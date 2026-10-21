@@ -1,0 +1,150 @@
+{
+  "version": "1.1.0",
+  "mapName": "AttentionAgentsPlazaAndArenas",
+  "coordinateSystem": "Y-up, right-handed",
+  "authoritativeServerTickRateHz": 30,
+  "clientInterpolationLerpFactor": 0.15,
+  "spawns": {
+    "defaultPlaza": { "x": 0, "y": 1.5, "z": 7.8, "rotY": 3.14159 },
+    "arcadeEntrance": { "x": 0, "y": 1.5, "z": -12, "rotY": 3.14159 },
+    "coinCatcherArena": { "x": 160, "y": 1.5, "z": 0, "rotY": 0 },
+    "hotPotatoCourt": { "x": -160, "y": 1.5, "z": 0, "rotY": 0 },
+    "socialPark": { "x": 0, "y": 1.5, "z": 42, "rotY": 0 }
+  },
+  "interactiveDoors": [
+    {
+      "id": "door_coin_catcher",
+      "name": "Coin Catcher Portal",
+      "position": { "x": -6.5, "y": 2.8, "z": -16.8 },
+      "size": { "w": 4.6, "h": 5.6, "d": 0.6 },
+      "triggerRadius": 3.5,
+      "teleportTarget": { "x": 160, "y": 1.5, "z": 0 },
+      "gameId": "coin_catcher",
+      "maxPlayers": 8,
+      "matchDurationSeconds": 45
+    },
+    {
+      "id": "door_hot_potato",
+      "name": "Hot Potato Portal",
+      "position": { "x": 6.5, "y": 2.8, "z": -16.8 },
+      "size": { "w": 4.6, "h": 5.6, "d": 0.6 },
+      "triggerRadius": 3.5,
+      "teleportTarget": { "x": -160, "y": 1.5, "z": 0 },
+      "gameId": "hot_potato",
+      "maxPlayers": 6,
+      "matchDurationSeconds": 18
+    }
+  ],
+  "collisionBoxes": [
+    {
+      "id": "ground_plane",
+      "type": "box",
+      "pos": [0, -0.2, 0],
+      "size": [260, 0.4, 260]
+    },
+    {
+      "id": "arcade_building_facade",
+      "type": "box",
+      "pos": [0, 5.8, -20.0],
+      "size": [32.0, 11.6, 6.0]
+    },
+    {
+      "id": "arcade_roof_overhang",
+      "type": "box",
+      "pos": [0, 11.6, -19.8],
+      "size": [32.5, 0.6, 6.5]
+    },
+    {
+      "id": "arcade_door_left_frame",
+      "type": "box",
+      "pos": [-6.5, 2.8, -16.8],
+      "size": [4.6, 5.6, 0.6]
+    },
+    {
+      "id": "arcade_door_right_frame",
+      "type": "box",
+      "pos": [6.5, 2.8, -16.8],
+      "size": [4.6, 5.6, 0.6]
+    },
+    {
+      "id": "fountain_tier1_basin",
+      "type": "cylinder",
+      "pos": [0, 0.35, 0],
+      "radius": 5.4,
+      "height": 0.7
+    },
+    {
+      "id": "fountain_tier2_step",
+      "type": "cylinder",
+      "pos": [0, 0.8, 0],
+      "radius": 3.8,
+      "height": 0.5
+    },
+    {
+      "id": "fountain_blue_sphere",
+      "type": "sphere",
+      "pos": [0, 2.65, 0],
+      "radius": 1.15
+    },
+    {
+      "id": "bench_left_plaza",
+      "type": "box",
+      "pos": [-6.8, 0.45, 4.2],
+      "size": [2.5, 0.9, 0.6]
+    },
+    {
+      "id": "bench_right_plaza",
+      "type": "box",
+      "pos": [6.2, 0.45, 4.2],
+      "size": [2.5, 0.9, 0.6]
+    },
+    {
+      "id": "potato_court_boundary_north",
+      "type": "box",
+      "pos": [-42, 2.5, 14],
+      "size": [30, 5.0, 0.8]
+    },
+    {
+      "id": "potato_court_boundary_south",
+      "type": "box",
+      "pos": [-42, 2.5, 30],
+      "size": [30, 5.0, 0.8]
+    },
+    {
+      "id": "potato_court_boundary_west",
+      "type": "box",
+      "pos": [-57, 2.5, 22],
+      "size": [0.8, 5.0, 16]
+    },
+    {
+      "id": "potato_court_boundary_east",
+      "type": "box",
+      "pos": [-27, 2.5, 22],
+      "size": [0.8, 5.0, 16]
+    },
+    {
+      "id": "coin_arena_boundary_north",
+      "type": "box",
+      "pos": [-42, 2.5, -28],
+      "size": [24, 5.0, 0.8]
+    },
+    {
+      "id": "coin_arena_boundary_south",
+      "type": "box",
+      "pos": [-42, 2.5, -12],
+      "size": [24, 5.0, 0.8]
+    },
+    {
+      "id": "coin_arena_boundary_west",
+      "type": "box",
+      "pos": [-54, 2.5, -20],
+      "size": [0.8, 5.0, 16]
+    },
+    {
+      "id": "coin_arena_boundary_east",
+      "type": "box",
+      "pos": [-30, 2.5, -20],
+      "size": [0.8, 5.0, 16]
+    }
+  ]
+}

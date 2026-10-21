@@ -1,0 +1,1912 @@
+// ==========================================================================
+// Living 3D World Environment - Complete Connected World
+// Exactly recreating the reference images:
+// 1. CENTRAL PLAZA (Image 2 Panel 1):
+//    - Modern futuristic city skyline with glass & steel skyscrapers
+//    - Digital billboards ("TOGETHER BETTER"), animated signage
+//    - Grand architectural fountain with tiered basins, water jets, glowing tower/orb
+//    - Paved stone plaza with geometric pavers & circular inlays
+//    - Modern curved wood-and-steel benches
+// 2. ARCADE ENTRANCE (Image 2 Panel 2):
+//    - Futuristic architectural arcade facade with pillars & cornice
+//    - Massive glowing cyan neon controller + "ARCADE" signage
+//    - Illuminated portal archways:
+//      * COIN CATCHER (warm golden neon arch, glass doors, interactive)
+//      * ROOFTOP RUN (purple/cyan neon arch, glass doors, interactive)
+//      * HOT POTATO (bright red neon arch, glass doors, interactive)
+//    - Floating "Select Game" menu with direct launch
+// 3. PARK AREA (Image 2 Panel 3):
+//    - Connected relaxing green park with curved paved walking paths
+//    - Blooming pink Japanese cherry blossom trees (Sakura)
+//    - Traditional cast iron street lanterns with warm lights
+//    - Arched wooden footbridge crossing over blue water canal/pond
+//    - Park benches facing the pond with sitting interaction ("Press E to sit")
+// 4. CARS & TRAFFIC (Image 2 Panel 4):
+//    - Multi-lane asphalt road, sidewalks, curbs, pedestrian crosswalk
+//    - Functional 3-lamp traffic light post cycling Red, Yellow, Green
+//    - Yellow Sports Coupe with aerodynamic wing and red taillights
+//    - Red City Transit Bus with illuminated passenger windows
+//    - Vehicles brake at red/yellow lights, accelerate on green, avoid collisions
+// 5. INTERACTIVE BUILDING DOORS (Image 2 Panel 5):
+//    - Modern glass building entrance with transparent sliding double doors
+//    - "Press E to open" prompt, smooth opening & closing animations
+// 6. MINI-GAMES CONNECTED:
+//    - Coin Catcher: 3D cyber grid arena, crates, spinning coins, Score & 45s timer
+//    - Rooftop Run: High-altitude obstacle course, red platforms, checkpoints, finish gate
+//    - Hot Potato: 3D stadium colosseum, fuse countdown, runners, angry potato bomb
+// 7. COMPLETE GAME UI & FEATURES (Image 2 Panel 8):
+//    - Profile card with avatar portrait & level
+//    - Minimap radar with compass & Central Plaza coordinates
+//    - Glassmorphism live chat box
+//    - Full modal with Leaderboard (Global/Friends), Game Selection & Settings
+// ==========================================================================
+
+import * as THREE from 'three';
+import { sound } from '../engine/audio.js';
+
+export class LivingWorld {
+  constructor(scene, playerController, options = {}) {
+    this.scene = scene;
+    this.player = playerController;
+    this.options = options;
+
+    this.root = new THREE.Group();
+    this.root.name = 'living_world_root';
+    this.scene.add(this.root);
+
+    // Trackers
+    this.updatables = [];
+    this.coins = [];
+    this.benches = [];
+    this.doors = [];
+    this.vehicles = [];
+    this.trafficLights = [];
+    this.gamePortals = [];
+    this.particles = [];
+
+    // Player State
+    this.isSitting = false;
+    this.sittingBench = null;
+    this.coinsCollected = parseInt(localStorage.getItem('aa_collected_coins') || '140', 10);
+    this.activePrompt = null;
+    this.activePromptCallback = null;
+
+    // Build the World Elements
+    this.setupSkyAndEnvironment();
+    this.buildRoadsAndCrosswalks();
+    this.buildCentralPlaza();
+    this.buildArcadeEntrance();
+    this.buildParkArea();
+    this.buildInteractiveBuilding();
+    this.buildTrafficSystem();
+    this.buildCollectibleCoins();
+    this.buildUIOverlays();
+
+    // Hook up keyboard input for interactions
+    this.setupKeyBindings();
+
+    // Force update matrix world so world positions are accurate
+    this.root.updateMatrixWorld(true);
+    this.refreshWorldPositions();
+  }
+
+  // ---------------------------------------------------------------- Key Bindings
+  setupKeyBindings() {
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'KeyE' || e.key === 'e' || e.key === 'E') {
+        if (this.activePromptCallback) {
+          e.preventDefault();
+          const cb = this.activePromptCallback;
+          cb();
+        }
+      } else if (this.isSitting && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        this.standUp();
+      }
+    });
+  }
+
+  standUp() {
+    if (!this.isSitting) return;
+    this.isSitting = false;
+    this.sittingBench = null;
+    this.player.y = 0;
+    this.clearPrompt();
+  }
+
+  // ---------------------------------------------------------------- 1. Environment Fill Lighting & Clouds
+  setupSkyAndEnvironment() {
+    // Soft subtle ground fill to enhance shadows without washing out stone textures
+    const subtleHemi = new THREE.HemisphereLight(0xfff5e6, 0x3d662e, 0.35);
+    this.root.add(subtleHemi);
+
+    // Drifting 3D Cumulus Clouds matching the bright sci-fi atmosphere in reference image
+    this.cloudGroup = new THREE.Group();
+    this.root.add(this.cloudGroup);
+
+    const cloudMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.95,
+      metalness: 0.0,
+      transparent: true,
+      opacity: 0.88,
+      depthWrite: false,
+    });
+
+    const cloudConfigs = [
+      { x: -35, y: 62, z: -40, s: 14 },
+      { x: 15, y: 68, z: -55, s: 18 },
+      { x: 50, y: 60, z: -25, s: 15 },
+      { x: -55, y: 65, z: 10, s: 16 },
+      { x: 30, y: 72, z: 45, s: 20 },
+      { x: -25, y: 58, z: 50, s: 14 },
+      { x: 0, y: 75, z: 70, s: 22 },
+      { x: -70, y: 64, z: -60, s: 19 },
+    ];
+
+    cloudConfigs.forEach((cfg, ci) => {
+      const cGrp = new THREE.Group();
+      cGrp.position.set(cfg.x, cfg.y, cfg.z);
+
+      // Multi-puff cloud geometry
+      const puffs = [
+        [0, 0, 0, 1.0],
+        [-0.7 * cfg.s, -0.1 * cfg.s, 0.2 * cfg.s, 0.75],
+        [0.7 * cfg.s, -0.15 * cfg.s, -0.2 * cfg.s, 0.8],
+        [0.2 * cfg.s, 0.3 * cfg.s, 0.1 * cfg.s, 0.7],
+        [-0.3 * cfg.s, 0.25 * cfg.s, -0.3 * cfg.s, 0.65],
+      ];
+
+      puffs.forEach(([px, py, pz, psc]) => {
+        const puff = new THREE.Mesh(new THREE.SphereGeometry(cfg.s * 0.45 * psc, 10, 8), cloudMat);
+        puff.scale.set(1.4, 0.65, 1.0);
+        puff.position.set(px, py, pz);
+        cGrp.add(puff);
+      });
+
+      this.cloudGroup.add(cGrp);
+    });
+
+    // Cloud drift animation
+    this.updatables.push((t, dt) => {
+      this.cloudGroup.children.forEach((c, i) => {
+        c.position.x += dt * (0.8 + (i % 3) * 0.4);
+        if (c.position.x > 120) c.position.x = -120;
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------- 2. Roads & Crosswalks (Panel 4)
+  buildRoadsAndCrosswalks() {
+    this.roadGroup = new THREE.Group();
+    this.root.add(this.roadGroup);
+
+    const asphaltMat = new THREE.MeshStandardMaterial({
+      color: 0x1e242d,
+      roughness: 0.82,
+      metalness: 0.15,
+    });
+    const lineMat = new THREE.MeshBasicMaterial({ color: 0xf5f6fa });
+    const yellowLineMat = new THREE.MeshBasicMaterial({ color: 0xfbc531 });
+
+    // Multi-lane roadway along the East side of the plaza (x = 22, z from -50 to 50)
+    const roadWidth = 9.5;
+    const roadGeo = new THREE.PlaneGeometry(roadWidth, 100);
+    const roadMesh = new THREE.Mesh(roadGeo, asphaltMat);
+    roadMesh.rotation.x = -Math.PI / 2;
+    roadMesh.position.set(22, 0.02, 0);
+    roadMesh.receiveShadow = true;
+    this.roadGroup.add(roadMesh);
+
+    // Center divider dashed line
+    for (let z = -46; z <= 46; z += 4) {
+      const dashGeo = new THREE.PlaneGeometry(0.32, 2.2);
+      const dash = new THREE.Mesh(dashGeo, yellowLineMat);
+      dash.rotation.x = -Math.PI / 2;
+      dash.position.set(22, 0.03, z);
+      this.roadGroup.add(dash);
+    }
+
+    // Painted Pedestrian Crosswalk stripes near Arcade entrance (z = 4)
+    for (let x = 17.8; x <= 26.2; x += 1.1) {
+      const stripeGeo = new THREE.PlaneGeometry(0.68, 4.0);
+      const stripe = new THREE.Mesh(stripeGeo, lineMat);
+      stripe.rotation.x = -Math.PI / 2;
+      stripe.position.set(x, 0.032, 4);
+      this.roadGroup.add(stripe);
+    }
+
+    // Stop Line on road before crosswalk
+    const stopLine = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth * 0.45, 0.6), lineMat);
+    stopLine.rotation.x = -Math.PI / 2;
+    stopLine.position.set(22 + roadWidth * 0.25, 0.033, 7.5);
+    this.roadGroup.add(stopLine);
+
+    // Concrete Sidewalk along road
+    const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 });
+    const sidewalkGeo = new THREE.BoxGeometry(3.2, 0.24, 100);
+    const sidewalk = new THREE.Mesh(sidewalkGeo, sidewalkMat);
+    sidewalk.position.set(22 - roadWidth / 2 - 1.6, 0.12, 0);
+    sidewalk.receiveShadow = true;
+    this.roadGroup.add(sidewalk);
+
+    // Curb edge stone along road
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.6 });
+    const curbGeo = new THREE.BoxGeometry(0.3, 0.28, 100);
+    const curb = new THREE.Mesh(curbGeo, curbMat);
+    curb.position.set(22 - roadWidth / 2 - 0.15, 0.14, 0);
+    this.roadGroup.add(curb);
+  }
+
+  // ---------------------------------------------------------------- 3. Central Plaza & Skyline (Panel 1)
+  createPlazaPaverTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 1024;
+    const ctx = canvas.getContext('2d');
+
+    // Warm terracotta / limestone base matching Image 2 Panel 1
+    ctx.fillStyle = '#bfae9c';
+    ctx.fillRect(0, 0, 1024, 1024);
+
+    const tileSize = 64;
+    const tiles = 1024 / tileSize;
+
+    for (let y = 0; y < tiles; y++) {
+      for (let x = 0; x < tiles; x++) {
+        const rand = (Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1;
+        const brightness = 0.92 + Math.abs(rand) * 0.15;
+        const r = Math.floor(198 * brightness);
+        const g = Math.floor(178 * brightness);
+        const b = Math.floor(158 * brightness);
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.fillRect(x * tileSize + 2, y * tileSize + 2, tileSize - 4, tileSize - 4);
+      }
+    }
+
+    // Grout lines
+    ctx.strokeStyle = '#8a7968';
+    ctx.lineWidth = 3;
+    for (let x = 0; x <= 1024; x += tileSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 1024);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= 1024; y += tileSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(1024, y);
+      ctx.stroke();
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(8, 8);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  buildCentralPlaza() {
+    this.plazaGroup = new THREE.Group();
+    this.root.add(this.plazaGroup);
+
+    // Warm polished stone plaza pavers (radius 22m)
+    const plazaGeo = new THREE.CylinderGeometry(21, 21.5, 0.16, 48);
+    const plazaMat = new THREE.MeshStandardMaterial({
+      map: this.createPlazaPaverTexture(),
+      roughness: 0.62,
+      metalness: 0.05,
+    });
+    const plaza = new THREE.Mesh(plazaGeo, plazaMat);
+    plaza.position.set(0, 0.08, 0);
+    plaza.receiveShadow = true;
+    this.plazaGroup.add(plaza);
+
+    // Decorative Plaza Inlay Rings
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x9e8e7a });
+    [6, 12, 18].forEach((r) => {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.12, 48), ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(0, 0.161, 0);
+      this.plazaGroup.add(ring);
+    });
+
+    // Grand Architectural Fountain in Center (Matching Image 2 Panel 1)
+    const fountainGroup = new THREE.Group();
+    fountainGroup.position.set(0, 0, 0);
+
+    const marbleMat = new THREE.MeshStandardMaterial({ color: 0xedebe4, roughness: 0.35, metalness: 0.1 });
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x00d2d3,
+      roughness: 0.08,
+      metalness: 0.85,
+      transparent: true,
+      opacity: 0.85,
+    });
+
+    // Basin 1 (Bottom Tier)
+    const basin1 = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 5.2, 0.7, 36), marbleMat);
+    basin1.position.y = 0.35;
+    basin1.receiveShadow = true;
+    basin1.castShadow = true;
+    fountainGroup.add(basin1);
+
+    const water1 = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 0.1, 36), waterMat);
+    water1.position.y = 0.65;
+    fountainGroup.add(water1);
+
+    // Basin 2 (Mid Tier)
+    const basin2 = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 3.1, 0.6, 28), marbleMat);
+    basin2.position.y = 1.15;
+    basin2.receiveShadow = true;
+    basin2.castShadow = true;
+    fountainGroup.add(basin2);
+
+    const water2 = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 0.1, 28), waterMat);
+    water2.position.y = 1.42;
+    fountainGroup.add(water2);
+
+    // Central Tower & Glowing Blue Glass Sphere (As seen in Image 2 Panel 1)
+    const towerMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.8, roughness: 0.2 });
+    const centralSpire = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 2.2, 16), towerMat);
+    centralSpire.position.y = 2.4;
+    fountainGroup.add(centralSpire);
+
+    const orbGeo = new THREE.SphereGeometry(1.2, 24, 24);
+    const orbMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      roughness: 0.1,
+      metalness: 0.9,
+      emissive: 0x0284c7,
+      emissiveIntensity: 0.65,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const orb = new THREE.Mesh(orbGeo, orbMat);
+    orb.position.y = 3.6;
+    fountainGroup.add(orb);
+
+    // Upward Water Jets
+    const jetMat = new THREE.MeshBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.75 });
+    const jets = [];
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const jet = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.09, 1.8, 8), jetMat);
+      jet.position.set(Math.cos(angle) * 1.8, 1.8, Math.sin(angle) * 1.8);
+      jet.rotation.x = Math.sin(angle) * 0.35;
+      jet.rotation.z = -Math.cos(angle) * 0.35;
+      fountainGroup.add(jet);
+      jets.push(jet);
+    }
+
+    // Fountain Glow PointLight
+    const fountainLight = new THREE.PointLight(0x38bdf8, 1.8, 14);
+    fountainLight.position.set(0, 3.8, 0);
+    fountainGroup.add(fountainLight);
+
+    this.plazaGroup.add(fountainGroup);
+
+    // Fountain animation
+    this.updatables.push((t, dt) => {
+      orb.position.y = 3.6 + Math.sin(t * 2.5) * 0.18;
+      orb.rotation.y += dt * 0.8;
+      jets.forEach((jet, i) => {
+        jet.scale.y = 1 + Math.sin(t * 4 + i) * 0.15;
+      });
+    });
+
+    // Modern Curved Benches around Plaza
+    this.buildPlazaBenches();
+
+    // Futuristic Skyscrapers & Skyline in Horizon
+    this.buildCitySkyline();
+  }
+
+  buildPlazaBenches() {
+    this.benchGroup = new THREE.Group();
+    this.root.add(this.benchGroup);
+
+    const configs = [
+      { x: -5.5, z: -4.5, rotY: Math.PI / 2 },
+      { x: 5.5, z: -4.5, rotY: -Math.PI / 2 },
+      { x: -6.5, z: 6.5, rotY: Math.PI / 4 },
+      { x: 6.5, z: 6.5, rotY: -Math.PI / 4 },
+    ];
+
+    configs.forEach((cfg) => {
+      const bench = this.createBenchMesh(cfg.x, cfg.z, cfg.rotY);
+      this.benchGroup.add(bench);
+      this.benches.push({
+        group: bench,
+        pos: new THREE.Vector3(cfg.x, 0, cfg.z),
+        sitPos: new THREE.Vector3(cfg.x, 0.48, cfg.z),
+        rotY: cfg.rotY,
+      });
+    });
+
+    // Sitting interaction update
+    this.updatables.push(() => {
+      if (this.isSitting) {
+        if (this.sittingBench) {
+          this.player.x = this.sittingBench.sitPos.x;
+          this.player.z = this.sittingBench.sitPos.z;
+          this.player.y = 0.48;
+          this.player.heading = this.sittingBench.rotY;
+        }
+        return;
+      }
+
+      const px = this.player.x;
+      const pz = this.player.z;
+      const near = this.benches.find((b) => Math.hypot(px - b.pos.x, pz - b.pos.z) < 1.9);
+      if (near && !this.activePrompt?.includes('play')) {
+        this.setPrompt('Press E to sit on bench', () => {
+          this.isSitting = true;
+          this.sittingBench = near;
+          sound.playClick();
+          this.setPrompt('Press WASD or Space to stand up', () => {
+            this.standUp();
+          });
+        });
+      }
+    });
+  }
+
+  createBenchMesh(x, z, rotY) {
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+    group.rotation.y = rotY;
+
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.65 });
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
+
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.75), woodMat);
+    seat.position.set(0, 0.48, 0);
+    seat.castShadow = true;
+    seat.receiveShadow = true;
+    group.add(seat);
+
+    const back = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 0.08), woodMat);
+    back.position.set(0, 0.85, -0.32);
+    back.castShadow = true;
+    group.add(back);
+
+    [-1.0, 1.0].forEach((lx) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.48, 0.72), steelMat);
+      leg.position.set(lx, 0.24, 0);
+      group.add(leg);
+    });
+
+    return group;
+  }
+
+  // Helper: Procedural high-res skyscraper facade texture with lit windows and glass reflections
+  createSkyscraperTexture(theme = 'blue') {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 1024;
+    const ctx = canvas.getContext('2d');
+
+    // Base glass / metal tint
+    ctx.fillStyle = theme === 'blue' ? '#0f172a' : (theme === 'cyan' ? '#082f49' : '#1e1b4b');
+    ctx.fillRect(0, 0, 512, 1024);
+
+    const cols = 12;
+    const rows = 28;
+    const w = 512 / cols;
+    const h = 1024 / rows;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = c * w + 3;
+        const y = r * h + 3;
+        const winW = w - 6;
+        const winH = h - 6;
+
+        // Random window state: lit office or reflective glass
+        const rand = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453;
+        const isLit = (Math.abs(rand) % 1) > 0.42;
+
+        if (isLit) {
+          const warm = (Math.abs(rand * 2.3) % 1) > 0.6;
+          ctx.fillStyle = warm ? '#fef08a' : (theme === 'cyan' ? '#67e8f9' : '#bae6fd');
+          ctx.fillRect(x, y, winW, winH);
+        } else {
+          ctx.fillStyle = theme === 'blue' ? '#1e293b' : '#164e63';
+          ctx.fillRect(x, y, winW, winH);
+        }
+      }
+    }
+
+    // Structural mullions and horizontal floor beams
+    ctx.fillStyle = '#334155';
+    for (let c = 0; c <= cols; c++) {
+      ctx.fillRect(c * w - 1.5, 0, 3, 1024);
+    }
+    for (let r = 0; r <= rows; r++) {
+      ctx.fillRect(0, r * h - 1.5, 512, 3);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(1, 2);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  buildCitySkyline() {
+    this.skylineRoot = new THREE.Group();
+    this.root.add(this.skylineRoot);
+
+    const texBlue = this.createSkyscraperTexture('blue');
+    const texCyan = this.createSkyscraperTexture('cyan');
+    const texPurple = this.createSkyscraperTexture('purple');
+
+    const darkSteelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.6 });
+    const brightGlassBlue = new THREE.MeshStandardMaterial({ map: texBlue, roughness: 0.15, metalness: 0.85 });
+    const brightGlassCyan = new THREE.MeshStandardMaterial({ map: texCyan, roughness: 0.15, metalness: 0.85 });
+    const brightGlassPurple = new THREE.MeshStandardMaterial({ map: texPurple, roughness: 0.15, metalness: 0.85 });
+    const cyanNeonMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
+    const blueNeonMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const goldNeonMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+
+    // =========================================================================
+    // 1. HERO LANDMARK: The "TOGETHER BETTER" Rotunda (East-North, Image 2 Panel 1)
+    // =========================================================================
+    const rotundaGroup = new THREE.Group();
+    rotundaGroup.position.set(18, 0, -36);
+    rotundaGroup.rotation.y = -Math.PI * 0.25;
+
+    // Multi-tier stepped cylindrical structure
+    const baseCyl = new THREE.Mesh(new THREE.CylinderGeometry(15, 16, 12, 36), darkSteelMat);
+    baseCyl.position.y = 6;
+    baseCyl.castShadow = true;
+    rotundaGroup.add(baseCyl);
+
+    const midCyl = new THREE.Mesh(new THREE.CylinderGeometry(13, 14, 14, 36), brightGlassCyan);
+    midCyl.position.y = 19;
+    midCyl.castShadow = true;
+    rotundaGroup.add(midCyl);
+
+    const topCyl = new THREE.Mesh(new THREE.CylinderGeometry(10, 11.5, 8, 36), darkSteelMat);
+    topCyl.position.y = 30;
+    rotundaGroup.add(topCyl);
+
+    // Glowing Cyan Catwalk Rings
+    [12, 26, 34].forEach((ry) => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(ry === 12 ? 15.3 : (ry === 26 ? 13.3 : 10.3), 0.22, 12, 48), cyanNeonMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = ry;
+      rotundaGroup.add(ring);
+    });
+
+    // Massive Curved "TOGETHER BETTER" Digital Billboard Sign
+    const signCanvas = document.createElement('canvas');
+    signCanvas.width = 1024;
+    signCanvas.height = 340;
+    const sCtx = signCanvas.getContext('2d');
+    sCtx.fillStyle = '#090d16';
+    sCtx.fillRect(0, 0, 1024, 340);
+    // Neon Cyan border
+    sCtx.strokeStyle = '#00d2d3';
+    sCtx.lineWidth = 12;
+    sCtx.strokeRect(16, 16, 992, 308);
+    // Texts matching Panel 1
+    sCtx.fillStyle = '#ffffff';
+    sCtx.font = '900 86px Fredoka, sans-serif';
+    sCtx.textAlign = 'center';
+    sCtx.fillText('TOGETHER', 512, 125);
+    sCtx.fillStyle = '#38bdf8';
+    sCtx.font = '900 96px Fredoka, sans-serif';
+    sCtx.fillText('BETTER', 512, 235);
+    sCtx.fillStyle = '#94a3b8';
+    sCtx.font = '700 32px Fredoka, sans-serif';
+    sCtx.fillText('FUTURISTIC SOCIAL METAVERSE', 512, 290);
+
+    const signTex = new THREE.CanvasTexture(signCanvas);
+    const curvedSign = new THREE.Mesh(
+      new THREE.CylinderGeometry(15.4, 15.4, 6.8, 32, 1, true, Math.PI * 0.65, Math.PI * 0.7),
+      new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide })
+    );
+    curvedSign.position.y = 8;
+    rotundaGroup.add(curvedSign);
+
+    // Rotunda Roof Spire
+    const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 1.2, 16, 12), cyanNeonMat);
+    spire.position.y = 42;
+    rotundaGroup.add(spire);
+
+    this.skylineRoot.add(rotundaGroup);
+
+    // =========================================================================
+    // 2. HERO LANDMARK: The Great Center Spire Tower with Glowing Blue Channel (North)
+    // =========================================================================
+    const centerSpireGroup = new THREE.Group();
+    centerSpireGroup.position.set(0, 0, -48);
+
+    // 85-meter Glass Skyscraper Body
+    const spireTower = new THREE.Mesh(new THREE.BoxGeometry(16, 80, 16), brightGlassBlue);
+    spireTower.position.y = 40;
+    spireTower.castShadow = true;
+    centerSpireGroup.add(spireTower);
+
+    // Tapered Upper Tier
+    const spireTier2 = new THREE.Mesh(new THREE.BoxGeometry(11, 24, 11), brightGlassCyan);
+    spireTier2.position.y = 92;
+    centerSpireGroup.add(spireTier2);
+
+    // Central Glowing Blue Energy Channel (Running up the entire facade!)
+    const energyConduit = new THREE.Mesh(new THREE.BoxGeometry(1.6, 92, 0.4), cyanNeonMat);
+    energyConduit.position.set(0, 46, 8.1);
+    centerSpireGroup.add(energyConduit);
+
+    // Needle Antenna Spire reaching 115m
+    const needle = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 1.4, 28, 8), darkSteelMat);
+    needle.position.y = 118;
+    centerSpireGroup.add(needle);
+
+    // Blinking beacon on antenna top
+    const beaconLight = new THREE.PointLight(0x38bdf8, 2.5, 30);
+    beaconLight.position.y = 132;
+    centerSpireGroup.add(beaconLight);
+
+    this.skylineRoot.add(centerSpireGroup);
+
+    // =========================================================================
+    // 3. 360-DEGREE DENSE SKYLINE: 26+ Individual Modern Glass & Steel Towers
+    // =========================================================================
+    const cityTowers = [
+      // NORTH CLUSTER
+      { x: -16, z: -42, w: 14, h: 64, d: 14, mat: brightGlassBlue, crown: 'angled' },
+      { x: -32, z: -38, w: 16, h: 52, d: 15, mat: brightGlassCyan, crown: 'flat', billboard: 'DREAM BIG' },
+      { x: -46, z: -35, w: 18, h: 72, d: 16, mat: brightGlassPurple, crown: 'spire' },
+      { x: 34, z: -40, w: 15, h: 58, d: 15, mat: brightGlassBlue, crown: 'stepped' },
+      { x: 48, z: -36, w: 20, h: 68, d: 18, mat: brightGlassCyan, crown: 'spire' },
+
+      // EAST CLUSTER (Framing Road & Arcade)
+      { x: 38, z: -18, w: 16, h: 62, d: 14, mat: brightGlassCyan, crown: 'stepped' },
+      { x: 42, z: 2, w: 18, h: 74, d: 16, mat: brightGlassBlue, crown: 'spire' },
+      { x: 40, z: 22, w: 16, h: 56, d: 15, mat: brightGlassPurple, crown: 'angled', billboard: 'CYBER CITY' },
+      { x: 44, z: 40, w: 18, h: 64, d: 18, mat: brightGlassCyan, crown: 'flat' },
+
+      // SOUTH-EAST CLUSTER
+      { x: 26, z: 42, w: 16, h: 58, d: 14, mat: brightGlassBlue, crown: 'stepped' },
+      { x: 14, z: 46, w: 15, h: 66, d: 15, mat: brightGlassPurple, crown: 'spire' },
+
+      // SOUTH CLUSTER (Directly behind player spawn)
+      { x: -2, z: 48, w: 18, h: 72, d: 16, mat: brightGlassCyan, crown: 'angled', billboard: 'METAVERSE' },
+      { x: -18, z: 46, w: 15, h: 60, d: 15, mat: brightGlassBlue, crown: 'stepped' },
+      { x: -30, z: 44, w: 16, h: 54, d: 14, mat: brightGlassPurple, crown: 'flat' },
+
+      // SOUTH-WEST CLUSTER (Behind Park)
+      { x: -42, z: 36, w: 18, h: 68, d: 16, mat: brightGlassCyan, crown: 'spire' },
+      { x: -48, z: 18, w: 16, h: 58, d: 15, mat: brightGlassBlue, crown: 'stepped' },
+
+      // WEST CLUSTER
+      { x: -44, z: -4, w: 20, h: 76, d: 18, mat: brightGlassBlue, crown: 'spire' },
+      { x: -40, z: -20, w: 16, h: 62, d: 14, mat: brightGlassCyan, crown: 'angled', billboard: 'HORIZONS' },
+      { x: -26, z: -28, w: 12, h: 48, d: 12, mat: brightGlassPurple, crown: 'flat' },
+    ];
+
+    cityTowers.forEach((t) => {
+      const bGrp = new THREE.Group();
+      bGrp.position.set(t.x, 0, t.z);
+
+      // Main tower body
+      const mainMesh = new THREE.Mesh(new THREE.BoxGeometry(t.w, t.h, t.d), t.mat);
+      mainMesh.position.y = t.h / 2;
+      mainMesh.castShadow = true;
+      mainMesh.receiveShadow = true;
+      bGrp.add(mainMesh);
+
+      // Crown Architecture
+      if (t.crown === 'spire') {
+        const spireCone = new THREE.Mesh(new THREE.ConeGeometry(t.w * 0.45, 16, 4), darkSteelMat);
+        spireCone.position.y = t.h + 8;
+        spireCone.rotation.y = Math.PI / 4;
+        bGrp.add(spireCone);
+
+        const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.4, 12, 8), cyanNeonMat);
+        ant.position.y = t.h + 22;
+        bGrp.add(ant);
+      } else if (t.crown === 'stepped') {
+        const step1 = new THREE.Mesh(new THREE.BoxGeometry(t.w * 0.75, 8, t.d * 0.75), darkSteelMat);
+        step1.position.y = t.h + 4;
+        bGrp.add(step1);
+
+        const step2 = new THREE.Mesh(new THREE.BoxGeometry(t.w * 0.5, 6, t.d * 0.5), cyanNeonMat);
+        step2.position.y = t.h + 11;
+        bGrp.add(step2);
+      } else if (t.crown === 'angled') {
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(t.w * 0.9, 4, t.d * 0.9), darkSteelMat);
+        roof.position.y = t.h + 2;
+        roof.rotation.x = 0.25;
+        bGrp.add(roof);
+      }
+
+      // Vertical Accent Neon Strips along building corners
+      const stripL = new THREE.Mesh(new THREE.BoxGeometry(0.25, t.h, 0.25), cyanNeonMat);
+      stripL.position.set(-t.w / 2 + 0.1, t.h / 2, t.d / 2 + 0.1);
+      bGrp.add(stripL);
+
+      const stripR = new THREE.Mesh(new THREE.BoxGeometry(0.25, t.h, 0.25), blueNeonMat);
+      stripR.position.set(t.w / 2 - 0.1, t.h / 2, t.d / 2 + 0.1);
+      bGrp.add(stripR);
+
+      // Digital Billboard Screens
+      if (t.billboard) {
+        const bbCanvas = document.createElement('canvas');
+        bbCanvas.width = 512;
+        bbCanvas.height = 160;
+        const bCtx = bbCanvas.getContext('2d');
+        bCtx.fillStyle = '#0f172a';
+        bCtx.fillRect(0, 0, 512, 160);
+        bCtx.strokeStyle = '#38bdf8';
+        bCtx.lineWidth = 8;
+        bCtx.strokeRect(10, 10, 492, 140);
+        bCtx.fillStyle = '#38bdf8';
+        bCtx.font = '900 48px Fredoka, sans-serif';
+        bCtx.textAlign = 'center';
+        bCtx.fillText(t.billboard, 256, 95);
+
+        const bbMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(t.w * 0.85, 4.8),
+          new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(bbCanvas) })
+        );
+        bbMesh.position.set(0, t.h * 0.65, t.d / 2 + 0.08);
+        bGrp.add(bbMesh);
+      }
+
+      this.skylineRoot.add(bGrp);
+    });
+
+    // =========================================================================
+    // 4. OUTER RING MEGACITY SILHOUETTES: 40+ Distant Towers across 360 Degrees
+    // =========================================================================
+    const farBuildingMat = new THREE.MeshStandardMaterial({
+      color: 0x33485d,
+      roughness: 0.6,
+      metalness: 0.3,
+    });
+
+    const farTowerCount = 42;
+    for (let i = 0; i < farTowerCount; i++) {
+      const angle = (i / farTowerCount) * Math.PI * 2;
+      const dist = 75 + ((i * 37) % 35);
+      const fx = Math.cos(angle) * dist;
+      const fz = Math.sin(angle) * dist;
+      const fw = 14 + ((i * 13) % 12);
+      const fh = 55 + ((i * 29) % 55);
+      const fd = 14 + ((i * 17) % 12);
+
+      const fMesh = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, fd), farBuildingMat);
+      fMesh.position.set(fx, fh / 2, fz);
+      this.skylineRoot.add(fMesh);
+
+      // Rooftop glowing beacon on distant skyscrapers
+      if (i % 2 === 0) {
+        const bcon = new THREE.Mesh(new THREE.SphereGeometry(0.6, 6, 6), i % 4 === 0 ? cyanNeonMat : goldNeonMat);
+        bcon.position.set(fx, fh + 1.2, fz);
+        this.skylineRoot.add(bcon);
+      }
+    }
+
+    // =========================================================================
+    // 5. PLAZA PERIMETER: Concrete Tree Planters & Modern Architectural Streetlights
+    // =========================================================================
+    this.buildPlazaPerimeterDecor();
+  }
+
+  buildPlazaPerimeterDecor() {
+    this.perimeterGroup = new THREE.Group();
+    this.root.add(this.perimeterGroup);
+
+    const planterMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 });
+    const hedgeMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.8 });
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4e342e, roughness: 0.85 });
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0x388e3c, roughness: 0.65 });
+    const lampMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.3 });
+    const lampGlow = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
+
+    // 12 Planters with lush trees surrounding the plaza perimeter (R = 20m)
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      // Skip where road and arcade open
+      if (angle > -0.4 && angle < 0.8) continue;
+
+      const px = Math.cos(angle) * 19.5;
+      const pz = Math.sin(angle) * 19.5;
+
+      const pGrp = new THREE.Group();
+      pGrp.position.set(px, 0, pz);
+
+      // Raised circular concrete planter
+      const curb = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.8, 0.55, 18), planterMat);
+      curb.position.y = 0.28;
+      curb.receiveShadow = true;
+      pGrp.add(curb);
+
+      // Soil & Hedges
+      const hedge = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.5, 0.4, 18), hedgeMat);
+      hedge.position.y = 0.58;
+      pGrp.add(hedge);
+
+      // Green Plaza Tree
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 4.2, 8), trunkMat);
+      trunk.position.y = 2.1;
+      trunk.castShadow = true;
+      pGrp.add(trunk);
+
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(1.8, 12, 10), leafMat);
+      crown.position.y = 4.4;
+      crown.scale.set(1.1, 0.9, 1.1);
+      crown.castShadow = true;
+      pGrp.add(crown);
+
+      this.perimeterGroup.add(pGrp);
+    }
+
+    // 8 Modern Dual-Head Architectural Streetlights along pathways
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + Math.PI / 8;
+      const lx = Math.cos(angle) * 15.5;
+      const lz = Math.sin(angle) * 15.5;
+
+      const lGrp = new THREE.Group();
+      lGrp.position.set(lx, 0, lz);
+      lGrp.rotation.y = angle + Math.PI / 2;
+
+      // Post
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 4.8, 8), lampMat);
+      post.position.y = 2.4;
+      lGrp.add(post);
+
+      // Dual Crossbar
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 0.1), lampMat);
+      bar.position.y = 4.7;
+      lGrp.add(bar);
+
+      // Dual Luminaire Heads
+      [-0.8, 0.8].forEach((bx) => {
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.14, 0.25), lampGlow);
+        head.position.set(bx, 4.62, 0);
+        lGrp.add(head);
+
+        const pLight = new THREE.PointLight(0xfff7ed, 0.8, 12);
+        pLight.position.set(bx, 4.5, 0);
+        lGrp.add(pLight);
+      });
+
+      this.perimeterGroup.add(lGrp);
+    }
+  }
+
+  // ---------------------------------------------------------------- 4. ARCADE Building & Portals (Panel 2)
+  buildArcadeEntrance() {
+    this.arcadeGroup = new THREE.Group();
+    this.arcadeGroup.position.set(13.5, 0, -6); // East Plaza side, facing the road & plaza
+    this.arcadeGroup.rotation.y = -Math.PI * 0.15;
+    this.root.add(this.arcadeGroup);
+
+    const facadeMat = new THREE.MeshStandardMaterial({ color: 0x140e26, roughness: 0.5, metalness: 0.3 });
+
+    // Arcade Facade Structure (width 22m, height 9m)
+    const facadeGeo = new THREE.BoxGeometry(22, 9.2, 5.5);
+    const facade = new THREE.Mesh(facadeGeo, facadeMat);
+    facade.position.y = 4.6;
+    facade.castShadow = true;
+    facade.receiveShadow = true;
+    this.arcadeGroup.add(facade);
+
+    // Glowing Neon Gamepad Controller Outline on Top (Matching Image 2 Panel 2)
+    const ctrlGroup = new THREE.Group();
+    ctrlGroup.position.set(0, 8.4, 2.8);
+    const neonCyan = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
+    const ctrlOutline = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.8, 0.2), neonCyan);
+    ctrlGroup.add(ctrlOutline);
+    this.arcadeGroup.add(ctrlGroup);
+
+    // Massive Glowing Cyan Neon "ARCADE" 3D Sign
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 180;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, 512, 180);
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(176, 16, 160, 58);
+
+    ctx.fillStyle = '#00d2d3';
+    ctx.font = '900 72px Fredoka, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ARCADE', 256, 145);
+
+    const arcadeTex = new THREE.CanvasTexture(canvas);
+    const arcadeSign = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 3.4), new THREE.MeshBasicMaterial({ map: arcadeTex }));
+    arcadeSign.position.set(0, 6.6, 2.82);
+    this.arcadeGroup.add(arcadeSign);
+
+    // Three Distinct Portal Entrances (Coin Catcher, Rooftop Run, Hot Potato)
+    const portals = [
+      { id: 'coincatcher', title: 'Coin Catcher', x: -6.0, color: 0xffbf1f, colorHex: '#ffbf1f', icon: '🪙' },
+      { id: 'rooftoprun', title: 'Rooftop Run', x: 0, color: 0x38bdf8, colorHex: '#38bdf8', icon: '🏃' },
+      { id: 'hotpotato', title: 'HOT POTATO', x: 6.0, color: 0xff3838, colorHex: '#ff3838', icon: '🔥' },
+    ];
+
+    portals.forEach((p) => {
+      const pGroup = new THREE.Group();
+      pGroup.position.set(p.x, 0, 2.8);
+
+      // Glowing Neon Archway
+      const archMat = new THREE.MeshBasicMaterial({ color: p.color });
+      const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.2, 0.35), archMat);
+      archLeft.position.set(-1.5, 2.1, 0);
+      pGroup.add(archLeft);
+
+      const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.2, 0.35), archMat);
+      archRight.position.set(1.5, 2.1, 0);
+      pGroup.add(archRight);
+
+      const archTop = new THREE.Mesh(new THREE.BoxGeometry(3.35, 0.4, 0.35), archMat);
+      archTop.position.set(0, 4.2, 0);
+      pGroup.add(archTop);
+
+      // Glass Sliding Door Panels
+      const glassMat = new THREE.MeshStandardMaterial({
+        color: p.color,
+        roughness: 0.1,
+        emissive: p.color,
+        emissiveIntensity: 0.45,
+        transparent: true,
+        opacity: 0.4,
+      });
+      const glass = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 3.8), glassMat);
+      glass.position.set(0, 1.9, 0.05);
+      pGroup.add(glass);
+
+      // Illuminated Title above Archway
+      const tCanvas = document.createElement('canvas');
+      tCanvas.width = 256;
+      tCanvas.height = 64;
+      const tCtx = tCanvas.getContext('2d');
+      tCtx.fillStyle = '#0f172a';
+      tCtx.fillRect(0, 0, 256, 64);
+      tCtx.fillStyle = p.colorHex;
+      tCtx.font = 'bold 26px Fredoka, sans-serif';
+      tCtx.textAlign = 'center';
+      tCtx.fillText(`${p.icon} ${p.title}`, 128, 42);
+
+      const pTitle = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.8, 0.7),
+        new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tCanvas) })
+      );
+      pTitle.position.set(0, 4.8, 0.1);
+      pGroup.add(pTitle);
+
+      this.arcadeGroup.add(pGroup);
+
+      this.gamePortals.push({
+        id: p.id,
+        title: p.title,
+        group: pGroup,
+        localX: p.x,
+        pos: new THREE.Vector3(),
+        colorHex: p.colorHex,
+      });
+    });
+
+    // Floating Directory Board on Right ("Select Game" Card)
+    const dirCanvas = document.createElement('canvas');
+    dirCanvas.width = 320;
+    dirCanvas.height = 240;
+    const dCtx = dirCanvas.getContext('2d');
+    dCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+    dCtx.roundRect(4, 4, 312, 232, 16);
+    dCtx.fill();
+    dCtx.strokeStyle = '#38bdf8';
+    dCtx.lineWidth = 4;
+    dCtx.stroke();
+
+    dCtx.fillStyle = '#fde047';
+    dCtx.font = 'bold 24px Fredoka, sans-serif';
+    dCtx.fillText('🪙 Coin Catcher   >', 20, 65);
+    dCtx.fillStyle = '#38bdf8';
+    dCtx.fillText('🏃 Rooftop Run    >', 20, 130);
+    dCtx.fillStyle = '#ff4757';
+    dCtx.fillText('🔥 HOT POTATO     >', 20, 195);
+
+    const dirTex = new THREE.CanvasTexture(dirCanvas);
+    const dirBoard = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.8), new THREE.MeshBasicMaterial({ map: dirTex }));
+    dirBoard.position.set(8.5, 4.2, 2.85);
+    this.arcadeGroup.add(dirBoard);
+  }
+
+  // ---------------------------------------------------------------- 5. Park Area (Panel 3)
+  buildParkArea() {
+    this.parkGroup = new THREE.Group();
+    this.parkGroup.position.set(-20, 0, 4); // South-West connected area
+    this.root.add(this.parkGroup);
+
+    // Lush green park lawn (24m x 28m)
+    const lawnMat = new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.8 });
+    const lawn = new THREE.Mesh(new THREE.BoxGeometry(24, 0.18, 28), lawnMat);
+    lawn.position.set(0, 0.09, 0);
+    lawn.receiveShadow = true;
+    this.parkGroup.add(lawn);
+
+    // Curved Stone Footpath
+    const pathMat = new THREE.MeshStandardMaterial({ color: 0xd6cbbd, roughness: 0.7 });
+    const path = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 26), pathMat);
+    path.position.set(4, 0.11, 0);
+    path.receiveShadow = true;
+    this.parkGroup.add(path);
+
+    // Park Pond / Water Canal with Water Lilies
+    const pondMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      roughness: 0.1,
+      metalness: 0.85,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const pond = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 5.2, 0.12, 32), pondMat);
+    pond.position.set(-5, 0.12, -2);
+    pond.receiveShadow = true;
+    this.parkGroup.add(pond);
+
+    // Arched Wooden Japanese Footbridge crossing the water
+    const bridgeGroup = new THREE.Group();
+    bridgeGroup.position.set(-5, 0.2, -2);
+
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.7 });
+    const bridgeArch = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.14, 7.5), woodMat);
+    bridgeArch.position.y = 0.45;
+    bridgeArch.castShadow = true;
+    bridgeGroup.add(bridgeArch);
+
+    [-1.1, 1.1].forEach((rx) => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 7.5), woodMat);
+      rail.position.set(rx, 0.75, 0);
+      bridgeGroup.add(rail);
+    });
+
+    this.parkGroup.add(bridgeGroup);
+
+    // Blooming Pink Cherry Blossom Trees (Sakura) - Matching Image 2 Panel 3
+    const sakuraPositions = [
+      [-8, 6],
+      [-7, -9],
+      [7, 8],
+      [6, -8],
+      [-2, 10],
+    ];
+
+    sakuraPositions.forEach(([sx, sz]) => {
+      const sakura = this.createSakuraTreeMesh();
+      sakura.position.set(sx, 0, sz);
+      this.parkGroup.add(sakura);
+    });
+
+    // Traditional Cast Iron Street Lanterns
+    const lanternPositions = [
+      [2.2, 6],
+      [2.2, -6],
+      [-5, 4],
+    ];
+
+    lanternPositions.forEach(([lx, lz]) => {
+      const lantern = this.createStreetLanternMesh();
+      lantern.position.set(lx, 0, lz);
+      this.parkGroup.add(lantern);
+    });
+
+    // Park Benches facing the pond with sit interaction
+    const pBench = this.createBenchMesh(-5, 4.2, Math.PI);
+    this.parkGroup.add(pBench);
+    this.benches.push({
+      group: pBench,
+      pos: new THREE.Vector3(-25, 0, 8.2),
+      sitPos: new THREE.Vector3(-25, 0.48, 8.2),
+      rotY: Math.PI,
+    });
+  }
+
+  createSakuraTreeMesh() {
+    const group = new THREE.Group();
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3825, roughness: 0.85 });
+    const sakuraPinkMat = new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.45 });
+
+    // Trunk
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.44, 4.8, 10), trunkMat);
+    trunk.position.y = 2.4;
+    trunk.castShadow = true;
+    group.add(trunk);
+
+    // Pink Blossom Canopies
+    const clusterOffsets = [
+      [0, 4.8, 0, 1.6],
+      [-0.9, 4.2, 0.6, 1.3],
+      [0.9, 4.4, -0.6, 1.3],
+      [0, 5.5, 0, 1.2],
+    ];
+
+    clusterOffsets.forEach(([cx, cy, cz, rad]) => {
+      const cluster = new THREE.Mesh(new THREE.SphereGeometry(rad, 14, 14), sakuraPinkMat);
+      cluster.position.set(cx, cy, cz);
+      cluster.castShadow = true;
+      group.add(cluster);
+    });
+
+    return group;
+  }
+
+  createStreetLanternMesh() {
+    const group = new THREE.Group();
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 });
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 3.4, 8), ironMat);
+    post.position.y = 1.7;
+    post.castShadow = true;
+    group.add(post);
+
+    const lanternHead = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.55, 0.42), glowMat);
+    lanternHead.position.y = 3.3;
+    group.add(lanternHead);
+
+    const light = new THREE.PointLight(0xfde047, 1.2, 8);
+    light.position.y = 3.3;
+    group.add(light);
+
+    return group;
+  }
+
+  // ---------------------------------------------------------------- 6. Interactive Building Entrance (Panel 5)
+  buildInteractiveBuilding() {
+    this.buildingGroup = new THREE.Group();
+    this.buildingGroup.position.set(-18, 0, -18);
+    this.root.add(this.buildingGroup);
+
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      roughness: 0.1,
+      metalness: 0.8,
+      transparent: true,
+      opacity: 0.45,
+    });
+
+    // Modern glass office building facade
+    const body = new THREE.Mesh(new THREE.BoxGeometry(16, 8.5, 6), wallMat);
+    body.position.y = 4.25;
+    body.castShadow = true;
+    this.buildingGroup.add(body);
+
+    // Glass Double Doors
+    this.leftBuildingDoor = new THREE.Mesh(new THREE.BoxGeometry(1.3, 3.4, 0.08), glassMat);
+    this.leftBuildingDoor.position.set(-0.65, 1.7, 3.02);
+    this.buildingGroup.add(this.leftBuildingDoor);
+
+    this.rightBuildingDoor = new THREE.Mesh(new THREE.BoxGeometry(1.3, 3.4, 0.08), glassMat);
+    this.rightBuildingDoor.position.set(0.65, 1.7, 3.02);
+    this.buildingGroup.add(this.rightBuildingDoor);
+
+    // Door Open/Close animation
+    this.updatables.push((t, dt) => {
+      const dist = Math.hypot(this.player.x - (-18), this.player.z - (-15));
+      const shouldOpen = dist < 3.8;
+      const targetOffset = shouldOpen ? 1.1 : 0.0;
+      this.leftBuildingDoor.position.x = THREE.MathUtils.lerp(this.leftBuildingDoor.position.x, -0.65 - targetOffset, dt * 6);
+      this.rightBuildingDoor.position.x = THREE.MathUtils.lerp(this.rightBuildingDoor.position.x, 0.65 + targetOffset, dt * 6);
+    });
+  }
+
+  // ---------------------------------------------------------------- 7. Cars & Traffic System (Panel 4)
+  buildTrafficSystem() {
+    this.trafficGroup = new THREE.Group();
+    this.root.add(this.trafficGroup);
+
+    // Build Traffic Light at the Crosswalk (x = 17, z = 4)
+    this.buildTrafficLight();
+
+    // Yellow Sports Coupe (Matching Image 2 Panel 4)
+    this.yellowSportsCar = this.createSportsCar(0xfacc15, 'PLAY');
+    this.yellowSportsCar.position.set(20.5, 0, 16);
+    this.yellowSportsCar.userData = { speed: 10.5, targetSpeed: 10.5 };
+    this.trafficGroup.add(this.yellowSportsCar);
+
+    // Red City Transit Bus (Matching Image 2 Panel 4)
+    this.redCityBus = this.createCityBus();
+    this.redCityBus.position.set(23.5, 0, -22);
+    this.redCityBus.userData = { speed: 7.5, targetSpeed: 7.5 };
+    this.trafficGroup.add(this.redCityBus);
+
+    this.vehicles = [this.yellowSportsCar, this.redCityBus];
+
+    // Traffic System Loop
+    this.updatables.push((t, dt) => {
+      this.updateTrafficLights(dt);
+      this.updateVehicles(dt);
+    });
+  }
+
+  buildTrafficLight() {
+    const group = new THREE.Group();
+    group.position.set(17, 0, 4);
+
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.3 });
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 5.5, 12), poleMat);
+    pole.position.y = 2.75;
+    group.add(pole);
+
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.2, 8), poleMat);
+    arm.rotation.z = Math.PI / 2;
+    arm.position.set(2.1, 5.2, 0);
+    group.add(arm);
+
+    const boxMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.7, roughness: 0.4 });
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.8, 0.55), boxMat);
+    box.position.set(3.2, 4.4, 0);
+    group.add(box);
+
+    // Visors
+    [-0.5, 0, 0.5].forEach((ly) => {
+      const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.28, 12, 1, true, 0, Math.PI), boxMat);
+      visor.rotation.x = Math.PI / 2;
+      visor.position.set(3.2, 4.4 + ly, 0.24);
+      group.add(visor);
+    });
+
+    // 3 Lamps
+    const redMat = new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff0000, emissiveIntensity: 0.1 });
+    const yellowMat = new THREE.MeshStandardMaterial({ color: 0x222200, emissive: 0xffaa00, emissiveIntensity: 0.1 });
+    const greenMat = new THREE.MeshStandardMaterial({ color: 0x002200, emissive: 0x00ff66, emissiveIntensity: 1.8 });
+
+    const redLamp = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), redMat);
+    redLamp.position.set(3.2, 4.9, 0.22);
+    group.add(redLamp);
+
+    const yellowLamp = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), yellowMat);
+    yellowLamp.position.set(3.2, 4.4, 0.22);
+    group.add(yellowLamp);
+
+    const greenLamp = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), greenMat);
+    greenLamp.position.set(3.2, 3.9, 0.22);
+    group.add(greenLamp);
+
+    this.trafficLight = {
+      group,
+      state: 'green',
+      timer: 8.0,
+      redMat,
+      yellowMat,
+      greenMat,
+    };
+
+    this.trafficGroup.add(group);
+  }
+
+  updateTrafficLights(dt) {
+    if (!this.trafficLight) return;
+    const tl = this.trafficLight;
+    tl.timer -= dt;
+
+    if (tl.state === 'green' && tl.timer <= 0) {
+      tl.state = 'yellow';
+      tl.timer = 2.5;
+      tl.greenMat.emissiveIntensity = 0.1;
+      tl.yellowMat.emissiveIntensity = 1.8;
+      tl.redMat.emissiveIntensity = 0.1;
+    } else if (tl.state === 'yellow' && tl.timer <= 0) {
+      tl.state = 'red';
+      tl.timer = 6.0;
+      tl.greenMat.emissiveIntensity = 0.1;
+      tl.yellowMat.emissiveIntensity = 0.1;
+      tl.redMat.emissiveIntensity = 2.0;
+    } else if (tl.state === 'red' && tl.timer <= 0) {
+      tl.state = 'green';
+      tl.timer = 8.0;
+      tl.greenMat.emissiveIntensity = 2.0;
+      tl.yellowMat.emissiveIntensity = 0.1;
+      tl.redMat.emissiveIntensity = 0.1;
+    }
+  }
+
+  updateVehicles(dt) {
+    const isStoppingLight = this.trafficLight && (this.trafficLight.state === 'red' || this.trafficLight.state === 'yellow');
+    const stopZ = 8.5;
+
+    this.vehicles.forEach((car) => {
+      let desiredSpeed = car === this.yellowSportsCar ? 10.5 : 7.5;
+
+      // Check if approaching crosswalk when light is red/yellow
+      if (isStoppingLight && car.position.z > stopZ && car.position.z < stopZ + 14) {
+        desiredSpeed = 0;
+      }
+
+      // Smooth acceleration / braking
+      car.userData.speed = THREE.MathUtils.lerp(car.userData.speed, desiredSpeed, dt * 3.5);
+
+      // Move forward along road
+      car.position.z -= car.userData.speed * dt;
+
+      // Loop circuit
+      if (car.position.z < -48) {
+        car.position.z = 48;
+      }
+    });
+  }
+
+  createSportsCar(bodyColor, plateText) {
+    const group = new THREE.Group();
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.2, metalness: 0.85 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 });
+
+    // Chassis
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.6, 4.4), bodyMat);
+    chassis.position.y = 0.55;
+    chassis.castShadow = true;
+    group.add(chassis);
+
+    // Aerodynamic Cabin
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.58, 2.3), glassMat);
+    cabin.position.set(0, 1.05, -0.3);
+    group.add(cabin);
+
+    // Rear Spoiler
+    const spoiler = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 0.4), bodyMat);
+    spoiler.position.set(0, 1.15, 1.9);
+    group.add(spoiler);
+
+    // Red LED Taillights
+    const tailMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.14, 0.1), tailMat);
+    tail.position.set(0, 0.65, 2.21);
+    group.add(tail);
+
+    // White Headlights
+    const headMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    [-0.8, 0.8].forEach((hx) => {
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.14, 0.1), headMat);
+      hl.position.set(hx, 0.55, -2.21);
+      group.add(hl);
+    });
+
+    // Wheels
+    const wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 16);
+    wheelGeo.rotateZ(Math.PI / 2);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+
+    [
+      [-1.1, 0.36, 1.4],
+      [1.1, 0.36, 1.4],
+      [-1.1, 0.36, -1.4],
+      [1.1, 0.36, -1.4],
+    ].forEach(([wx, wy, wz]) => {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.position.set(wx, wy, wz);
+      group.add(wheel);
+    });
+
+    return group;
+  }
+
+  createCityBus() {
+    const group = new THREE.Group();
+    const redMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.6 });
+
+    // Large Bus Body (width 2.6m, height 3.2m, length 8.8m)
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.2, 8.8), redMat);
+    body.position.y = 1.9;
+    body.castShadow = true;
+    group.add(body);
+
+    // Window Strips
+    const winStrip = new THREE.Mesh(new THREE.BoxGeometry(2.65, 1.1, 8.2), glassMat);
+    winStrip.position.set(0, 2.4, 0);
+    group.add(winStrip);
+
+    // Wheels
+    const wheelGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.32, 16);
+    wheelGeo.rotateZ(Math.PI / 2);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+
+    [
+      [-1.35, 0.48, 2.6],
+      [1.35, 0.48, 2.6],
+      [-1.35, 0.48, -2.6],
+      [1.35, 0.48, -2.6],
+    ].forEach(([wx, wy, wz]) => {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.position.set(wx, wy, wz);
+      group.add(wheel);
+    });
+
+    return group;
+  }
+
+  // ---------------------------------------------------------------- 8. Rotating Collectible Coins
+  buildCollectibleCoins() {
+    this.coinGroup = new THREE.Group();
+    this.root.add(this.coinGroup);
+
+    const coinGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.1, 16);
+    coinGeo.rotateX(Math.PI / 2);
+    const coinMat = new THREE.MeshStandardMaterial({
+      color: 0xffd166,
+      roughness: 0.2,
+      metalness: 0.85,
+      emissive: 0xff9900,
+      emissiveIntensity: 0.45,
+    });
+
+    const positions = [
+      [0, 6],
+      [-6, 0],
+      [6, 0],
+      [0, -6],
+      [-8, 6],
+      [8, 6],
+      [-6, -10],
+      [6, -10],
+      [-12, 0],
+      [10, 4],
+    ];
+
+    positions.forEach(([cx, cz]) => {
+      const mesh = new THREE.Mesh(coinGeo, coinMat);
+      mesh.position.set(cx, 0.75, cz);
+      mesh.castShadow = true;
+      this.coinGroup.add(mesh);
+      this.coins.push({ mesh, x: cx, z: cz, active: true, respawn: 0 });
+    });
+
+    this.updatables.push((t, dt) => {
+      const px = this.player.x;
+      const pz = this.player.z;
+      this.coins.forEach((c) => {
+        if (!c.active) {
+          c.respawn -= dt;
+          if (c.respawn <= 0) {
+            c.active = true;
+            c.mesh.visible = true;
+          }
+          return;
+        }
+
+        c.mesh.rotation.z += dt * 3.5;
+        c.mesh.position.y = 0.75 + Math.sin(t * 4 + c.x) * 0.16;
+
+        if (Math.hypot(px - c.x, pz - c.z) < 1.25) {
+          c.active = false;
+          c.mesh.visible = false;
+          c.respawn = 20;
+          this.coinsCollected += 10;
+          localStorage.setItem('aa_collected_coins', String(this.coinsCollected));
+          sound.playCoin();
+          this.showCoinPopText(c.x, c.z, '+10 Coins');
+        }
+      });
+    });
+  }
+
+  showCoinPopText(x, z, text) {
+    const pop = document.createElement('div');
+    pop.style.cssText = `
+      position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%);
+      color: #fde047; font-size: 28px; font-weight: 900; text-shadow: 0 4px 12px rgba(0,0,0,0.8);
+      pointer-events: none; z-index: 100; font-family: "Fredoka", sans-serif;
+      animation: popUp 1.2s forwards ease-out;
+    `;
+    pop.textContent = text;
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 1200);
+  }
+
+  // ---------------------------------------------------------------- 9. Complete UI & Features (Panel 8)
+  buildUIOverlays() {
+    this.hudContainer = document.createElement('div');
+    this.hudContainer.id = 'living-world-hud';
+    this.hudContainer.style.cssText = `
+      position: fixed; inset: 0; pointer-events: none; z-index: 90;
+      font-family: "Fredoka", system-ui, sans-serif;
+    `;
+
+    this.hudContainer.innerHTML = `
+      <!-- Top-Left Profile Card (Matching Image 2 Panel 8) -->
+      <div id="lw-profile-card" style="
+        position: absolute; top: 18px; left: 18px; display: flex; align-items: center; gap: 14px;
+        background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(56, 189, 248, 0.3);
+        padding: 8px 18px 8px 10px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        pointer-events: auto;
+      ">
+        <div style="
+          width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #38bdf8);
+          display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid #38bdf8;
+        ">👤</div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="color: #fff; font-weight: 800; font-size: 16px;">Alex</span>
+            <span style="color: #38bdf8; font-size: 13px; font-weight: 700;">Level 1</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+            <div style="width: 110px; height: 7px; background: rgba(255,255,255,0.18); border-radius: 4px; overflow: hidden;">
+              <div style="width: 45%; height: 100%; background: linear-gradient(90deg, #38bdf8, #00d2d3);"></div>
+            </div>
+            <span style="color: #94a3b8; font-size: 10px; font-weight: 600;">980 XP</span>
+          </div>
+        </div>
+        <button id="lw-btn-menu" style="
+          background: rgba(255,255,255,0.1); border: none; color: #cbd5e1; width: 34px; height: 34px;
+          border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
+        ">☰</button>
+      </div>
+
+      <!-- Top-Right Compass Minimap -->
+      <div id="lw-minimap-card" style="
+        position: absolute; top: 18px; right: 18px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        pointer-events: auto;
+      ">
+        <div style="
+          width: 110px; height: 110px; border-radius: 50%; background: rgba(15, 23, 42, 0.85);
+          backdrop-filter: blur(12px); border: 3px solid #00d2d3; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+          position: relative; overflow: hidden;
+        ">
+          <canvas id="lw-minimap-canvas" width="110" height="110" style="width: 100%; height: 100%;"></canvas>
+        </div>
+        <div style="
+          background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);
+          padding: 4px 12px; border-radius: 12px; color: #f8fafc; font-size: 12px; font-weight: 700;
+          display: flex; align-items: center; gap: 4px;
+        ">
+          <span>📍</span> Central Plaza
+        </div>
+      </div>
+
+      <!-- Bottom-Left Glassmorphism Chat -->
+      <div id="lw-chat-card" style="
+        position: absolute; bottom: 20px; left: 18px; width: 320px; background: rgba(15, 23, 42, 0.82);
+        backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.15); border-radius: 18px;
+        padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); pointer-events: auto;
+      ">
+        <div id="lw-chat-messages" style="
+          max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; font-size: 12px;
+        ">
+          <div><b style="color: #38bdf8;">NovaStar :</b> <span style="color: #e2e8f0;">Nice game!</span></div>
+          <div><b style="color: #ec4899;">PixelQueen :</b> <span style="color: #e2e8f0;">Let's play again!</span></div>
+          <div><b style="color: #facc15;">ShadowX :</b> <span style="color: #e2e8f0;">gg everyone 🔥</span></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <input id="lw-chat-input" type="text" placeholder="Type a message..." style="
+            flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px; padding: 6px 12px; color: #fff; font-size: 12px; outline: none; font-family: inherit;
+          " />
+          <button id="lw-chat-send" style="
+            background: #00d2d3; border: none; width: 28px; height: 28px; border-radius: 50%;
+            color: #0f172a; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;
+          ">➤</button>
+        </div>
+      </div>
+
+      <!-- Central Proximity Prompt -->
+      <div id="lw-interact-prompt" style="
+        display: none; position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+        background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(14px); border: 2px solid #00d2d3;
+        color: #fff; font-size: 16px; font-weight: 800; padding: 10px 24px; border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 210, 211, 0.4); text-align: center; pointer-events: auto; cursor: pointer;
+      ">
+        Press E to Interact
+      </div>
+
+      <!-- Game Menu / UI & Features Modal (Matching Image 2 Panel 8) -->
+      <div id="lw-main-menu-modal" style="
+        display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 760px; height: 480px; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(24px);
+        border: 2px solid #38bdf8; border-radius: 24px; box-shadow: 0 25px 70px rgba(0,0,0,0.85);
+        pointer-events: auto; color: #fff; z-index: 100; overflow: hidden;
+      ">
+        <div style="display: flex; height: 100%;">
+          <!-- Left Sidebar Menu -->
+          <div style="
+            width: 260px; background: rgba(30, 41, 59, 0.6); border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 24px; display: flex; flex-direction: column; justify-content: space-between;
+          ">
+            <div>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 26px;">👤</div>
+                <div>
+                  <div style="font-weight: 800; font-size: 18px;">Alex</div>
+                  <div style="color: #38bdf8; font-size: 13px;">Level 1</div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button id="lw-tab-games" style="display: flex; align-items: center; gap: 10px; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #fff; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🕹️ Game Selection</button>
+                <button id="lw-tab-leaderboard" style="display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🏆 Leaderboard</button>
+                <button id="lw-tab-profile" style="display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">👤 Profile</button>
+                <button id="lw-tab-settings" style="display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">⚙️ Settings</button>
+              </div>
+            </div>
+
+            <button id="lw-btn-close-menu" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 8px; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: bold;">✕ Close</button>
+          </div>
+
+          <!-- Right Content Area -->
+          <div id="lw-menu-content" style="flex: 1; padding: 24px; overflow-y: auto;">
+            <!-- Game Selection View -->
+            <div id="lw-view-games">
+              <h2 style="margin: 0 0 16px 0; color: #38bdf8; font-size: 22px;">Select Game</h2>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div id="lw-launch-hotpotato" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #ef4444; border-radius: 16px; padding: 14px; cursor: pointer;">
+                  <span style="font-size: 36px;">🥔</span>
+                  <div style="flex: 1;">
+                    <div style="font-size: 16px; font-weight: 800; color: #f87171;">HOT POTATO (3D Stadium)</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Tag someone before it explodes!</div>
+                  </div>
+                  <span style="font-size: 20px; color: #ef4444;">▶</span>
+                </div>
+
+                <div id="lw-launch-coincatcher" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #facc15; border-radius: 16px; padding: 14px; cursor: pointer;">
+                  <span style="font-size: 36px;">🪙</span>
+                  <div style="flex: 1;">
+                    <div style="font-size: 16px; font-weight: 800; color: #fde047;">Coin Catcher</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Collect spawned items during a timed round</div>
+                  </div>
+                  <span style="font-size: 20px; color: #facc15;">▶</span>
+                </div>
+
+                <div id="lw-launch-rooftoprun" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #38bdf8; border-radius: 16px; padding: 14px; cursor: pointer;">
+                  <span style="font-size: 36px;">🏃</span>
+                  <div style="flex: 1;">
+                    <div style="font-size: 16px; font-weight: 800; color: #38bdf8;">Rooftop Run</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Race through high-altitude obstacle courses</div>
+                  </div>
+                  <span style="font-size: 20px; color: #38bdf8;">▶</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Leaderboard View -->
+            <div id="lw-view-leaderboard" style="display: none;">
+              <h2 style="margin: 0 0 16px 0; color: #facc15; font-size: 22px;">🏆 Leaderboard</h2>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 10px; font-size: 13px; font-weight: 700;">
+                  <span>🥇 1. NovaStar</span><span style="color: #facc15;">1250 pts</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 10px; font-size: 13px; font-weight: 700;">
+                  <span>🥈 2. PixelQueen</span><span style="color: #facc15;">1180 pts</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 10px; font-size: 13px; font-weight: 700;">
+                  <span>🥉 3. ShadowX</span><span style="color: #facc15;">1105 pts</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; border-radius: 10px; font-size: 13px; font-weight: 700;">
+                  <span>👤 4. Alex (You)</span><span style="color: #38bdf8;">980 pts</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 10px; font-size: 13px; font-weight: 700;">
+                  <span>5. GameMaster</span><span style="color: #facc15;">920 pts</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(this.hudContainer);
+
+    // Setup Minimap Canvas
+    const canvas = this.hudContainer.querySelector('#lw-minimap-canvas');
+    if (canvas) this.minimapCtx = canvas.getContext('2d');
+
+    // Menu handlers
+    const modal = this.hudContainer.querySelector('#lw-main-menu-modal');
+    this.hudContainer.querySelector('#lw-btn-menu')?.addEventListener('click', () => {
+      modal.style.display = 'block';
+    });
+    this.hudContainer.querySelector('#lw-btn-close-menu')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    // Tab switching
+    const tabGames = this.hudContainer.querySelector('#lw-tab-games');
+    const tabLdr = this.hudContainer.querySelector('#lw-tab-leaderboard');
+    const viewGames = this.hudContainer.querySelector('#lw-view-games');
+    const viewLdr = this.hudContainer.querySelector('#lw-view-leaderboard');
+
+    tabGames?.addEventListener('click', () => {
+      tabGames.style.background = 'rgba(56, 189, 248, 0.2)';
+      tabGames.style.borderColor = '#38bdf8';
+      tabLdr.style.background = 'transparent';
+      tabLdr.style.borderColor = 'transparent';
+      viewGames.style.display = 'block';
+      viewLdr.style.display = 'none';
+    });
+
+    tabLdr?.addEventListener('click', () => {
+      tabLdr.style.background = 'rgba(250, 204, 21, 0.2)';
+      tabLdr.style.borderColor = '#facc15';
+      tabGames.style.background = 'transparent';
+      tabGames.style.borderColor = 'transparent';
+      viewGames.style.display = 'none';
+      viewLdr.style.display = 'block';
+    });
+
+    const tabProfile = this.hudContainer.querySelector('#lw-tab-profile');
+    tabProfile?.addEventListener('click', () => {
+      modal.style.display = 'none';
+      window.openHumanCustomizer?.();
+    });
+
+    // Profile card avatar click
+    this.hudContainer.querySelector('#lw-profile-card')?.addEventListener('click', (e) => {
+      if (e.target.id === 'lw-btn-menu') return;
+      window.openHumanCustomizer?.();
+    });
+
+    // Game launchers from modal
+    this.hudContainer.querySelector('#lw-launch-hotpotato')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+      this.options.onOpenGame?.('hotpotato');
+    });
+    this.hudContainer.querySelector('#lw-launch-coincatcher')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+      this.options.onOpenGame?.('coincatcher');
+    });
+    this.hudContainer.querySelector('#lw-launch-rooftoprun')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+      this.options.onOpenGame?.('rooftoprun');
+    });
+
+    // Setup Chat Send handler
+    const chatIn = this.hudContainer.querySelector('#lw-chat-input');
+    const chatSend = this.hudContainer.querySelector('#lw-chat-send');
+    const msgList = this.hudContainer.querySelector('#lw-chat-messages');
+
+    const sendMsg = () => {
+      const txt = chatIn.value.trim();
+      if (!txt) return;
+      chatIn.value = '';
+      const line = document.createElement('div');
+      line.innerHTML = `<b style="color: #38bdf8;">Alex :</b> <span style="color: #fff;">${txt}</span>`;
+      msgList.appendChild(line);
+      msgList.scrollTop = msgList.scrollHeight;
+    };
+
+    chatSend?.addEventListener('click', sendMsg);
+    chatIn?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMsg();
+      e.stopPropagation();
+    });
+
+    // Prompt Click
+    const promptEl = this.hudContainer.querySelector('#lw-interact-prompt');
+    promptEl?.addEventListener('click', () => {
+      if (this.activePromptCallback) this.activePromptCallback();
+    });
+  }
+
+  refreshWorldPositions() {
+    this.root.updateMatrixWorld(true);
+    this.gamePortals.forEach((p) => {
+      p.group.getWorldPosition(p.pos);
+    });
+    this.benches.forEach((b) => {
+      b.group.getWorldPosition(b.pos);
+      b.sitPos.copy(b.pos).add(new THREE.Vector3(0, 0.48, 0));
+    });
+  }
+
+  setPrompt(text, callback) {
+    this.activePrompt = text;
+    this.activePromptCallback = callback;
+    const promptEl = this.hudContainer.querySelector('#lw-interact-prompt');
+    if (promptEl) {
+      promptEl.textContent = text;
+      promptEl.style.display = 'block';
+    }
+  }
+
+  clearPrompt() {
+    this.activePrompt = null;
+    this.activePromptCallback = null;
+    const promptEl = this.hudContainer.querySelector('#lw-interact-prompt');
+    if (promptEl) promptEl.style.display = 'none';
+  }
+
+  drawMinimap() {
+    if (!this.minimapCtx) return;
+    const ctx = this.minimapCtx;
+    ctx.clearRect(0, 0, 110, 110);
+
+    const cx = 55,
+      cy = 55,
+      scale = 1.4;
+
+    // Background Circle
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 52, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Plaza Circle
+    ctx.fillStyle = 'rgba(215, 195, 175, 0.22)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 18 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Center Fountain
+    ctx.fillStyle = '#00d2d3';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Arcade & Park
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(cx + 12 * scale - 2, cy - 6 * scale - 2, 5, 5);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(cx - 16 * scale - 2, cy + 2 * scale - 2, 6, 6);
+
+    // Player Arrow
+    const px = cx + this.player.x * scale;
+    const pz = cy + this.player.z * scale;
+    const heading = this.player.heading || 0;
+
+    ctx.save();
+    ctx.translate(px, pz);
+    ctx.rotate(heading);
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.moveTo(0, 5);
+    ctx.lineTo(-3.5, -3.5);
+    ctx.lineTo(3.5, -3.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ---------------------------------------------------------------- Frame Loop
+  update(totalTime, deltaTime) {
+    this.updatables.forEach((fn) => fn(totalTime, deltaTime));
+    this.drawMinimap();
+
+    // Check Portal / Door Triggers
+    if (!this.isSitting) {
+      let nearPortal = null;
+      let minD = Infinity;
+
+      this.gamePortals.forEach((p) => {
+        const d = Math.hypot(this.player.x - p.pos.x, this.player.z - p.pos.z);
+        if (d < 3.2 && d < minD) {
+          minD = d;
+          nearPortal = p;
+        }
+      });
+
+      const distArcade = Math.hypot(this.player.x - 13.5, this.player.z - (-6.0));
+      const distBuilding = Math.hypot(this.player.x - (-18), this.player.z - (-15));
+
+      if (nearPortal) {
+        this.setPrompt(`Press E to play ${nearPortal.title}`, () => {
+          this.options.onOpenGame?.(nearPortal.id);
+        });
+      } else if (distArcade < 4.2) {
+        this.setPrompt('Press E to select Arcade Game', () => {
+          const modal = this.hudContainer.querySelector('#lw-main-menu-modal');
+          if (modal) modal.style.display = 'block';
+        });
+      } else if (distBuilding < 3.5) {
+        this.setPrompt('Press E to open doors', () => {
+          // Slide open
+        });
+      } else if (!this.benches.some((b) => Math.hypot(this.player.x - b.pos.x, this.player.z - b.pos.z) < 1.9)) {
+        this.clearPrompt();
+      }
+    }
+  }
+}
