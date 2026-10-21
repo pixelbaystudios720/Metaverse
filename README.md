@@ -1,14 +1,6 @@
 # 🌐 Metaverse 3D Social Hub & Mini-Games MVP
 
-[![React](https://img.shields.io/badge/React-18.3-61dafb?logo=react&logoColor=black)](https://react.dev/)
-[![Three.js](https://img.shields.io/badge/Three.js-r174-black?logo=three.js)](https://threejs.org/)
-[![React Three Fiber](https://img.shields.io/badge/@react--three/fiber-8.17-blue)](https://docs.pmnd.rs/react-three-fiber)
-[![Rapier Physics](https://img.shields.io/badge/@react--three/rapier-1.5-orange)](https://rapier.rs/)
-[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.0-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
-
-A modular, browser-based 3D multiplayer-ready social metaverse lobby and competitive mini-game ecosystem inspired by **[Attention Agents](https://attentionagents.fun/)**. Built in accordance with the official **Metaverse 3D Game MVP Product Requirements Document (PRD v1.0)**.
+A modular, browser-based 3D multiplayer-ready social metaverse lobby and competitive mini-game ecosystem featuring a Central Plaza, 360° Skyscraper Metropolis, Coin Catcher, and Hot Potato Arena. Built in accordance with the official **Metaverse 3D Game MVP Product Requirements Document (PRD v1.0)**.
 
 ---
 
@@ -20,7 +12,7 @@ A modular, browser-based 3D multiplayer-ready social metaverse lobby and competi
   * Park benches with interactive sitting prompts (`Press E to Sit / Stand`).
   * "NetKid" carved on the plaza step.
 * **360° High-Rise Skyline**:
-  * Surrounding high-density skyscrapers with procedural illuminated window textures, rooftop aviation beacons, antennas, and neon signs (`METROPOLIS`, `CYBER TOWER`, `ATTENTION HQ`, `NIGHT MARKET`, `SOLANA PLAZA`, `KARAOKE TOWER`).
+  * Surrounding high-density skyscrapers with procedural illuminated window textures, rooftop aviation beacons, antennas, and neon signs (`METROPOLIS`, `CYBER TOWER`, `NET CAFE`, `24H NOODLES`, `KARAOKE PLAZA`, `SOLANA TOWER`).
   * Elevated cyber skybridge spanning downtown towers across the South sector.
   * Moving cyber ground traffic loop with light trails.
 * **Social Park (`0, 0, 42`)**:
@@ -58,13 +50,11 @@ A modular, browser-based 3D multiplayer-ready social metaverse lobby and competi
 
 ### 🎨 3. Avatar Customizer (2-Column Architecture)
 
-Designed following modern AAA character customizers:
-
 * **Left Box (`CHARACTERS`)**:
   * **Active Character Showcase**: 3D archetype icon, active badge, role title, and live status beacon.
   * **Archetypes**:
-    1. **Chibi Net Kid** (Attention Agents Hero)
-    2. **Musebot Sprout** (Official Fluffy Attention Mascot)
+    1. **Chibi Net Kid** (Hero Archetype)
+    2. **Musebot Sprout** (Fluffy Mascot)
     3. **Gigachad** (Cyber Chad)
     4. **Swole Gamer** (Buff Gym Gamer)
     5. **Confusion Kid** (Derpy Streetwear Kid)
@@ -80,7 +70,7 @@ Designed following modern AAA character customizers:
 
 ---
 
-### 👥 4. Attention Agents Mascots & City NPCs
+### 👥 4. Living City Mascots & NPCs
 * Populated with authentic **Muse Mascots** (**Sprout Mint**, **Vanilla Cream**, **Blush Pink**, **Sky Blue**, **Lemon Yellow**) with marshmallow bodies, sprout leaves, and waddling animations.
 * Wandering **Chibi Streetwear Visitors** (**PixelQueen**, **NovaStar**, **BobaKid**, **ShadowX**) with oversized hoodies, cat-ear hoods, baggy joggers, and chunky sneakers.
 * Upright floating name badges and proximity speech bubbles.
@@ -124,8 +114,8 @@ Designed following modern AAA character customizers:
 ## 🚀 Getting Started
 
 ### Prerequisites
-* [Node.js](https://nodejs.org/) (v18.0.0 or higher recommended)
-* `npm` or `yarn` / `pnpm`
+* Node.js (v18.0.0 or higher recommended)
+* npm, yarn, or pnpm
 
 ### Installation & Local Development
 
@@ -149,7 +139,7 @@ Designed following modern AAA character customizers:
    ```bash
    npm run dev
    ```
-   Open [http://localhost:5173/](http://localhost:5173/) in your browser.
+   Open `http://localhost:5173/` in your browser.
 
 5. **Build for production:**
    ```bash
@@ -198,4 +188,4 @@ For backend integration (Colyseus / WebSocket / Authoritative Server):
 ---
 
 ## 📄 License
-Internal proprietary working document and codebase for Pixel Bay Studios & Attention Agents.
+Internal proprietary working document and codebase for Pixel Bay Studios.

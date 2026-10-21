@@ -69,7 +69,7 @@ export const AvatarSelectModal: React.FC<AvatarSelectModalProps> = ({
                   Avatar Customizer
                 </h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-                  attentionagents.fun
+                  3D AVATAR SYSTEM
                 </span>
               </div>
               <p className="text-xs text-slate-400">
