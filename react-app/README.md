@@ -1,32 +1,21 @@
-# React + TypeScript + Vite
+# 🌐 Metaverse 3D Social Hub & Mini-Games (React Client)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This folder contains the modern React 18 + TypeScript + Three.js / React Three Fiber client for the **Metaverse 3D Game MVP**.
 
-Currently, two official plugins are available:
+For full project documentation, architectural breakdown, controls, and PRD specifications, see the main repository [README.md](../README.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Quick Start
 
-## React Compiler
+```bash
+# Install dependencies
+npm install
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Start Vite dev server
+npm run dev
 
-## Expanding the Oxlint configuration
+# Build for production
+npm run build
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+# Preview production build
+npm run preview
 ```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
