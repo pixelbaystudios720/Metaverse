@@ -41,23 +41,33 @@ export class CoinCatcherGame {
     this.group.visible = false;
 
     this.isActive = false;
-    this.matchDuration = 45; // 45 seconds
-    this.timeRemaining = 45;
+    this.matchDuration = 90; // 90 seconds
+    this.timeRemaining = 90;
     this.score = 0;
     this.gemsCollected = 0;
     this.coinsCollected = 0;
+    this.maxCoinsOnMap = 15;
+    this.spawnInterval = 0.8;
+    this.spawnTimer = 0;
 
     // Spawning items
     this.items = [];
     this.boostPads = [];
 
     // Pre-allocate materials & geometries
-    this.coinGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.14, 18);
+    this.coinGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.12, 18);
     this.coinMat = new THREE.MeshStandardMaterial({
-      color: 0xffbf1f,
+      color: 0x38bdf8,
       metalness: 0.85,
       roughness: 0.2,
-      emissive: 0x664400,
+      emissive: 0x0369a1,
+    });
+
+    this.goldCoinMat = new THREE.MeshStandardMaterial({
+      color: 0xffbf1f,
+      metalness: 0.9,
+      roughness: 0.15,
+      emissive: 0xb45309,
     });
 
     this.gemGeo = new THREE.OctahedronGeometry(0.75, 0);
@@ -317,7 +327,7 @@ export class CoinCatcherGame {
       this.uiContainer.style.display = 'block';
       this.updateHUD();
       const timerEl = this.uiContainer.querySelector('#cc-timer-text');
-      if (timerEl) timerEl.textContent = `00:${this.matchDuration.toString().padStart(2, '0')}`;
+      if (timerEl) timerEl.textContent = '01:30';
     }
 
     // Teleport player into arena
@@ -326,13 +336,11 @@ export class CoinCatcherGame {
 
     // Clean previous items
     this.clearItems();
+    this.spawnTimer = 0;
 
-    // Spawn initial items: 16 coins, 5 gems
-    for (let i = 0; i < 16; i++) {
-      this.spawnItem('coin');
-    }
-    for (let i = 0; i < 5; i++) {
-      this.spawnItem('gem');
+    // Initial spawn: 8 items
+    for (let i = 0; i < 8; i++) {
+      this.spawnItem(Math.random() < 0.10 ? 'gold' : 'normal');
     }
 
     sound.playPortal();
@@ -345,31 +353,28 @@ export class CoinCatcherGame {
     this.items = [];
   }
 
-  spawnItem(type = 'coin') {
-    const isGem = type === 'gem';
+  spawnItem(type = 'normal') {
+    const isGold = type === 'gold';
     const mesh = new THREE.Mesh(
-      isGem ? this.gemGeo : this.coinGeo,
-      isGem ? this.gemMat : this.coinMat
+      this.coinGeo,
+      isGold ? this.goldCoinMat : this.coinMat
     );
 
     // Random position within arena bounds
     const rx = (Math.random() - 0.5) * 28;
     const rz = (Math.random() - 0.5) * 28;
     mesh.position.set(rx, 1.2, rz);
+    mesh.rotation.z = Math.PI / 2;
     mesh.castShadow = true;
-
-    if (!isGem) {
-      mesh.rotation.z = Math.PI / 2;
-    }
 
     this.group.add(mesh);
     this.items.push({
       mesh,
       type,
-      points: isGem ? 50 : 10,
-      radius: isGem ? 2.6 : 2.3, // Generous pickup radius for smooth player collision
+      points: isGold ? 5 : 1,
+      radius: 1.2, // Server authoritative pickup radius: 1.2m
       initialY: 1.2,
-      spinSpeed: isGem ? 2.4 : 3.2,
+      spinSpeed: isGold ? 4.0 : 3.0,
       floatOffset: Math.random() * Math.PI * 2,
     });
   }
@@ -377,12 +382,14 @@ export class CoinCatcherGame {
   update(deltaTime, totalTime) {
     if (!this.isActive) return;
 
-    // 1. Update Match Timer
+    // 1. Update Match Timer (90s countdown)
     this.timeRemaining -= deltaTime;
     const secs = Math.max(0, Math.ceil(this.timeRemaining));
+    const mins = Math.floor(secs / 60);
+    const remSecs = secs % 60;
     if (this.uiContainer) {
       const timerEl = this.uiContainer.querySelector('#cc-timer-text');
-      if (timerEl) timerEl.textContent = `00:${secs.toString().padStart(2, '0')}`;
+      if (timerEl) timerEl.textContent = `${mins.toString().padStart(2, '0')}:${remSecs.toString().padStart(2, '0')}`;
     }
 
     if (this.timeRemaining <= 0) {
@@ -391,12 +398,19 @@ export class CoinCatcherGame {
       return;
     }
 
+    // Continuous dynamic coin spawn: every 0.8s up to 15 max on map
+    this.spawnTimer += deltaTime;
+    if (this.spawnTimer >= this.spawnInterval && this.items.length < this.maxCoinsOnMap) {
+      this.spawnTimer = 0;
+      this.spawnItem(Math.random() < 0.10 ? 'gold' : 'normal');
+    }
+
     // Animate exit portal pulsing
     if (this.portalPaneMat) {
       this.portalPaneMat.opacity = 0.45 + Math.sin(totalTime * 4) * 0.25;
     }
 
-    // 2. Animate and Check Pickups
+    // 2. Animate and Check Pickups (Server simulated or authoritative pickup)
     const playerPos = this.player.position;
     const arenaPlayerPos = new THREE.Vector3(
       playerPos.x,
@@ -411,7 +425,7 @@ export class CoinCatcherGame {
       item.mesh.rotation.y += deltaTime * item.spinSpeed;
       item.mesh.position.y = item.initialY + Math.sin(totalTime * 3 + item.floatOffset) * 0.15;
 
-      // Distance check to player
+      // Distance check to player (1.2m radius)
       const dist = Math.hypot(
         arenaPlayerPos.x - item.mesh.position.x,
         arenaPlayerPos.z - item.mesh.position.z
@@ -420,28 +434,26 @@ export class CoinCatcherGame {
       if (dist <= item.radius) {
         // Collect Item!
         this.score += item.points;
-        const addCoins = item.type === 'gem' ? 50 : 10;
-        if (item.type === 'gem') {
-          this.gemsCollected++;
+        this.coinsCollected += item.points;
+        if (item.type === 'gold') {
           sound.playGem();
-          this.showPopupText(`+${item.points} Diamond Gem!`, '#38bdf8');
+          this.showPopupText(`+${item.points} Gold Coin!`, '#fde047');
         } else {
-          this.coinsCollected++;
           sound.playCoin();
-          this.showPopupText(`+${item.points} Coins!`, '#fde047');
+          this.showPopupText(`+${item.points} Coin`, '#38bdf8');
         }
 
         // Add to persistent wallet and notify living world
         try {
           const cur = parseInt(localStorage.getItem('aa_collected_coins') || '140', 10);
-          const next = cur + addCoins;
+          const next = cur + item.points;
           localStorage.setItem('aa_collected_coins', String(next));
           window.dispatchEvent(new CustomEvent('coins-updated', { detail: { coins: next } }));
         } catch (e) {}
 
         this.updateHUD();
 
-        // Remove from arena and respawn replacement
+        // Remove from arena
         this.group.remove(item.mesh);
         this.items.splice(i, 1);
         this.spawnItem(item.type);

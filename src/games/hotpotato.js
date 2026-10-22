@@ -30,14 +30,15 @@ export class HotPotatoGame {
     this.scene.add(this.group);
     this.group.visible = false;
 
-    // Configurable Game Parameters
-    this.fuseDuration = 12; // 12s per fuse
+    // Configurable Game Parameters matching Authoritative Server Spec
+    this.fuseDuration = 10 + Math.random() * 5; // 10 to 15s random fuse
     this.tagCooldownDuration = 2.0; // 2s anti-tagback cooldown
-    this.tagRadius = 2.8; // Proximity tag distance in meters
+    this.tagRadius = 1.2; // Proximity tag distance in meters (no E key needed)
     this.arenaRadius = 24; // Stadium pitch radius
     this.targetArenaRadius = 24;
     this.minArenaRadius = 10;
     this.shrinkPerRound = 3.5;
+    this.maxMatchDuration = 180; // 180s max match duration
 
     // State Variables
     this.isActive = false;
@@ -668,6 +669,7 @@ export class HotPotatoGame {
         const survivors = this.players.filter((p) => p.isAlive);
         const next = survivors[Math.floor(Math.random() * survivors.length)];
         this.setPotatoHolder(next.id);
+        this.fuseDuration = 10 + Math.random() * 5;
         this.fuseTime = this.fuseDuration;
         this.state = 'playing';
       }, 1800);

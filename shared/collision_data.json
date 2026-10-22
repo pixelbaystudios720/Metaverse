@@ -2,8 +2,41 @@
   "version": "1.1.0",
   "mapName": "AttentionAgentsPlazaAndArenas",
   "coordinateSystem": "Y-up, right-handed",
-  "authoritativeServerTickRateHz": 30,
+  "authoritativeServerTickRateHz": 20,
   "clientInterpolationLerpFactor": 0.15,
+  "sprintSpeedMultiplier": 1.45,
+  "chatMaxCharacters": 140,
+  "gameRules": {
+    "coinCatcher": {
+      "minPlayers": 2,
+      "maxPlayers": 8,
+      "countdownSeconds": 5,
+      "matchDurationSeconds": 90,
+      "coinSpawnIntervalSeconds": 0.8,
+      "maxCoinsOnMap": 15,
+      "normalCoinPoints": 1,
+      "goldCoinPoints": 5,
+      "goldCoinProbability": 0.10,
+      "pickupRadiusMeters": 1.2
+    },
+    "hotPotato": {
+      "minPlayers": 4,
+      "maxPlayers": 10,
+      "maxMatchDurationSeconds": 180,
+      "autoPassRadiusMeters": 1.2,
+      "tagbackCooldownSeconds": 2.0,
+      "fuseMinSeconds": 10,
+      "fuseMaxSeconds": 15,
+      "eliminatedSpectate": true
+    },
+    "placementPoints": {
+      "first": 5,
+      "second": 3,
+      "third": 2,
+      "other": 1,
+      "leftEarly": 0
+    }
+  },
   "spawns": {
     "defaultPlaza": { "x": 0, "y": 1.5, "z": 7.8, "rotY": 3.14159 },
     "arcadeEntrance": { "x": 0, "y": 1.5, "z": -12, "rotY": 3.14159 },
@@ -20,8 +53,9 @@
       "triggerRadius": 3.5,
       "teleportTarget": { "x": 160, "y": 1.5, "z": 0 },
       "gameId": "coin_catcher",
+      "minPlayers": 2,
       "maxPlayers": 8,
-      "matchDurationSeconds": 45
+      "matchDurationSeconds": 90
     },
     {
       "id": "door_hot_potato",
@@ -31,8 +65,9 @@
       "triggerRadius": 3.5,
       "teleportTarget": { "x": -160, "y": 1.5, "z": 0 },
       "gameId": "hot_potato",
-      "maxPlayers": 6,
-      "matchDurationSeconds": 18
+      "minPlayers": 4,
+      "maxPlayers": 10,
+      "matchDurationSeconds": 180
     }
   ],
   "collisionBoxes": [
