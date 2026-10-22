@@ -268,45 +268,63 @@ export class HumanAvatarCustomizer {
           border-radius: 10px !important;
         }
         .hc-tabs-bar {
-          gap: 3px !important;
-          padding: 3px !important;
-          border-radius: 10px !important;
+          gap: 6px !important;
+          padding: 4px 6px !important;
+          border-radius: 999px !important;
+          display: flex !important;
+          overflow-x: auto !important;
+          scrollbar-width: none !important;
+          -webkit-overflow-scrolling: touch !important;
+        }
+        .hc-tabs-bar::-webkit-scrollbar {
+          display: none !important;
         }
         .hc-tab-btn {
-          font-size: 10.5px !important;
-          padding: 5px 6px !important;
-          min-width: 48px !important;
+          font-size: 11.5px !important;
+          padding: 6px 12px !important;
+          min-width: auto !important;
+          flex: 0 0 auto !important;
+          border-radius: 999px !important;
+          white-space: nowrap !important;
         }
         .hc-tab-body {
-          max-height: calc(100vh - 200px) !important;
-          min-height: 110px !important;
+          max-height: calc(100vh - 210px) !important;
+          min-height: 120px !important;
         }
         .hc-swatches-grid {
-          grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)) !important;
-          gap: 6px !important;
+          grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)) !important;
+          gap: 8px !important;
         }
         .hc-char-card {
-          padding: 6px 8px !important;
+          padding: 10px 12px !important;
+          gap: 10px !important;
+          border-radius: 14px !important;
         }
         .hc-char-avatar-icon {
-          font-size: 18px !important;
-          width: 28px !important;
+          font-size: 22px !important;
+          width: 36px !important;
+          height: 36px !important;
+          border-radius: 10px !important;
         }
         .hc-char-info strong {
-          font-size: 12px !important;
+          font-size: 13.5px !important;
+        }
+        .hc-char-tag {
+          font-size: 10.5px !important;
+          padding: 3px 9px !important;
         }
         .hc-footer-actions {
-          padding-top: 6px !important;
+          padding-top: 8px !important;
           margin-top: auto !important;
-          gap: 6px !important;
+          gap: 8px !important;
         }
         .hc-btn-secondary {
-          padding: 8px 12px !important;
-          font-size: 11.5px !important;
+          padding: 9px 14px !important;
+          font-size: 12px !important;
         }
         .hc-btn-primary {
-          padding: 8px 14px !important;
-          font-size: 12px !important;
+          padding: 9px 16px !important;
+          font-size: 13px !important;
         }
       }
 
@@ -488,34 +506,34 @@ export class HumanAvatarCustomizer {
       .hc-tabs-bar {
         display: flex;
         gap: 6px;
-        padding: 4px;
-        background: rgba(15, 23, 42, 0.7);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 5px;
+        background: rgba(15, 23, 42, 0.85);
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         overflow-x: auto;
         scrollbar-width: none;
         -ms-overflow-style: none;
+        -webkit-overflow-scrolling: touch;
       }
       .hc-tabs-bar::-webkit-scrollbar {
         display: none;
       }
 
       .hc-tab-btn {
-        flex: 1;
-        min-width: 68px;
-        padding: 9px 8px;
-        border-radius: 12px;
-        border: 0;
-        background: transparent;
+        flex: 0 0 auto;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.04);
         color: #94a3b8;
         font-family: inherit;
-        font-size: 13px;
-        font-weight: 600;
+        font-size: 12.5px;
+        font-weight: 700;
         cursor: pointer;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 5px;
+        gap: 6px;
         transition: all 0.15s ease;
         white-space: nowrap;
       }
@@ -1114,7 +1132,7 @@ export class HumanAvatarCustomizer {
   renderTabs() {
     const tabs = [
       { id: 'characters', label: '👤 Avatars' },
-      { id: 'style', label: '🐱 Hood Style' },
+      { id: 'style', label: '🐱 Cat Hood' },
       { id: 'skin', label: '🎨 Skin' },
       { id: 'hair', label: '💇 Hair' },
       { id: 'tops', label: '👕 Hoodie' },
@@ -1145,8 +1163,9 @@ export class HumanAvatarCustomizer {
     // 1. Character Selector Tab
     if (this.activeTab === 'characters') {
       body.innerHTML = `
-        <div style="margin-bottom: 12px; font-size: 13px; color: #94a3b8; font-weight: 600;">
-          Select your Metaverse identity. Fully rigged with procedural walking, running, jumping & emotes:
+        <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 13px; font-weight: 700; color: #cbd5e1;">Available Avatars</span>
+          <span style="font-size: 11px; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 999px;">100% Animated</span>
         </div>
         <div class="hc-chars-grid">
           ${CHARACTER_CATALOG.map(c => `
@@ -1155,7 +1174,7 @@ export class HumanAvatarCustomizer {
                 <div class="hc-char-avatar-icon">${c.icon}</div>
                 <div class="hc-char-info">
                   <strong>${c.name}</strong>
-                  <small style="color: #64748b; font-size: 11px;">${c.tagline || ''}</small>
+                  <small style="color: #94a3b8; font-size: 11.5px; font-weight: 500;">${c.tagline || ''}</small>
                 </div>
               </div>
               <span class="hc-char-tag hc-tag-meme">${c.gender}</span>
