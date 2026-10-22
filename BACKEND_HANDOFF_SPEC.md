@@ -16,13 +16,14 @@ All avatar archetypes, styles, and color options are indexed starting from `0` t
 | Index | Avatar ID | Name | Category | Gender / Tag | Customization Scope | Target Height |
 |:---:|:---|:---|:---|:---|:---|:---:|
 | **0** | `chibi_netkid` | **Chibi Net Kid** | Nexora Heroes | Hero Chibi | **Full Modular (Hood, Skin, Hair, Clothes, Glow)** | 1.48 m |
-| **1** | `muse_mascot` | **Musebot Sprout** | Nexora Mascots | Fluffy Mascot | Preset mascot (glow only, clothes ignored) | 1.45 m |
-| **2** | `agent_gumdrop` | **Agent Gumdrop** | Nexora Mascots | Candy Agent | Preset mascot (glow only, clothes ignored) | 1.35 m |
-| **3** | `plush_mascot` | **Plush Fur Mascot** | Nexora Mascots | Fluffy Plush | Preset mascot (glow only, clothes ignored) | 1.60 m |
+| **1** | `muse_mascot` | **Musebot Sprout** | Nexora Mascots | Fluffy Mascot | Preset mascot (no clothes, no glowColor) | 1.45 m |
+| **2** | `agent_gumdrop` | **Agent Gumdrop** | Nexora Mascots | Candy Agent | Preset mascot (no clothes, no glowColor) | 1.35 m |
+| **3** | `plush_mascot` | **Plush Fur Mascot** | Nexora Mascots | Fluffy Plush | Preset mascot (no clothes, no glowColor) | 1.60 m |
 
 > *Answers to Avatar Customization Questions:*
 > 1. **Can archetypes 1 to 3 be customized?** No, only **Archetype 0 (`chibi_netkid`)** has modular clothing, hair, and skin. Archetypes 1 to 3 are preset mascots — the server can safely default clothing/hair/skin fields to `0` for them.
-> 2. **Is headphone LED on/off toggle still in the game?** No separate boolean toggle is needed. Headphone LED color is controlled by `glowColor` (`0` to `5`).
+> 2. **Is there glowColor for archetypes 1 to 3?** **No.** `glowColor` (`0` to `5`) exclusively controls the headphone ear-cup LED ring on **Archetype 0 (`chibi_netkid`)**. Archetypes 1 to 3 do not wear headphones and have no glowing LED elements; the server can default `glowColor` to `0` for them.
+> 3. **Is headphone LED on/off toggle still in the game?** No separate boolean toggle is needed. Headphone LED color is controlled by `glowColor` (`0` to `5`).
 
 ---
 
