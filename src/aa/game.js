@@ -323,6 +323,10 @@ const CSS = `
   .g-ca .g-btn { padding: 8px 12px; font-size: 13px; }
   .g-ca-copy { max-width: calc(100vw - 150px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .g-look, .g-coin { top: calc(104px + env(safe-area-inset-top, 0px)); right: 10px; left: 10px; width: auto; max-height: calc(100% - 200px); }
+  /* Inverted touch controls: Right hand moves, buttons placed cleanly */
+  .g-jump { position: absolute !important; left: 18px !important; right: auto !important; bottom: calc(145px + env(safe-area-inset-bottom, 0px)) !important; width: 46px !important; height: 46px !important; font-size: 11px !important; z-index: 46 !important; }
+  .g-duck { position: absolute !important; left: 72px !important; right: auto !important; bottom: calc(145px + env(safe-area-inset-bottom, 0px)) !important; width: 46px !important; height: 46px !important; font-size: 11px !important; z-index: 46 !important; }
+  .g-a { position: absolute !important; right: 20px !important; bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; width: 56px !important; height: 56px !important; font-size: 20px !important; z-index: 46 !important; opacity: 0.85 !important; }
 }
 /* calmer top bar (owner: less cluttered): no location/clock pills, a short CA chip, round icon buttons */
 .g-hud .g-where, .g-hud .g-clock { display: none !important; }
@@ -1353,9 +1357,9 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     cv.addEventListener('pointerdown', (e) => {
       if (dlg) { advance(!!chat); return; } // tapping the room ends a chat too
       if (e.pointerType !== 'mouse') {
-        const isRightSide = e.clientX >= window.innerWidth * 0.45;
-        if (isRightSide) {
-          // Right half of mobile screen: camera rotation swivel
+        const isLeftSide = e.clientX < window.innerWidth * 0.50;
+        if (isLeftSide) {
+          // Left half of mobile screen: camera rotation & tilt control
           camTouch.on = true;
           camTouch.id = e.pointerId;
           camTouch.lx = e.clientX;
@@ -1364,6 +1368,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
           return;
         }
       }
+      // Right half of mobile screen: character movement controls (move left, right, forward, back)
       stick.on = true; stick.id = e.pointerId; stick.ox = e.clientX; stick.oy = e.clientY; stick.x = stick.y = 0; stick.moved = 0; stick.t0 = performance.now();
       cv.setPointerCapture(e.pointerId);
     });

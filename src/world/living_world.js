@@ -1549,33 +1549,39 @@ export class LivingWorld {
         #lw-profile-card {
           top: 10px !important;
           left: 10px !important;
-          gap: 6px !important;
-          padding: 5px 8px 5px 6px !important;
-          border-radius: 14px !important;
-          max-width: 160px !important;
+          gap: 8px !important;
+          padding: 6px 10px 6px 7px !important;
+          border-radius: 16px !important;
+          max-width: none !important;
+          width: auto !important;
         }
         #lw-profile-card .lw-avatar-icon {
-          width: 32px !important;
-          height: 32px !important;
-          font-size: 16px !important;
+          width: 34px !important;
+          height: 34px !important;
+          font-size: 17px !important;
         }
         #lw-profile-card .lw-player-name {
           font-size: 13px !important;
         }
         #lw-profile-card .lw-player-level {
-          font-size: 10px !important;
+          font-size: 10.5px !important;
+        }
+        #lw-profile-card #lw-coins-badge {
+          font-size: 10.5px !important;
+          padding: 2px 7px !important;
         }
         #lw-profile-card .lw-xp-bar-wrap {
-          width: 50px !important;
-          height: 5px !important;
+          width: 44px !important;
+          height: 4px !important;
         }
         #lw-profile-card .lw-xp-text {
-          font-size: 8px !important;
+          display: none !important;
         }
         #lw-profile-card #lw-btn-menu {
-          width: 26px !important;
-          height: 26px !important;
-          font-size: 13px !important;
+          width: 30px !important;
+          height: 30px !important;
+          font-size: 14px !important;
+          margin-left: 4px !important;
         }
 
         #lw-minimap-card {
@@ -1666,29 +1672,31 @@ export class LivingWorld {
       <!-- Top-Left Profile Card -->
       <div id="lw-profile-card">
         <div class="lw-avatar-icon" style="
-          width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #38bdf8);
-          display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px solid #38bdf8;
+          width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #38bdf8);
+          display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid #38bdf8;
           flex-shrink: 0;
         ">👤</div>
-        <div style="min-width: 0;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span class="lw-player-name" style="color: #fff; font-weight: 800; font-size: 15px;">Alex</span>
-            <span class="lw-player-level" style="color: #38bdf8; font-size: 12px; font-weight: 700;">Level 1</span>
-            <span id="lw-coins-badge" style="background: rgba(250, 204, 21, 0.2); border: 1px solid #facc15; border-radius: 999px; padding: 1px 7px; color: #fde047; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">
+        <div style="min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+          <!-- Top Row: Name and Level -->
+          <div style="display: flex; align-items: center; gap: 6px; line-height: 1;">
+            <span class="lw-player-name" style="color: #fff; font-weight: 800; font-size: 14px;">Alex</span>
+            <span class="lw-player-level" style="color: #38bdf8; font-size: 11px; font-weight: 700;">Level 1</span>
+          </div>
+          <!-- Bottom Row: Coin Pill and XP Bar -->
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 1px;">
+            <span id="lw-coins-badge" style="background: rgba(250, 204, 21, 0.22); border: 1.5px solid #facc15; border-radius: 999px; padding: 2px 8px; color: #fde047; font-size: 11px; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; line-height: 1; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
               <span>🪙</span> <span id="lw-coins-count">${this.coinsCollected}</span>
             </span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
-            <div class="lw-xp-bar-wrap" style="width: 90px; height: 6px; background: rgba(255,255,255,0.18); border-radius: 4px; overflow: hidden;">
+            <div class="lw-xp-bar-wrap" style="width: 55px; height: 5px; background: rgba(255,255,255,0.18); border-radius: 4px; overflow: hidden; flex-shrink: 0;">
               <div style="width: 45%; height: 100%; background: linear-gradient(90deg, #38bdf8, #00d2d3);"></div>
             </div>
-            <span class="lw-xp-text" style="color: #94a3b8; font-size: 9.5px; font-weight: 600;">980 XP</span>
+            <span class="lw-xp-text" style="color: #94a3b8; font-size: 9px; font-weight: 600;">980 XP</span>
           </div>
         </div>
         <button id="lw-btn-menu" style="
-          background: rgba(255,255,255,0.1); border: none; color: #cbd5e1; width: 32px; height: 32px;
+          background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: #cbd5e1; width: 32px; height: 32px;
           border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px;
-          flex-shrink: 0;
+          flex-shrink: 0; margin-left: 2px;
         ">☰</button>
       </div>
 
