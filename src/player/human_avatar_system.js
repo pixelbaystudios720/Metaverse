@@ -180,7 +180,7 @@ export class HumanAvatarManager {
       const raw = localStorage.getItem('aa_human_avatar_config');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && parsed.characterId) {
+        if (parsed && parsed.characterId && parsed.characterId !== 'man_uploaded') {
           return {
             characterId: parsed.characterId,
             style: parsed.style || 'ears',
@@ -190,7 +190,7 @@ export class HumanAvatarManager {
             bottomColor: parsed.bottomColor || '#33364d',
             shoeColor: parsed.shoeColor || '#dcd8d0',
             glowColor: parsed.glowColor || '#3ff0e0',
-            name: parsed.name || localStorage.getItem('aa.name.v1') || 'Player'
+            name: parsed.name || localStorage.getItem('aa.name.v1') || 'Alex'
           };
         }
       }
@@ -199,7 +199,7 @@ export class HumanAvatarManager {
     }
 
     return {
-      characterId: 'man_uploaded',
+      characterId: 'chibi_net_kid',
       style: 'ears',
       skinColor: '#ffc7a6',
       hairColor: '#3b2a24',
@@ -207,7 +207,7 @@ export class HumanAvatarManager {
       bottomColor: '#33364d',
       shoeColor: '#dcd8d0',
       glowColor: '#3ff0e0',
-      name: localStorage.getItem('aa.name.v1') || 'Player'
+      name: localStorage.getItem('aa.name.v1') || 'Alex'
     };
   }
 

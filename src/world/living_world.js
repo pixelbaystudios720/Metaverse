@@ -1774,8 +1774,9 @@ export class LivingWorld {
 
               <div class="lw-modal-tabs" style="display: flex; flex-direction: column; gap: 8px;">
                 <button id="lw-tab-games" style="display: flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #fff; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🕹️ Game Selection</button>
+                <button id="lw-tab-map" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🗺️ District Map</button>
                 <button id="lw-tab-leaderboard" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🏆 Leaderboard</button>
-                <button id="lw-tab-profile" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">👤 Profile</button>
+                <button id="lw-tab-profile" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">👤 Profile & Avatars</button>
                 <button id="lw-tab-settings" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">⚙️ Settings</button>
               </div>
             </div>
@@ -1830,6 +1831,65 @@ export class LivingWorld {
                 </div>
               </div>
             </div>
+
+            <!-- District Fast-Travel Map View -->
+            <div id="lw-view-map" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <h2 style="margin: 0; color: #38bdf8; font-size: 22px; font-weight: 900;">🗺️ District Fast-Travel</h2>
+                  <div style="color: #94a3b8; font-size: 12.5px;">Tap any district card to jump there instantly</div>
+                </div>
+                <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 999px; padding: 4px 12px; color: #38bdf8; font-size: 11.5px; font-weight: 700;">
+                  🟢 142 Citizens Online
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <!-- Central Plaza Card -->
+                <div class="lw-district-btn" data-dist="town" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95)); border: 2px solid #00d2d3; border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.15s ease;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span style="font-size: 28px;">🏙️</span>
+                    <span style="background: rgba(0, 210, 211, 0.2); border: 1px solid #00d2d3; border-radius: 999px; padding: 2px 8px; color: #00d2d3; font-size: 10px; font-weight: 800;">Central Hub</span>
+                  </div>
+                  <div style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px;">Central Plaza</div>
+                  <div style="font-size: 11.5px; color: #94a3b8; margin-bottom: 10px; line-height: 1.3;">Cyber Cafe, Social Fountain & Trading Terminals</div>
+                  <button style="width: 100%; background: #00d2d3; border: none; border-radius: 8px; color: #0f172a; font-weight: 900; padding: 7px; cursor: pointer; font-size: 12.5px;">Fast Travel ➔</button>
+                </div>
+
+                <!-- Neon Arcade Card -->
+                <div class="lw-district-btn" data-dist="arcade" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95)); border: 2px solid #facc15; border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.15s ease;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span style="font-size: 28px;">🕹️</span>
+                    <span style="background: rgba(250, 204, 21, 0.2); border: 1px solid #facc15; border-radius: 999px; padding: 2px 8px; color: #fde047; font-size: 10px; font-weight: 800;">🔥 Hot Games</span>
+                  </div>
+                  <div style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px;">Neon Arcade</div>
+                  <div style="font-size: 11.5px; color: #94a3b8; margin-bottom: 10px; line-height: 1.3;">🪙 Coin Catcher & 🥔 Hot Potato 3D Stadium</div>
+                  <button style="width: 100%; background: linear-gradient(135deg, #facc15, #f59e0b); border: none; border-radius: 8px; color: #451a03; font-weight: 900; padding: 7px; cursor: pointer; font-size: 12.5px;">Fast Travel ➔</button>
+                </div>
+
+                <!-- Sakura Park Card -->
+                <div class="lw-district-btn" data-dist="park" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95)); border: 2px solid #4ade80; border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.15s ease;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span style="font-size: 28px;">🌸</span>
+                    <span style="background: rgba(74, 222, 128, 0.2); border: 1px solid #4ade80; border-radius: 999px; padding: 2px 8px; color: #4ade80; font-size: 10px; font-weight: 800;">🌿 Chill Zone</span>
+                  </div>
+                  <div style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px;">Sakura Park</div>
+                  <div style="font-size: 11.5px; color: #94a3b8; margin-bottom: 10px; line-height: 1.3;">Cherry Blossom Trees, Reflecting Pond & Benches</div>
+                  <button style="width: 100%; background: #4ade80; border: none; border-radius: 8px; color: #064e3b; font-weight: 900; padding: 7px; cursor: pointer; font-size: 12.5px;">Fast Travel ➔</button>
+                </div>
+
+                <!-- Harbor Docks Card -->
+                <div class="lw-district-btn" data-dist="docks" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95)); border: 2px solid #38bdf8; border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.15s ease;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span style="font-size: 28px;">⚓</span>
+                    <span style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; border-radius: 999px; padding: 2px 8px; color: #38bdf8; font-size: 10px; font-weight: 800;">🌊 Waterfront</span>
+                  </div>
+                  <div style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px;">Harbor Docks</div>
+                  <div style="font-size: 11.5px; color: #94a3b8; margin-bottom: 10px; line-height: 1.3;">Boardwalk, Ocean Pier & Dock Racing</div>
+                  <button style="width: 100%; background: #38bdf8; border: none; border-radius: 8px; color: #082f49; font-weight: 900; padding: 7px; cursor: pointer; font-size: 12.5px;">Fast Travel ➔</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1861,26 +1921,64 @@ export class LivingWorld {
 
     // Tab switching
     const tabGames = this.hudContainer.querySelector('#lw-tab-games');
+    const tabMap = this.hudContainer.querySelector('#lw-tab-map');
     const tabLdr = this.hudContainer.querySelector('#lw-tab-leaderboard');
     const viewGames = this.hudContainer.querySelector('#lw-view-games');
+    const viewMap = this.hudContainer.querySelector('#lw-view-map');
     const viewLdr = this.hudContainer.querySelector('#lw-view-leaderboard');
 
+    const resetTabs = () => {
+      [tabGames, tabMap, tabLdr].forEach((t) => {
+        if (t) { t.style.background = 'transparent'; t.style.borderColor = 'transparent'; t.style.color = '#94a3b8'; }
+      });
+      [viewGames, viewMap, viewLdr].forEach((v) => { if (v) v.style.display = 'none'; });
+    };
+
     tabGames?.addEventListener('click', () => {
+      resetTabs();
       tabGames.style.background = 'rgba(56, 189, 248, 0.2)';
       tabGames.style.borderColor = '#38bdf8';
-      tabLdr.style.background = 'transparent';
-      tabLdr.style.borderColor = 'transparent';
+      tabGames.style.color = '#fff';
       viewGames.style.display = 'block';
-      viewLdr.style.display = 'none';
+    });
+
+    tabMap?.addEventListener('click', () => {
+      resetTabs();
+      tabMap.style.background = 'rgba(0, 210, 211, 0.2)';
+      tabMap.style.borderColor = '#00d2d3';
+      tabMap.style.color = '#fff';
+      viewMap.style.display = 'block';
     });
 
     tabLdr?.addEventListener('click', () => {
+      resetTabs();
       tabLdr.style.background = 'rgba(250, 204, 21, 0.2)';
       tabLdr.style.borderColor = '#facc15';
-      tabGames.style.background = 'transparent';
-      tabGames.style.borderColor = 'transparent';
-      viewGames.style.display = 'none';
+      tabLdr.style.color = '#fff';
       viewLdr.style.display = 'block';
+    });
+
+    // District Fast Travel Clicks
+    this.hudContainer.querySelectorAll('.lw-district-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const dist = btn.dataset.dist;
+        modal.style.display = 'none';
+        sound.playPortal();
+        if (window.__jumpToDistrict) {
+          window.__jumpToDistrict(dist);
+        } else {
+          if (dist === 'town') this.player.teleport(0, 0, 0);
+          else if (dist === 'arcade') this.player.teleport(13.5, 0, -6.0);
+          else if (dist === 'park') this.player.teleport(-18, 0, 10);
+          else if (dist === 'docks') this.player.teleport(24, 0, 18);
+        }
+      });
+    });
+
+    // Clicking Minimap opens District Map
+    this.hudContainer.querySelector('#lw-minimap-card')?.addEventListener('click', () => {
+      modal.style.display = 'block';
+      tabMap?.click();
     });
 
     const tabProfile = this.hudContainer.querySelector('#lw-tab-profile');
@@ -1969,54 +2067,105 @@ export class LivingWorld {
     if (promptEl) promptEl.style.display = 'none';
   }
 
-  drawMinimap() {
+  drawMinimap(totalTime = performance.now() * 0.001) {
     if (!this.minimapCtx) return;
     const ctx = this.minimapCtx;
     ctx.clearRect(0, 0, 110, 110);
 
-    const cx = 55,
-      cy = 55,
-      scale = 1.4;
+    const cx = 55, cy = 55, scale = 1.35;
 
-    // Background Circle
-    ctx.fillStyle = '#0f172a';
+    // 1. Dark Futuristic Radar Background
+    ctx.fillStyle = '#090d16';
     ctx.beginPath();
     ctx.arc(cx, cy, 52, 0, Math.PI * 2);
     ctx.fill();
 
-    // Plaza Circle
-    ctx.fillStyle = 'rgba(215, 195, 175, 0.22)';
-    ctx.beginPath();
-    ctx.arc(cx, cy, 18 * scale, 0, Math.PI * 2);
-    ctx.fill();
+    // 2. Concentric Radar Grid Rings
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+    ctx.lineWidth = 1;
+    [16, 32, 48].forEach((r) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    });
 
-    // Center Fountain
+    // Crosshairs
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 48); ctx.lineTo(cx, cy + 48);
+    ctx.moveTo(cx - 48, cy); ctx.lineTo(cx + 48, cy);
+    ctx.stroke();
+
+    // 3. Sweeping Radar Line
+    const sweepAngle = (totalTime * 1.8) % (Math.PI * 2);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, 48, sweepAngle - 0.25, sweepAngle);
+    ctx.closePath();
+    const sweepGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 48);
+    sweepGrad.addColorStop(0, 'rgba(0, 210, 211, 0.45)');
+    sweepGrad.addColorStop(1, 'rgba(0, 210, 211, 0.0)');
+    ctx.fillStyle = sweepGrad;
+    ctx.fill();
+    ctx.restore();
+
+    // 4. North Indicator
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 9px "Fredoka", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('N', cx, cy - 38);
+
+    // 5. Landmark Icons & Blips
+    // Center Fountain (cyan)
     ctx.fillStyle = '#00d2d3';
     ctx.beginPath();
     ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Arcade & Park
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(cx + 12 * scale - 2, cy - 6 * scale - 2, 5, 5);
-    ctx.fillStyle = '#4ade80';
-    ctx.fillRect(cx - 16 * scale - 2, cy + 2 * scale - 2, 6, 6);
+    // Hot Potato Arena (red blip)
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(cx + 13 * scale, cy - 7 * scale, 3.5, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Player Arrow
-    const px = cx + this.player.x * scale;
-    const pz = cy + this.player.z * scale;
+    // Coin Catcher Arena (gold blip)
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(cx + 10 * scale, cy + 9 * scale, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sakura Park (green blip)
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(cx - 15 * scale, cy + 6 * scale, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 6. Player Heading Arrow with Pulsing Aura
+    const px = Math.min(98, Math.max(12, cx + this.player.x * scale));
+    const pz = Math.min(98, Math.max(12, cy + this.player.z * scale));
     const heading = this.player.heading || 0;
 
+    // Player Glow Aura
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.beginPath();
+    ctx.arc(px, pz, 7 + Math.sin(totalTime * 4) * 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Player Arrow
     ctx.save();
     ctx.translate(px, pz);
     ctx.rotate(heading);
-    ctx.fillStyle = '#ef4444';
+    ctx.fillStyle = '#fde047';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(0, 5);
-    ctx.lineTo(-3.5, -3.5);
-    ctx.lineTo(3.5, -3.5);
+    ctx.moveTo(0, 6);
+    ctx.lineTo(-4, -4);
+    ctx.lineTo(0, -1);
+    ctx.lineTo(4, -4);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
     ctx.restore();
   }
 

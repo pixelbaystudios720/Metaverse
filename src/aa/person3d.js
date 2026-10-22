@@ -242,7 +242,7 @@ export function buildPerson(look = DEFAULT_LOOK, { seed = 7, lite = false } = {}
         try { return makePerson(mergedLook, seed); } finally { LITE = false; }
       }
 
-      const charDef = CHARACTER_CATALOG.find(c => c.id === charId) || CHARACTER_CATALOG.find(c => c.id === 'man_uploaded');
+      const charDef = CHARACTER_CATALOG.find(c => c.id === charId) || CHARACTER_CATALOG.find(c => c.id === 'chibi_net_kid') || CHARACTER_CATALOG[0];
       if (charDef) {
         const root = new THREE.Group();
         const manager = new HumanAvatarManager();

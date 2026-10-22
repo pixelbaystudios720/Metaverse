@@ -1620,6 +1620,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     await wait(60); fadeEl.style.opacity = 0; await wait(200); busy = false;
   }
   const jumpTo = (id) => changeRoom(id);
+  window.__jumpToDistrict = (id) => changeRoom(id);
   // a gate: within reach of one in this room (walking into it goes through, like the cafe door)
   const gateNear = (r = 1.9) => world.gates.find((g) => g.room === zone.now && Math.hypot(player.x - g.x, player.z - g.z) < r);
   function zoneBanner() { const g = !busy && gateNear(1.05); if (g && Math.hypot(player.vx, player.vz) > .5) changeRoom(g.to); } // walked into a gate
