@@ -53,9 +53,9 @@
     {
       "id": "door_coin_catcher",
       "name": "Coin Catcher Portal",
-      "position": { "x": -9.0, "y": 2.8, "z": -16.8 },
-      "size": { "w": 4.8, "h": 5.6, "d": 0.6 },
-      "triggerRadius": 4.5,
+      "position": { "x": 13.2, "y": 2.1, "z": -17.5 },
+      "size": { "w": 3.2, "h": 4.2, "d": 0.4 },
+      "triggerRadius": 3.2,
       "teleportTarget": { "x": 160, "y": 1.5, "z": 0 },
       "gameId": "coin_catcher",
       "minPlayers": 2,
@@ -65,9 +65,9 @@
     {
       "id": "door_hot_potato",
       "name": "Hot Potato Portal",
-      "position": { "x": 9.0, "y": 2.8, "z": -16.8 },
-      "size": { "w": 4.8, "h": 5.6, "d": 0.6 },
-      "triggerRadius": 4.5,
+      "position": { "x": 20.3, "y": 2.1, "z": -14.7 },
+      "size": { "w": 3.2, "h": 4.2, "d": 0.4 },
+      "triggerRadius": 3.2,
       "teleportTarget": { "x": -160, "y": 1.5, "z": 0 },
       "gameId": "hot_potato",
       "minPlayers": 4,
@@ -104,30 +104,30 @@
       "id": "arcade_building_facade",
       "kind": "blocker",
       "type": "box",
-      "pos": [0, 6.25, -20.0],
-      "size": [38.0, 12.5, 8.0],
-      "desc": "Grand Cyber Arcade Complex main facade"
+      "pos": [16.0, 3.6, -18.0],
+      "size": [15.0, 7.2, 4.0],
+      "desc": "Compact Cyber Arcade building facade with Coin Catcher and Hot Potato doors"
     },
     {
       "id": "arcade_roof_overhang",
       "kind": "blocker",
       "type": "box",
-      "pos": [0, 12.5, -19.8],
-      "size": [39.0, 0.8, 8.5]
+      "pos": [16.0, 7.2, -18.0],
+      "size": [15.4, 0.4, 4.4]
     },
     {
       "id": "arcade_door_left_frame",
       "kind": "blocker",
       "type": "box",
-      "pos": [-9.0, 2.8, -16.8],
-      "size": [4.8, 5.6, 0.6]
+      "pos": [13.2, 2.1, -17.5],
+      "size": [3.2, 4.2, 0.4]
     },
     {
       "id": "arcade_door_right_frame",
       "kind": "blocker",
       "type": "box",
-      "pos": [9.0, 2.8, -16.8],
-      "size": [4.8, 5.6, 0.6]
+      "pos": [20.3, 2.1, -14.7],
+      "size": [3.2, 4.2, 0.4]
     },
     {
       "id": "fountain_tier1_basin",

@@ -33,10 +33,10 @@ const slotSpots = Object.fromEntries(Object.entries(SLOTS).map(([id, l]) => [id,
 // The outside is an open world, Club Penguin style: the town square in the middle and three districts down lit
 // streets through gaps in the towers. Each zone is a walkable box; the streets join them.
 export const DISTRICTS = [
-  { id: 'town',   name: 'Town Center',  x: 0,   z: 0,  hw: 19, hd: 19 },
-  { id: 'arcade', name: 'Neon Arcade',  x: -50, z: 0,  hw: 14, hd: 14 },
-  { id: 'docks',  name: 'Harbor Docks', x: 46,  z: 0,  hw: 10, hd: 14 }, // ends at the quay (x 56); the pier counts as the docks
-  { id: 'park',   name: 'Sakura Park',  x: 0,   z: 50, hw: 15, hd: 14 },
+  { id: 'town',   name: 'Town Center',  x: 0,   z: 0,  hw: 80, hd: 80 },
+  { id: 'arcade', name: 'Neon Arcade',  x: -50, z: 0,  hw: 24, hd: 24 },
+  { id: 'docks',  name: 'Harbor Docks', x: 46,  z: 0,  hw: 16, hd: 24 }, // ends at the quay (x 56); the pier counts as the docks
+  { id: 'park',   name: 'Sakura Park',  x: 0,   z: 50, hw: 24, hd: 24 },
 ];
 const STREETS = [[-36.5, -3.2, -18.5, 3.2], [18.5, -3.2, 36.5, 3.2], [-3.2, 18.5, 3.2, 36.5], [56, 1.6, 65.5, 2.4]]; // x0, z0, x1, z1
 // where each district's street meets the town square and the district, and open places inside each to walk to

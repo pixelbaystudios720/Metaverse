@@ -188,9 +188,9 @@ export class LivingWorld {
     const lineMat = new THREE.MeshBasicMaterial({ color: 0xf5f6fa });
     const yellowLineMat = new THREE.MeshBasicMaterial({ color: 0xfbc531 });
 
-    // Multi-lane roadway along the East side of the plaza (x = 22, z from -50 to 50)
+    // Multi-lane roadway along the East side of the plaza (x = 22, z from -96 to 96)
     const roadWidth = 9.5;
-    const roadGeo = new THREE.PlaneGeometry(roadWidth, 100);
+    const roadGeo = new THREE.PlaneGeometry(roadWidth, 200);
     const roadMesh = new THREE.Mesh(roadGeo, asphaltMat);
     roadMesh.rotation.x = -Math.PI / 2;
     roadMesh.position.set(22, 0.02, 0);
@@ -198,7 +198,7 @@ export class LivingWorld {
     this.roadGroup.add(roadMesh);
 
     // Center divider dashed line
-    for (let z = -46; z <= 46; z += 4) {
+    for (let z = -92; z <= 92; z += 4) {
       const dashGeo = new THREE.PlaneGeometry(0.32, 2.2);
       const dash = new THREE.Mesh(dashGeo, yellowLineMat);
       dash.rotation.x = -Math.PI / 2;
@@ -223,7 +223,7 @@ export class LivingWorld {
 
     // Concrete Sidewalk along road
     const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 });
-    const sidewalkGeo = new THREE.BoxGeometry(3.2, 0.24, 100);
+    const sidewalkGeo = new THREE.BoxGeometry(3.2, 0.24, 200);
     const sidewalk = new THREE.Mesh(sidewalkGeo, sidewalkMat);
     sidewalk.position.set(22 - roadWidth / 2 - 1.6, 0.12, 0);
     sidewalk.receiveShadow = true;
@@ -231,7 +231,7 @@ export class LivingWorld {
 
     // Curb edge stone along road
     const curbMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.6 });
-    const curbGeo = new THREE.BoxGeometry(0.3, 0.28, 100);
+    const curbGeo = new THREE.BoxGeometry(0.3, 0.28, 200);
     const curb = new THREE.Mesh(curbGeo, curbMat);
     curb.position.set(22 - roadWidth / 2 - 0.15, 0.14, 0);
     this.roadGroup.add(curb);
@@ -282,7 +282,7 @@ export class LivingWorld {
     const tex = new THREE.CanvasTexture(canvas);
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(8, 8);
+    tex.repeat.set(28, 28);
     tex.colorSpace = THREE.SRGBColorSpace;
     return tex;
   }
@@ -291,24 +291,24 @@ export class LivingWorld {
     this.plazaGroup = new THREE.Group();
     this.root.add(this.plazaGroup);
 
-    // Warm polished stone plaza pavers (radius 22m)
-    const plazaGeo = new THREE.CylinderGeometry(21, 21.5, 0.16, 48);
+    // Warm polished stone plaza pavers - EXPANDED GRAND WORLD PLATFORM (radius 80m, diameter 160m)
+    const plazaGeo = new THREE.CylinderGeometry(80, 81, 0.22, 64);
     const plazaMat = new THREE.MeshStandardMaterial({
       map: this.createPlazaPaverTexture(),
       roughness: 0.62,
       metalness: 0.05,
     });
     const plaza = new THREE.Mesh(plazaGeo, plazaMat);
-    plaza.position.set(0, 0.08, 0);
+    plaza.position.set(0, 0.11, 0);
     plaza.receiveShadow = true;
     this.plazaGroup.add(plaza);
 
-    // Decorative Plaza Inlay Rings
+    // Decorative Grand Plaza Inlay Rings
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x9e8e7a });
-    [6, 12, 18].forEach((r) => {
-      const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.12, 48), ringMat);
+    [8, 18, 32, 50, 70].forEach((r) => {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.16, 64), ringMat);
       ring.rotation.x = -Math.PI / 2;
-      ring.position.set(0, 0.161, 0);
+      ring.position.set(0, 0.222, 0);
       this.plazaGroup.add(ring);
     });
 
@@ -810,84 +810,113 @@ export class LivingWorld {
     const lampMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.3 });
     const lampGlow = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
 
-    // 12 Planters with lush trees surrounding the plaza perimeter (R = 20m)
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2;
-      // Skip where road and arcade open
-      if (angle > -0.4 && angle < 0.8) continue;
+    // 1. Outer Perimeter Planters & Trees framing the big 160m platform (R = 76m)
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * Math.PI * 2;
+      // Leave open spaces for roads and bridges
+      if (angle > -0.22 && angle < 0.52) continue;
 
-      const px = Math.cos(angle) * 19.5;
-      const pz = Math.sin(angle) * 19.5;
+      const px = Math.cos(angle) * 76.0;
+      const pz = Math.sin(angle) * 76.0;
 
       const pGrp = new THREE.Group();
-      pGrp.position.set(px, 0, pz);
+      pGrp.position.set(px, 0.11, pz);
 
-      // Raised circular concrete planter
-      const curb = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.8, 0.55, 18), planterMat);
+      const curb = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.0, 0.55, 18), planterMat);
       curb.position.y = 0.28;
       curb.receiveShadow = true;
       pGrp.add(curb);
 
-      // Soil & Hedges
-      const hedge = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.5, 0.4, 18), hedgeMat);
+      const hedge = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.7, 0.4, 18), hedgeMat);
       hedge.position.y = 0.58;
       pGrp.add(hedge);
 
-      // Green Plaza Tree
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 4.2, 8), trunkMat);
-      trunk.position.y = 2.1;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 4.6, 8), trunkMat);
+      trunk.position.y = 2.3;
       trunk.castShadow = true;
       pGrp.add(trunk);
 
-      const crown = new THREE.Mesh(new THREE.SphereGeometry(1.8, 12, 10), leafMat);
-      crown.position.y = 4.4;
-      crown.scale.set(1.1, 0.9, 1.1);
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(2.1, 12, 10), leafMat);
+      crown.position.y = 4.8;
+      crown.scale.set(1.15, 0.95, 1.15);
       crown.castShadow = true;
       pGrp.add(crown);
 
       this.perimeterGroup.add(pGrp);
     }
 
-    // 8 Modern Dual-Head Architectural Streetlights along pathways
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2 + Math.PI / 8;
-      const lx = Math.cos(angle) * 15.5;
-      const lz = Math.sin(angle) * 15.5;
+    // 2. Interior Promenade Trees (R = 36m) spaced for open walking avenues
+    [0.75, 1.4, 2.2, 2.9, 3.8, 4.5, 5.3, 6.0].forEach((angle) => {
+      const px = Math.cos(angle) * 36.0;
+      const pz = Math.sin(angle) * 36.0;
 
-      const lGrp = new THREE.Group();
-      lGrp.position.set(lx, 0, lz);
-      lGrp.rotation.y = angle + Math.PI / 2;
+      const pGrp = new THREE.Group();
+      pGrp.position.set(px, 0.11, pz);
 
-      // Post
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 4.8, 8), lampMat);
-      post.position.y = 2.4;
-      lGrp.add(post);
+      const curb = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.7, 0.45, 16), planterMat);
+      curb.position.y = 0.22;
+      curb.receiveShadow = true;
+      pGrp.add(curb);
 
-      // Dual Crossbar
-      const bar = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 0.1), lampMat);
-      bar.position.y = 4.7;
-      lGrp.add(bar);
+      const hedge = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.4, 0.35, 16), hedgeMat);
+      hedge.position.y = 0.48;
+      pGrp.add(hedge);
 
-      // Dual Luminaire Heads
-      [-0.8, 0.8].forEach((bx) => {
-        const head = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.14, 0.25), lampGlow);
-        head.position.set(bx, 4.62, 0);
-        lGrp.add(head);
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 4.0, 8), trunkMat);
+      trunk.position.y = 2.0;
+      trunk.castShadow = true;
+      pGrp.add(trunk);
 
-        const pLight = new THREE.PointLight(0xfff7ed, 0.8, 12);
-        pLight.position.set(bx, 4.5, 0);
-        lGrp.add(pLight);
-      });
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(1.8, 12, 10), leafMat);
+      crown.position.y = 4.2;
+      crown.castShadow = true;
+      pGrp.add(crown);
 
-      this.perimeterGroup.add(lGrp);
-    }
+      this.perimeterGroup.add(pGrp);
+    });
+
+    // 3. Modern Dual-Head Architectural Streetlights along inner and outer avenues
+    const lightRadii = [26.0, 56.0];
+    lightRadii.forEach((rad, ri) => {
+      const count = ri === 0 ? 8 : 14;
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + (ri * Math.PI) / count;
+        const lx = Math.cos(angle) * rad;
+        const lz = Math.sin(angle) * rad;
+
+        const lGrp = new THREE.Group();
+        lGrp.position.set(lx, 0.11, lz);
+        lGrp.rotation.y = angle + Math.PI / 2;
+
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 4.8, 8), lampMat);
+        post.position.y = 2.4;
+        lGrp.add(post);
+
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 0.1), lampMat);
+        bar.position.y = 4.7;
+        lGrp.add(bar);
+
+        [-0.8, 0.8].forEach((bx) => {
+          const head = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.14, 0.25), lampGlow);
+          head.position.set(bx, 4.62, 0);
+          lGrp.add(head);
+
+          const pLight = new THREE.PointLight(0xfff7ed, 0.65, 12);
+          pLight.position.set(bx, 4.5, 0);
+          lGrp.add(pLight);
+        });
+
+        this.perimeterGroup.add(lGrp);
+      }
+    });
   }
 
-  // ---------------------------------------------------------------- 4. ARCADE Building & Portals (Expanded Grand Complex)
+  // ---------------------------------------------------------------- 4. ARCADE Building (Compact with 2 Doors: Coin Catcher & Hot Potato)
   buildArcadeEntrance() {
     this.arcadeGroup = new THREE.Group();
-    this.arcadeGroup.position.set(13.5, 0, -6); // East Plaza side, facing the road & plaza
-    this.arcadeGroup.rotation.y = -Math.PI * 0.15;
+    // Positioned neatly north-east of the plaza with 16m+ clear open walking space to the fountain
+    this.arcadeGroup.position.set(16.0, 0, -18.0);
+    this.arcadeGroup.rotation.y = -Math.PI * 0.12;
     this.root.add(this.arcadeGroup);
 
     const facadeMat = new THREE.MeshStandardMaterial({ color: 0x140e26, roughness: 0.45, metalness: 0.35 });
@@ -895,137 +924,105 @@ export class LivingWorld {
     const cyanLedMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
     const pinkLedMat = new THREE.MeshBasicMaterial({ color: 0xff4757 });
 
-    // 1. Grand Arcade Facade Structure (expanded: width 38m, height 12.5m, depth 8.0m)
-    const facadeGeo = new THREE.BoxGeometry(38, 12.5, 8.0);
+    // 1. Compact Arcade Building Facade (width 15.0m, height 7.2m, depth 4.0m)
+    const facadeGeo = new THREE.BoxGeometry(15.0, 7.2, 4.0);
     const facade = new THREE.Mesh(facadeGeo, facadeMat);
-    facade.position.set(0, 6.25, 0);
+    facade.position.set(0, 3.6, 0);
     facade.castShadow = true;
     facade.receiveShadow = true;
     this.arcadeGroup.add(facade);
 
-    // 2. Front Plaza Gathering Terrace (width 40m, depth 4.5m, height 0.35m) for crowds
-    const terraceGeo = new THREE.BoxGeometry(40, 0.35, 4.5);
+    // 2. Front Entrance Terrace (width 16.0m, depth 3.2m, height 0.22m)
+    const terraceGeo = new THREE.BoxGeometry(16.0, 0.22, 3.2);
     const terrace = new THREE.Mesh(terraceGeo, trimMat);
-    terrace.position.set(0, 0.175, 4.25);
+    terrace.position.set(0, 0.11, 2.5);
     terrace.receiveShadow = true;
     this.arcadeGroup.add(terrace);
 
-    // Glowing LED trim along the terrace edge
-    const terraceGlow = new THREE.Mesh(new THREE.BoxGeometry(40.2, 0.08, 0.15), cyanLedMat);
-    terraceGlow.position.set(0, 0.35, 6.45);
+    // Glowing LED trim along terrace edge
+    const terraceGlow = new THREE.Mesh(new THREE.BoxGeometry(16.1, 0.06, 0.12), cyanLedMat);
+    terraceGlow.position.set(0, 0.22, 4.05);
     this.arcadeGroup.add(terraceGlow);
 
-    // 3. Cyber Architectural Columns (5 majestic columns framing the entrances)
-    [-17.5, -9.0, 0, 9.0, 17.5].forEach((cx) => {
-      const col = new THREE.Mesh(new THREE.BoxGeometry(1.2, 12.6, 1.4), trimMat);
-      col.position.set(cx, 6.3, 4.1);
+    // 3. Cyber Columns (Outer framing and subtle center divider)
+    [-7.2, 0, 7.2].forEach((cx) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(0.8, 7.3, 0.9), trimMat);
+      col.position.set(cx, 3.65, 2.05);
       this.arcadeGroup.add(col);
 
-      // Vertical neon light strip on each column
-      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 11.0, 0.08), cyanLedMat);
-      strip.position.set(cx, 6.0, 4.82);
+      // Vertical neon accent strip
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 6.2, 0.06), cyanLedMat);
+      strip.position.set(cx, 3.5, 2.52);
       this.arcadeGroup.add(strip);
     });
 
-    // 4. Glowing Neon Gamepad Controller on Top (Expanded Scale)
+    // 4. Glowing Neon Gamepad Controller Silhouette on Roof
     const ctrlGroup = new THREE.Group();
-    ctrlGroup.position.set(0, 12.8, 4.1);
-    const ctrlOutline = new THREE.Mesh(new THREE.BoxGeometry(5.4, 2.6, 0.3), cyanLedMat);
+    ctrlGroup.position.set(0, 7.8, 2.05);
+    const ctrlOutline = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.5, 0.2), cyanLedMat);
     ctrlGroup.add(ctrlOutline);
-    // D-Pad and Buttons on top marquee
-    const dpad = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 0.35), pinkLedMat);
-    dpad.position.set(-1.4, 0, 0.05);
+
+    const dpad = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.65, 0.22), pinkLedMat);
+    dpad.position.set(-0.95, 0, 0.04);
     ctrlGroup.add(dpad);
-    const btnA = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.35, 16), pinkLedMat);
+
+    const btnA = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.22, 16), pinkLedMat);
     btnA.rotation.x = Math.PI / 2;
-    btnA.position.set(1.4, 0, 0.05);
+    btnA.position.set(0.95, 0, 0.04);
     ctrlGroup.add(btnA);
     this.arcadeGroup.add(ctrlGroup);
 
-    // 5. Massive Glowing Cyan Neon "ARCADE" 3D Marquee Sign
+    // 5. Sleek Neon "ARCADE" Marquee Sign
     const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 160;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#0a0f1d';
-    ctx.fillRect(0, 0, 1024, 256);
+    ctx.fillRect(0, 0, 512, 160);
 
     ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(20, 20, 984, 216);
+    ctx.lineWidth = 6;
+    ctx.strokeRect(10, 10, 492, 140);
 
     ctx.fillStyle = '#00d2d3';
-    ctx.font = '900 110px Fredoka, sans-serif';
+    ctx.font = '900 68px Fredoka, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('MEGA ARCADE', 512, 140);
-    ctx.font = '700 36px Fredoka, sans-serif';
+    ctx.fillText('ARCADE', 256, 82);
+
+    ctx.font = '700 22px Fredoka, sans-serif';
     ctx.fillStyle = '#facc15';
-    ctx.fillText('MULTIPLAYER ARENAS · PLAY TO EARN', 512, 195);
+    ctx.fillText('🪙 COIN CATCHER  ·  🔥 HOT POTATO', 256, 126);
 
     const arcadeTex = new THREE.CanvasTexture(canvas);
-    const arcadeSign = new THREE.Mesh(new THREE.PlaneGeometry(14.0, 3.8), new THREE.MeshBasicMaterial({ map: arcadeTex }));
-    arcadeSign.position.set(0, 9.8, 4.15);
+    const arcadeSign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.0), new THREE.MeshBasicMaterial({ map: arcadeTex }));
+    arcadeSign.position.set(0, 5.8, 2.12);
     this.arcadeGroup.add(arcadeSign);
 
-    // 6. Central Atrium Double Glass Doors (Grand Lobby Gathering Hub)
-    const centerDoors = new THREE.Group();
-    centerDoors.position.set(0, 0, 4.05);
-    const centerGlassMat = new THREE.MeshStandardMaterial({
-      color: 0x00d2d3,
-      roughness: 0.1,
-      emissive: 0x00d2d3,
-      emissiveIntensity: 0.35,
-      transparent: true,
-      opacity: 0.35
-    });
-    const centerGlass = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 5.0), centerGlassMat);
-    centerGlass.position.set(0, 2.5, 0.05);
-    centerDoors.add(centerGlass);
-
-    // Atrium Sign
-    const atCanvas = document.createElement('canvas');
-    atCanvas.width = 512;
-    atCanvas.height = 96;
-    const atCtx = atCanvas.getContext('2d');
-    atCtx.fillStyle = '#090d16';
-    atCtx.fillRect(0, 0, 512, 96);
-    atCtx.fillStyle = '#38bdf8';
-    atCtx.font = 'bold 36px Fredoka, sans-serif';
-    atCtx.textAlign = 'center';
-    atCtx.fillText('MAIN LOBBY · ALL ARENAS', 256, 60);
-    const atSign = new THREE.Mesh(
-      new THREE.PlaneGeometry(4.8, 0.9),
-      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(atCanvas) })
-    );
-    atSign.position.set(0, 5.6, 0.1);
-    centerDoors.add(atSign);
-    this.arcadeGroup.add(centerDoors);
-
-    // 7. Two Distinct Grand Portal Entrances (Coin Catcher & Hot Potato) - Spaced for Crowds
+    // 6. EXACTLY TWO GRAND DOORS: COIN CATCHER (Left) & HOT POTATO (Right)
     const portals = [
-      { id: 'coincatcher', title: 'Coin Catcher', x: -9.0, color: 0xffbf1f, colorHex: '#ffbf1f', icon: '🪙' },
-      { id: 'hotpotato', title: 'HOT POTATO', x: 9.0, color: 0xff3838, colorHex: '#ff3838', icon: '🔥' },
+      { id: 'coincatcher', title: 'Coin Catcher', x: -3.8, color: 0xffbf1f, colorHex: '#ffbf1f', icon: '🪙' },
+      { id: 'hotpotato', title: 'HOT POTATO', x: 3.8, color: 0xff3838, colorHex: '#ff3838', icon: '🔥' },
     ];
 
     portals.forEach((p) => {
       const pGroup = new THREE.Group();
-      pGroup.position.set(p.x, 0, 4.05);
+      pGroup.position.set(p.x, 0, 2.05);
 
-      // Glowing Neon Archway (widened to 4.5m for seamless multiplayer flow)
+      // Glowing Neon Archway
       const archMat = new THREE.MeshBasicMaterial({ color: p.color });
-      const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.2, 0.4), archMat);
-      archLeft.position.set(-2.2, 2.6, 0);
+      const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.32, 4.2, 0.35), archMat);
+      archLeft.position.set(-1.6, 2.1, 0);
       pGroup.add(archLeft);
 
-      const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.2, 0.4), archMat);
-      archRight.position.set(2.2, 2.6, 0);
+      const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.32, 4.2, 0.35), archMat);
+      archRight.position.set(1.6, 2.1, 0);
       pGroup.add(archRight);
 
-      const archTop = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.5, 0.4), archMat);
-      archTop.position.set(0, 5.2, 0);
+      const archTop = new THREE.Mesh(new THREE.BoxGeometry(3.52, 0.36, 0.35), archMat);
+      archTop.position.set(0, 4.2, 0);
       pGroup.add(archTop);
 
-      // Glass Sliding Door Panels (Wider entrance)
+      // Glass Sliding Door Panel
       const glassMat = new THREE.MeshStandardMaterial({
         color: p.color,
         roughness: 0.1,
@@ -1034,11 +1031,11 @@ export class LivingWorld {
         transparent: true,
         opacity: 0.4,
       });
-      const glass = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 4.8), glassMat);
-      glass.position.set(0, 2.4, 0.05);
+      const glass = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 3.9), glassMat);
+      glass.position.set(0, 1.95, 0.05);
       pGroup.add(glass);
 
-      // Illuminated Title above Archway
+      // Illuminated Title above Door
       const tCanvas = document.createElement('canvas');
       tCanvas.width = 384;
       tCanvas.height = 80;
@@ -1051,10 +1048,10 @@ export class LivingWorld {
       tCtx.fillText(`${p.icon} ${p.title}`, 192, 54);
 
       const pTitle = new THREE.Mesh(
-        new THREE.PlaneGeometry(4.0, 0.9),
+        new THREE.PlaneGeometry(3.0, 0.75),
         new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tCanvas) })
       );
-      pTitle.position.set(0, 5.8, 0.1);
+      pTitle.position.set(0, 4.7, 0.1);
       pGroup.add(pTitle);
 
       this.arcadeGroup.add(pGroup);
@@ -1067,34 +1064,6 @@ export class LivingWorld {
         pos: new THREE.Vector3(),
         colorHex: p.colorHex,
       });
-    });
-
-    // 8. Dual Floating Directory Boards (Left & Right Wings)
-    const dirCanvas = document.createElement('canvas');
-    dirCanvas.width = 360;
-    dirCanvas.height = 260;
-    const dCtx = dirCanvas.getContext('2d');
-    dCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-    dCtx.roundRect(4, 4, 352, 252, 16);
-    dCtx.fill();
-    dCtx.strokeStyle = '#38bdf8';
-    dCtx.lineWidth = 4;
-    dCtx.stroke();
-
-    dCtx.fillStyle = '#fde047';
-    dCtx.font = 'bold 28px Fredoka, sans-serif';
-    dCtx.fillText('🪙 Coin Catcher   >', 30, 95);
-    dCtx.fillStyle = '#ff4757';
-    dCtx.fillText('🔥 HOT POTATO     >', 30, 165);
-    dCtx.fillStyle = '#38bdf8';
-    dCtx.font = '600 20px Fredoka, sans-serif';
-    dCtx.fillText('2 - 10 PLAYERS LIVE', 30, 220);
-
-    const dirTex = new THREE.CanvasTexture(dirCanvas);
-    [-15.0, 15.0].forEach((bx) => {
-      const dirBoard = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 3.2), new THREE.MeshBasicMaterial({ map: dirTex }));
-      dirBoard.position.set(bx, 4.5, 4.2);
-      this.arcadeGroup.add(dirBoard);
     });
   }
 
@@ -2495,7 +2464,7 @@ export class LivingWorld {
         }
       });
 
-      const distArcade = Math.hypot(this.player.x - 13.5, this.player.z - (-6.0));
+      const distArcade = Math.hypot(this.player.x - 16.0, this.player.z - (-18.0));
       const distBuilding = Math.hypot(this.player.x - (-18), this.player.z - (-15));
 
       if (nearPortal) {
