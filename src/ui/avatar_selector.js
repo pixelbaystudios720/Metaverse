@@ -132,9 +132,9 @@ export class AvatarSelectionScreen {
       <header class="av-header">
         <div class="av-brand">
           <span class="av-logo-badge">3D</span>
-          <h1>Attention Agents</h1>
+          <h1>Welcome to Metaverse</h1>
         </div>
-        <p class="av-subtitle">Select or customize your streetwear avatar</p>
+        <p class="av-subtitle">Select or customize your 3D metaverse avatar</p>
       </header>
 
       <!-- Main Stage Container -->

@@ -41,10 +41,10 @@ export class HumanAvatarCustomizer {
       <!-- Top Header -->
       <header class="hc-top-header">
         <div class="hc-brand-pill">
-          <span class="hc-badge">3D HUMANOID STUDIO</span>
-          <span class="hc-title">Funny & Stylized Avatar Hub</span>
+          <span class="hc-badge">3D METAVERSE STUDIO</span>
+          <span class="hc-title">Welcome to Metaverse - Avatars</span>
         </div>
-        <p class="hc-subtitle">Select funny, expressive 3D humanoids and stylized characters with live animations & color customization</p>
+        <p class="hc-subtitle">Select your 3D avatar, customize appearance, and step into the Metaverse</p>
       </header>
 
       <!-- Main Studio Workspace -->
@@ -130,6 +130,10 @@ export class HumanAvatarCustomizer {
         font-family: "Fredoka", "Nunito", system-ui, -apple-system, sans-serif;
         user-select: none;
         overflow-y: auto;
+        overflow-x: hidden;
+        width: 100vw;
+        max-width: 100vw;
+        box-sizing: border-box;
       }
 
       .hc-ambient-bg {
@@ -142,7 +146,7 @@ export class HumanAvatarCustomizer {
       .hc-top-header {
         position: relative;
         z-index: 2;
-        padding: 16px 24px 8px;
+        padding: 16px 20px 8px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -186,28 +190,60 @@ export class HumanAvatarCustomizer {
         z-index: 2;
         flex: 1;
         display: grid;
-        grid-template-columns: 1fr 480px;
+        grid-template-columns: minmax(0, 1fr) 460px;
         max-width: 1360px;
         width: 100%;
         margin: 0 auto;
-        padding: 12px 24px 24px;
-        gap: 24px;
+        padding: 12px 20px 24px;
+        gap: 20px;
         align-items: center;
+        box-sizing: border-box;
       }
 
       @media (max-width: 960px) {
         .hc-workspace {
-          grid-template-columns: 1fr;
+          grid-template-columns: minmax(0, 1fr);
+          padding: 8px 12px 24px;
+          gap: 16px;
+        }
+        .hc-viewport-card {
+          min-height: unset !important;
+          width: 100%;
+        }
+        .hc-canvas-container {
+          max-width: 100% !important;
+          width: 100% !important;
+          height: 320px !important;
+          max-height: 42vh !important;
+          aspect-ratio: unset !important;
+          border-radius: 20px !important;
+        }
+        .hc-controls-card {
+          max-height: unset !important;
+          padding: 16px !important;
+          border-radius: 20px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .hc-top-header {
+          padding: 12px 14px 4px !important;
+        }
+        .hc-title {
+          font-size: 15px !important;
+        }
+        .hc-subtitle {
+          font-size: 11.5px !important;
         }
       }
 
       .hc-viewport-card {
         height: 100%;
-        min-height: 500px;
+        min-height: 480px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        width: 100%;
       }
 
       .hc-canvas-container {
@@ -840,15 +876,31 @@ export class HumanAvatarCustomizer {
     this.animate = this.animate.bind(this);
     requestAnimationFrame(this.animate);
 
-    // Window Resize
-    window.addEventListener('resize', () => {
-      if (!this.wrap || !this.renderer) return;
-      const w = this.wrap.clientWidth || 480;
-      const h = this.wrap.clientHeight || 480;
+    // Responsive Canvas & Camera Sizing
+    const updateSize = () => {
+      if (!this.wrap || !this.renderer || !this.camera) return;
+      const w = this.wrap.clientWidth || 360;
+      const h = this.wrap.clientHeight || 320;
       this.camera.aspect = w / h;
+      if (w < 640) {
+        this.camera.fov = 42;
+        this.camera.position.set(0, 1.0, 4.2);
+      } else {
+        this.camera.fov = 35;
+        this.camera.position.set(0, 1.1, 3.4);
+      }
+      this.camera.lookAt(0, 0.9, 0);
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(w, h, false);
-    });
+    };
+
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => updateSize());
+      ro.observe(this.wrap);
+    }
+    window.addEventListener('resize', updateSize);
+    setTimeout(updateSize, 60);
+    setTimeout(updateSize, 300);
 
     this.attachActionListeners();
   }
@@ -1023,7 +1075,7 @@ export class HumanAvatarCustomizer {
       body.innerHTML = `
         <div class="hc-filter-pills">
           <button type="button" class="hc-pill ${filter === 'all' ? 'active' : ''}" data-filter="all">🔥 All Avatars (${CHARACTER_CATALOG.length})</button>
-          <button type="button" class="hc-pill ${filter === 'aa' ? 'active' : ''}" data-filter="aa">🐱 Attention Agents (4)</button>
+          <button type="button" class="hc-pill ${filter === 'aa' ? 'active' : ''}" data-filter="aa">🐱 Metaverse Avatars (4)</button>
           <button type="button" class="hc-pill ${filter === 'scans' ? 'active' : ''}" data-filter="scans">🧍 3D Scans (3)</button>
         </div>
         <div class="hc-chars-grid">

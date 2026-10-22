@@ -930,11 +930,10 @@ export class LivingWorld {
     arcadeSign.position.set(0, 6.6, 2.82);
     this.arcadeGroup.add(arcadeSign);
 
-    // Three Distinct Portal Entrances (Coin Catcher, Rooftop Run, Hot Potato)
+    // Two Distinct Portal Entrances (Coin Catcher & Hot Potato) - Rooftop Run removed
     const portals = [
-      { id: 'coincatcher', title: 'Coin Catcher', x: -6.0, color: 0xffbf1f, colorHex: '#ffbf1f', icon: '🪙' },
-      { id: 'rooftoprun', title: 'Rooftop Run', x: 0, color: 0x38bdf8, colorHex: '#38bdf8', icon: '🏃' },
-      { id: 'hotpotato', title: 'HOT POTATO', x: 6.0, color: 0xff3838, colorHex: '#ff3838', icon: '🔥' },
+      { id: 'coincatcher', title: 'Coin Catcher', x: -4.5, color: 0xffbf1f, colorHex: '#ffbf1f', icon: '🪙' },
+      { id: 'hotpotato', title: 'HOT POTATO', x: 4.5, color: 0xff3838, colorHex: '#ff3838', icon: '🔥' },
     ];
 
     portals.forEach((p) => {
@@ -1012,12 +1011,10 @@ export class LivingWorld {
     dCtx.stroke();
 
     dCtx.fillStyle = '#fde047';
-    dCtx.font = 'bold 24px Fredoka, sans-serif';
-    dCtx.fillText('🪙 Coin Catcher   >', 20, 65);
-    dCtx.fillStyle = '#38bdf8';
-    dCtx.fillText('🏃 Rooftop Run    >', 20, 130);
+    dCtx.font = 'bold 26px Fredoka, sans-serif';
+    dCtx.fillText('🪙 Coin Catcher   >', 25, 95);
     dCtx.fillStyle = '#ff4757';
-    dCtx.fillText('🔥 HOT POTATO     >', 20, 195);
+    dCtx.fillText('🔥 HOT POTATO     >', 25, 165);
 
     const dirTex = new THREE.CanvasTexture(dirCanvas);
     const dirBoard = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.8), new THREE.MeshBasicMaterial({ map: dirTex }));
@@ -1518,71 +1515,213 @@ export class LivingWorld {
       font-family: "Fredoka", system-ui, sans-serif;
     `;
 
-    this.hudContainer.innerHTML = `
-      <!-- Top-Left Profile Card (Matching Image 2 Panel 8) -->
-      <div id="lw-profile-card" style="
-        position: absolute; top: 18px; left: 18px; display: flex; align-items: center; gap: 14px;
+    // Inject dedicated responsive styles for the Living World HUD
+    const styleEl = document.createElement('style');
+    styleEl.id = 'lw-hud-styles';
+    styleEl.textContent = `
+      #lw-profile-card {
+        position: absolute; top: 18px; left: 18px; display: flex; align-items: center; gap: 12px;
         background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(56, 189, 248, 0.3);
-        padding: 8px 18px 8px 10px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-        pointer-events: auto;
-      ">
-        <div style="
-          width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #38bdf8);
-          display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid #38bdf8;
+        padding: 8px 16px 8px 10px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        pointer-events: auto; z-index: 50; transition: all 0.2s ease;
+      }
+      #lw-minimap-card {
+        position: absolute; top: 18px; right: 18px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        pointer-events: auto; z-index: 50; transition: all 0.2s ease;
+      }
+      #lw-chat-card {
+        position: absolute; bottom: 20px; left: 18px; width: 320px; background: rgba(15, 23, 42, 0.88);
+        backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.15); border-radius: 18px;
+        padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); pointer-events: auto; z-index: 45;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #lw-main-menu-modal {
+        display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 760px; max-width: calc(100vw - 20px); height: 480px; max-height: calc(100vh - 40px);
+        background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(24px);
+        border: 2px solid #38bdf8; border-radius: 24px; box-shadow: 0 25px 70px rgba(0,0,0,0.85);
+        pointer-events: auto; color: #fff; z-index: 100; overflow: hidden;
+      }
+
+      /* Mobile Overrides (width <= 640px) */
+      @media (max-width: 640px) {
+        #lw-profile-card {
+          top: 10px !important;
+          left: 10px !important;
+          gap: 6px !important;
+          padding: 5px 8px 5px 6px !important;
+          border-radius: 14px !important;
+          max-width: 160px !important;
+        }
+        #lw-profile-card .lw-avatar-icon {
+          width: 32px !important;
+          height: 32px !important;
+          font-size: 16px !important;
+        }
+        #lw-profile-card .lw-player-name {
+          font-size: 13px !important;
+        }
+        #lw-profile-card .lw-player-level {
+          font-size: 10px !important;
+        }
+        #lw-profile-card .lw-xp-bar-wrap {
+          width: 50px !important;
+          height: 5px !important;
+        }
+        #lw-profile-card .lw-xp-text {
+          font-size: 8px !important;
+        }
+        #lw-profile-card #lw-btn-menu {
+          width: 26px !important;
+          height: 26px !important;
+          font-size: 13px !important;
+        }
+
+        #lw-minimap-card {
+          top: 10px !important;
+          right: 10px !important;
+          gap: 3px !important;
+        }
+        #lw-minimap-card .lw-minimap-circle {
+          width: 70px !important;
+          height: 70px !important;
+          border-width: 2px !important;
+        }
+        #lw-minimap-card #lw-minimap-canvas {
+          width: 70px !important;
+          height: 70px !important;
+        }
+        #lw-minimap-card .lw-loc-badge {
+          font-size: 9.5px !important;
+          padding: 2px 6px !important;
+          border-radius: 8px !important;
+        }
+
+        /* Chat positioned on mobile above touch controls, collapsible */
+        #lw-chat-card {
+          bottom: 80px !important;
+          left: 10px !important;
+          width: calc(100vw - 20px) !important;
+          max-width: 280px !important;
+          padding: 8px !important;
+          border-radius: 14px !important;
+        }
+        #lw-chat-card.collapsed #lw-chat-messages,
+        #lw-chat-card.collapsed .lw-chat-input-row {
+          display: none !important;
+        }
+        #lw-chat-card.collapsed {
+          width: auto !important;
+          padding: 6px 12px !important;
+          border-radius: 999px !important;
+          bottom: 12px !important;
+          left: 10px !important;
+          background: rgba(15, 23, 42, 0.92) !important;
+        }
+        #lw-chat-messages {
+          max-height: 60px !important;
+          font-size: 11px !important;
+        }
+
+        /* Menu modal mobile adjustments */
+        #lw-main-menu-modal {
+          width: calc(100vw - 20px) !important;
+          max-height: 84vh !important;
+          border-radius: 18px !important;
+          height: auto !important;
+        }
+        #lw-main-menu-modal .lw-modal-layout {
+          flex-direction: column !important;
+          height: auto !important;
+          max-height: 84vh !important;
+        }
+        #lw-main-menu-modal .lw-modal-sidebar {
+          width: 100% !important;
+          border-right: none !important;
+          border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+          padding: 12px !important;
+          box-sizing: border-box !important;
+        }
+        #lw-main-menu-modal .lw-modal-tabs {
+          flex-direction: row !important;
+          overflow-x: auto !important;
+          gap: 6px !important;
+        }
+        #lw-main-menu-modal .lw-modal-tabs button {
+          padding: 6px 10px !important;
+          font-size: 11.5px !important;
+          white-space: nowrap !important;
+        }
+        #lw-main-menu-modal #lw-menu-content {
+          padding: 14px !important;
+          max-height: 55vh !important;
+          overflow-y: auto !important;
+        }
+      }
+    `;
+    document.head.appendChild(styleEl);
+
+    this.hudContainer.innerHTML = `
+      <!-- Top-Left Profile Card -->
+      <div id="lw-profile-card">
+        <div class="lw-avatar-icon" style="
+          width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #38bdf8);
+          display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px solid #38bdf8;
+          flex-shrink: 0;
         ">👤</div>
-        <div>
+        <div style="min-width: 0;">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="color: #fff; font-weight: 800; font-size: 16px;">Alex</span>
-            <span style="color: #38bdf8; font-size: 13px; font-weight: 700;">Level 1</span>
+            <span class="lw-player-name" style="color: #fff; font-weight: 800; font-size: 15px;">Alex</span>
+            <span class="lw-player-level" style="color: #38bdf8; font-size: 12px; font-weight: 700;">Level 1</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <div style="width: 110px; height: 7px; background: rgba(255,255,255,0.18); border-radius: 4px; overflow: hidden;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+            <div class="lw-xp-bar-wrap" style="width: 90px; height: 6px; background: rgba(255,255,255,0.18); border-radius: 4px; overflow: hidden;">
               <div style="width: 45%; height: 100%; background: linear-gradient(90deg, #38bdf8, #00d2d3);"></div>
             </div>
-            <span style="color: #94a3b8; font-size: 10px; font-weight: 600;">980 XP</span>
+            <span class="lw-xp-text" style="color: #94a3b8; font-size: 9.5px; font-weight: 600;">980 XP</span>
           </div>
         </div>
         <button id="lw-btn-menu" style="
-          background: rgba(255,255,255,0.1); border: none; color: #cbd5e1; width: 34px; height: 34px;
-          border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
+          background: rgba(255,255,255,0.1); border: none; color: #cbd5e1; width: 32px; height: 32px;
+          border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px;
+          flex-shrink: 0;
         ">☰</button>
       </div>
 
       <!-- Top-Right Compass Minimap -->
-      <div id="lw-minimap-card" style="
-        position: absolute; top: 18px; right: 18px; display: flex; flex-direction: column; align-items: center; gap: 6px;
-        pointer-events: auto;
-      ">
-        <div style="
-          width: 110px; height: 110px; border-radius: 50%; background: rgba(15, 23, 42, 0.85);
+      <div id="lw-minimap-card">
+        <div class="lw-minimap-circle" style="
+          width: 100px; height: 100px; border-radius: 50%; background: rgba(15, 23, 42, 0.85);
           backdrop-filter: blur(12px); border: 3px solid #00d2d3; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
           position: relative; overflow: hidden;
         ">
           <canvas id="lw-minimap-canvas" width="110" height="110" style="width: 100%; height: 100%;"></canvas>
         </div>
-        <div style="
+        <div class="lw-loc-badge" style="
           background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);
-          padding: 4px 12px; border-radius: 12px; color: #f8fafc; font-size: 12px; font-weight: 700;
+          padding: 3px 10px; border-radius: 10px; color: #f8fafc; font-size: 11px; font-weight: 700;
           display: flex; align-items: center; gap: 4px;
         ">
           <span>📍</span> Central Plaza
         </div>
       </div>
 
-      <!-- Bottom-Left Glassmorphism Chat -->
-      <div id="lw-chat-card" style="
-        position: absolute; bottom: 20px; left: 18px; width: 320px; background: rgba(15, 23, 42, 0.82);
-        backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.15); border-radius: 18px;
-        padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); pointer-events: auto;
-      ">
+      <!-- Bottom-Left Glassmorphism Chat (Mobile friendly, toggleable) -->
+      <div id="lw-chat-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 11px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 4px;">
+            💬 Metaverse Chat
+          </span>
+          <button id="lw-chat-min-btn" style="background: none; border: none; color: #94a3b8; font-size: 12px; cursor: pointer; padding: 0 4px;">−</button>
+        </div>
         <div id="lw-chat-messages" style="
-          max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; font-size: 12px;
+          max-height: 95px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; font-size: 12px;
         ">
           <div><b style="color: #38bdf8;">NovaStar :</b> <span style="color: #e2e8f0;">Nice game!</span></div>
           <div><b style="color: #ec4899;">PixelQueen :</b> <span style="color: #e2e8f0;">Let's play again!</span></div>
           <div><b style="color: #facc15;">ShadowX :</b> <span style="color: #e2e8f0;">gg everyone 🔥</span></div>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="lw-chat-input-row" style="display: flex; align-items: center; gap: 6px;">
           <input id="lw-chat-input" type="text" placeholder="Type a message..." style="
             flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
             border-radius: 12px; padding: 6px 12px; color: #fff; font-size: 12px; outline: none; font-family: inherit;
@@ -1604,46 +1743,41 @@ export class LivingWorld {
         Press E to Interact
       </div>
 
-      <!-- Game Menu / UI & Features Modal (Matching Image 2 Panel 8) -->
-      <div id="lw-main-menu-modal" style="
-        display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 760px; height: 480px; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(24px);
-        border: 2px solid #38bdf8; border-radius: 24px; box-shadow: 0 25px 70px rgba(0,0,0,0.85);
-        pointer-events: auto; color: #fff; z-index: 100; overflow: hidden;
-      ">
-        <div style="display: flex; height: 100%;">
+      <!-- Game Menu / UI & Features Modal -->
+      <div id="lw-main-menu-modal">
+        <div class="lw-modal-layout" style="display: flex; height: 100%;">
           <!-- Left Sidebar Menu -->
-          <div style="
-            width: 260px; background: rgba(30, 41, 59, 0.6); border-right: 1px solid rgba(255,255,255,0.1);
-            padding: 24px; display: flex; flex-direction: column; justify-content: space-between;
+          <div class="lw-modal-sidebar" style="
+            width: 250px; background: rgba(30, 41, 59, 0.6); border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
           ">
             <div>
-              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-                <div style="width: 52px; height: 52px; border-radius: 50%; background: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 26px;">👤</div>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 24px;">👤</div>
                 <div>
-                  <div style="font-weight: 800; font-size: 18px;">Alex</div>
-                  <div style="color: #38bdf8; font-size: 13px;">Level 1</div>
+                  <div style="font-weight: 800; font-size: 17px;">Alex</div>
+                  <div style="color: #38bdf8; font-size: 12px;">Level 1</div>
                 </div>
               </div>
 
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button id="lw-tab-games" style="display: flex; align-items: center; gap: 10px; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #fff; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🕹️ Game Selection</button>
-                <button id="lw-tab-leaderboard" style="display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🏆 Leaderboard</button>
-                <button id="lw-tab-profile" style="display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">👤 Profile</button>
-                <button id="lw-tab-settings" style="display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">⚙️ Settings</button>
+              <div class="lw-modal-tabs" style="display: flex; flex-direction: column; gap: 8px;">
+                <button id="lw-tab-games" style="display: flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #fff; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🕹️ Game Selection</button>
+                <button id="lw-tab-leaderboard" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🏆 Leaderboard</button>
+                <button id="lw-tab-profile" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">👤 Profile</button>
+                <button id="lw-tab-settings" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">⚙️ Settings</button>
               </div>
             </div>
 
-            <button id="lw-btn-close-menu" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 8px; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: bold;">✕ Close</button>
+            <button id="lw-btn-close-menu" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 8px; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: bold; margin-top: 12px;">✕ Close</button>
           </div>
 
           <!-- Right Content Area -->
-          <div id="lw-menu-content" style="flex: 1; padding: 24px; overflow-y: auto;">
-            <!-- Game Selection View -->
+          <div id="lw-menu-content" style="flex: 1; padding: 22px; overflow-y: auto;">
+            <!-- Game Selection View (ONLY HOT POTATO & COIN CATCHER - ROOFTOP RUN REMOVED) -->
             <div id="lw-view-games">
               <h2 style="margin: 0 0 16px 0; color: #38bdf8; font-size: 22px;">Select Game</h2>
-              <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div id="lw-launch-hotpotato" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #ef4444; border-radius: 16px; padding: 14px; cursor: pointer;">
+              <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div id="lw-launch-hotpotato" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #ef4444; border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.15s ease;">
                   <span style="font-size: 36px;">🥔</span>
                   <div style="flex: 1;">
                     <div style="font-size: 16px; font-weight: 800; color: #f87171;">HOT POTATO (3D Stadium)</div>
@@ -1652,22 +1786,13 @@ export class LivingWorld {
                   <span style="font-size: 20px; color: #ef4444;">▶</span>
                 </div>
 
-                <div id="lw-launch-coincatcher" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #facc15; border-radius: 16px; padding: 14px; cursor: pointer;">
+                <div id="lw-launch-coincatcher" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #facc15; border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.15s ease;">
                   <span style="font-size: 36px;">🪙</span>
                   <div style="flex: 1;">
                     <div style="font-size: 16px; font-weight: 800; color: #fde047;">Coin Catcher</div>
                     <div style="font-size: 12px; color: #94a3b8;">Collect spawned items during a timed round</div>
                   </div>
                   <span style="font-size: 20px; color: #facc15;">▶</span>
-                </div>
-
-                <div id="lw-launch-rooftoprun" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #38bdf8; border-radius: 16px; padding: 14px; cursor: pointer;">
-                  <span style="font-size: 36px;">🏃</span>
-                  <div style="flex: 1;">
-                    <div style="font-size: 16px; font-weight: 800; color: #38bdf8;">Rooftop Run</div>
-                    <div style="font-size: 12px; color: #94a3b8;">Race through high-altitude obstacle courses</div>
-                  </div>
-                  <span style="font-size: 20px; color: #38bdf8;">▶</span>
                 </div>
               </div>
             </div>
@@ -1749,7 +1874,7 @@ export class LivingWorld {
       window.openHumanCustomizer?.();
     });
 
-    // Game launchers from modal
+    // Game launchers from modal (HOT POTATO & COIN CATCHER ONLY)
     this.hudContainer.querySelector('#lw-launch-hotpotato')?.addEventListener('click', () => {
       modal.style.display = 'none';
       this.options.onOpenGame?.('hotpotato');
@@ -1758,9 +1883,13 @@ export class LivingWorld {
       modal.style.display = 'none';
       this.options.onOpenGame?.('coincatcher');
     });
-    this.hudContainer.querySelector('#lw-launch-rooftoprun')?.addEventListener('click', () => {
-      modal.style.display = 'none';
-      this.options.onOpenGame?.('rooftoprun');
+
+    // Chat minimize toggle (especially for mobile devices)
+    const chatCard = this.hudContainer.querySelector('#lw-chat-card');
+    const chatMinBtn = this.hudContainer.querySelector('#lw-chat-min-btn');
+    chatMinBtn?.addEventListener('click', () => {
+      chatCard.classList.toggle('collapsed');
+      chatMinBtn.textContent = chatCard.classList.contains('collapsed') ? '💬' : '−';
     });
 
     // Setup Chat Send handler

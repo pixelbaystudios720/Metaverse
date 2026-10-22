@@ -235,14 +235,14 @@ export class MetaverseWorld {
       'coin-catcher'
     );
 
-    // Billboard 2: ROOFTOP RUN (Right: x = 14, z = 4)
+    // Billboard 2: HOT POTATO (Right: x = 14, z = 4)
     this.createGameBillboard(
       14, 0, 4,
       -Math.PI * 0.15,
-      'ROOFTOP RUN',
-      'Neon Parkour Speedrun Course!',
-      0x06d6a0,
-      'rooftop-run'
+      'HOT POTATO',
+      'Pass the Bomb Before It Blows!',
+      0xef4444,
+      'hot-potato'
     );
   }
 
