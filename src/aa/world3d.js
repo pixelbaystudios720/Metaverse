@@ -1717,10 +1717,8 @@ export function buildWorld(scene, { shadows = true, seed = 7, labTubes = true, c
       [-1, 1].forEach((sd) => { const [px, pz] = toWorldXZ(x, z, ry, sd * (w / 2 - .3), 0); obstacles.push({ x: px, z: pz, r: .3 }); });
       return g;
     };
-    // Auda City: its station stands in the town square (pad, badge and a lit poster), north-east of the plaza
-    // Agent Royale stands across the square from it, north-west
-    for (const id of ['getaway', 'royale', 'obby', 'roadster']) { const gw = MINIGAMES.find((m) => m.id === id);
-      if (gw) { gamePad(group, extras, gw.spot.x, gw.spot.z, gw.color); gameBadge(group, extras, gw.x, 3.6, gw.z, gw); gamePoster(group, extras, gw.x, gw.z, Math.atan2(-gw.x, -gw.z), gw, { w: 2.6 }); } }
+    // Town square front vista is kept completely open and clean for the Coin Catcher and Hot Potato grand arena entrances
+    // (minigames remain fully accessible via the top HUD menu, map, and dedicated district arcades)
     // a big themed arcade cabinet for one minigame: painted side stripes, a lit marquee with the title, an attract-mode
     // screen panning across the key art, a control panel with a joystick and buttons, neon edges
     const marqueeTex = (m) => { const c = document.createElement('canvas'); c.width = 768; c.height = 256; const tex = texOf(c);

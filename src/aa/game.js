@@ -523,7 +523,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
   let peerSortN = 0, peerShown = new Set();
   // 12 townsfolk (owner): background characters who travel between the districts and hang out at the games. They never talk,
   // are never counted as players online, and follow a shared clock so everyone sees the same
-  const NPC_SPOTS = { town: [[-6, 6], [6, 6], [-7, -5], [7, -4], [0, 7.5], [3, 10]], arcade: [[-48.6, -7.6], [-45.4, -7.4], [-42.2, -7.8], [-50.4, 2.2], [-44, 3]], docks: [[53.4, -3.6], [60.5, -1], [63.5, -1.2], [47, 4], [52, 2], [60, 3.5]], park: [[-6.8, 48.6], [-3.2, 48.4], [3, 52], [1.5, 45], [-1, 58], [8.7, 49.5]] };
+  const NPC_SPOTS = { town: [[-9.5, 0], [9.5, 0], [-10.5, 8.5], [10.5, 8.5], [-4.5, 12.5], [4.5, 12.5], [-12.5, -8.5], [12.5, -8.5]], arcade: [[-48.6, -7.6], [-45.4, -7.4], [-42.2, -7.8], [-50.4, 2.2], [-44, 3]], docks: [[53.4, -3.6], [60.5, -1], [63.5, -1.2], [47, 4], [52, 2], [60, 3.5]], park: [[-6.8, 48.6], [-3.2, 48.4], [3, 52], [1.5, 45], [-1, 58], [8.7, 49.5]] };
   const NPC_GATE = { town: [0, 4], arcade: [-38.5, 0], docks: [38.5, 0], park: [0, 38.6] }, NPC_ZONES = Object.keys(NPC_SPOTS);
   const NPC_NAMES = ['n0scope', 'fl1ckz', 'dezzy_', 'kr4ken', 'v0id.', 'tr1gg3r', 'zeph-', 'm4rr', 'ezpz_', 'lurk3r', 'frag0', 'ttv_s1lent', 'cl4ssic', 'nade.exe', 'jxnny'];
   const hash = (n) => { n = (n ^ 61) ^ (n >>> 16); n = Math.imul(n, 9); n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); return (n ^ (n >>> 15)) >>> 0; };
@@ -586,8 +586,41 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     peers.forEach((p) => {
       if (!p.here || !scene || busy || !peerShown.has(p)) { if (p.root) p.root.visible = false; return; }
       if (!p.root || p.rootW !== where) { dropRoot(p); p.root = p.body && p.body !== 'person' ? buildVisitor(p.body, p.vcolor || p.look?.hoodie) : buildPerson(p.look, { lite: true }); castShadows(p.root, false, false); scene.add(p.root); p.rootW = where; }
-      const u = p.root.userData.creature;
       if (Math.hypot(p.tx - p.x, p.tz - p.z) > 4) { p.x = p.tx; p.z = p.tz; } else { p.x = lerp(p.x, p.tx, k); p.z = lerp(p.z, p.tz, k); }
+      if (where === 'out') {
+        // Enforce static world collision against benches, fountain, and buildings
+        globalCollision._resolveOverlap(p, 0.42);
+
+        // Mutual collision separation with other active peers so NPCs never overlap/clip
+        peers.forEach((other) => {
+          if (other === p || !other.here) return;
+          const odx = p.x - other.x, odz = p.z - other.z;
+          const odist = Math.hypot(odx, odz);
+          if (odist < 0.85 && odist > 1e-4) {
+            const push = (0.85 - odist) * 0.5;
+            const nx = odx / odist, nz = odz / odist;
+            p.x += nx * push;
+            p.z += nz * push;
+            other.x -= nx * push;
+            other.z -= nz * push;
+          }
+        });
+
+        // Mutual collision separation with local player
+        const pdx = p.x - player.x, pdz = p.z - player.z;
+        const pdist = Math.hypot(pdx, pdz);
+        const minDist = (player.r || 0.36) + 0.42;
+        if (pdist < minDist && pdist > 1e-4) {
+          const push = (minDist - pdist);
+          const nx = pdx / pdist, nz = pdz / pdist;
+          p.x += nx * push * 0.6;
+          p.z += nz * push * 0.6;
+          player.x -= nx * push * 0.4;
+          player.z -= nz * push * 0.4;
+        }
+
+        globalCollision._resolveOverlap(p, 0.42);
+      }
       p.h = turn(p.h, p.th, dt * 9);
       u.walk = lerp(u.walk, p.tv > .15 ? clamp(p.tv / 3.3, .7, 1.45) : 0, Math.min(1, dt * 8));
       if (p.tv > .15) u.walkPhase += dt * Math.min(u.strideFor ? p.tv / (u.strideFor(Math.max(.7, u.walk)) * s) : p.tv * 3.1, 26);
@@ -1062,8 +1095,23 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     if (coinCatcherGame?.isActive) coinCatcherGame.update(dt, t);
     if (rooftopRunGame?.isActive) rooftopRunGame.update(dt, t);
     if (cyberSpeedwayGame?.isActive) cyberSpeedwayGame.update(dt, t);
-    // Agents step around the player instead of walking through
+    // Agents and peers step around the player instead of walking through
     world.agents.forEach((fa) => { const dx = fa.pos.x - player.x, dz = fa.pos.y - player.z, d = Math.hypot(dx, dz), min = fa.radius + player.r; if (d < min && d > 1e-4) { fa.pos.x = player.x + (dx / d) * min; fa.pos.y = player.z + (dz / d) * min; fa.place(); } });
+    peers.forEach((p) => {
+      if (!p.here) return;
+      const dx = player.x - p.x, dz = player.z - p.z;
+      const dist = Math.hypot(dx, dz);
+      const minDist = (player.r || 0.36) + 0.42;
+      if (dist < minDist && dist > 1e-4) {
+        const push = (minDist - dist);
+        const nx = dx / dist, nz = dz / dist;
+        player.x += nx * push * 0.5;
+        player.z += nz * push * 0.5;
+        p.x -= nx * push * 0.5;
+        p.z -= nz * push * 0.5;
+      }
+    });
+    globalCollision._resolveOverlap(player, player.r || 0.36);
     const c = outS.camera, ok = Math.min(1, dt * 10);
     orbit.yaw = lerp(orbit.yaw, orbit.tyaw, ok); orbit.pitch = lerp(orbit.pitch, orbit.tpitch, ok); orbit.dist = lerp(orbit.dist, orbit.tdist, ok);
     const fx = -Math.sin(orbit.yaw), fz = -Math.cos(orbit.yaw);

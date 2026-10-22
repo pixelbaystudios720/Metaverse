@@ -76,9 +76,9 @@ export class LivingWorld {
     this.setupSkyAndEnvironment();
     this.buildRoadsAndCrosswalks();
     this.buildCentralPlaza();
-    this.buildArcadeEntrance();
+    this.buildCoinCatcherBuilding(); // Left Building (-18, 0, -18)
+    this.buildHotPotatoBuilding();   // Right Building (18, 0, -18)
     this.buildParkArea();
-    this.buildInteractiveBuilding();
     this.buildTrafficSystem();
     this.buildCollectibleCoins();
     this.buildUIOverlays();
@@ -189,168 +189,100 @@ export class LivingWorld {
     const lineMat = new THREE.MeshBasicMaterial({ color: 0xf5f6fa });
     const yellowLineMat = new THREE.MeshBasicMaterial({ color: 0xfbc531 });
 
-    // Multi-lane roadway along the East side of the plaza (x = 22, z from -96 to 96)
+    // Multi-lane roadway placed safely along outer arterial boulevard (x = 38.5, z from -96 to 96)
+    // 20+ meters away from the plaza and Hot Potato building!
     const roadWidth = 9.5;
-    const roadGeo = new THREE.PlaneGeometry(roadWidth, 200);
-    const roadMesh = new THREE.Mesh(roadGeo, asphaltMat);
+    const roadMesh = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth, 200), asphaltMat);
     roadMesh.rotation.x = -Math.PI / 2;
-    roadMesh.position.set(22, 0.02, 0);
+    roadMesh.position.set(38.5, 0.02, 0);
     roadMesh.receiveShadow = true;
     this.roadGroup.add(roadMesh);
 
-    // Center divider dashed line
+    // Center divider dashed line (x = 38.5)
     for (let z = -92; z <= 92; z += 4) {
-      const dashGeo = new THREE.PlaneGeometry(0.32, 2.2);
-      const dash = new THREE.Mesh(dashGeo, yellowLineMat);
+      const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 2.2), yellowLineMat);
       dash.rotation.x = -Math.PI / 2;
-      dash.position.set(22, 0.03, z);
+      dash.position.set(38.5, 0.03, z);
       this.roadGroup.add(dash);
     }
 
-    // Painted Pedestrian Crosswalk stripes near Arcade entrance (z = 4)
-    for (let x = 17.8; x <= 26.2; x += 1.1) {
-      const stripeGeo = new THREE.PlaneGeometry(0.68, 4.0);
-      const stripe = new THREE.Mesh(stripeGeo, lineMat);
+    // Painted Pedestrian Crosswalk stripes (z = 4)
+    for (let x = 34.2; x <= 42.8; x += 1.1) {
+      const stripe = new THREE.Mesh(new THREE.PlaneGeometry(0.68, 4.0), lineMat);
       stripe.rotation.x = -Math.PI / 2;
       stripe.position.set(x, 0.032, 4);
       this.roadGroup.add(stripe);
     }
 
-    // Two-way Stop Lines on road before crosswalk:
-    // 1. Northbound Stop Line (left lane, x = 19.65, z = 7.2)
+    // Lane Stop Lines before crosswalk
     const stopLineNorth = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth * 0.44, 0.65), lineMat);
     stopLineNorth.rotation.x = -Math.PI / 2;
-    stopLineNorth.position.set(19.65, 0.033, 7.2);
+    stopLineNorth.position.set(36.25, 0.033, 7.2);
     this.roadGroup.add(stopLineNorth);
 
-    // 2. Southbound Stop Line (right lane, x = 24.35, z = 0.8)
     const stopLineSouth = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth * 0.44, 0.65), lineMat);
     stopLineSouth.rotation.x = -Math.PI / 2;
-    stopLineSouth.position.set(24.35, 0.033, 0.8);
+    stopLineSouth.position.set(40.75, 0.033, 0.8);
     this.roadGroup.add(stopLineSouth);
-
-    // Painted Lane Direction Straight Arrows on Asphalt
-    [-60, -20, 25, 65].forEach((az) => {
-      // Northbound arrow (x = 19.65)
-      const arrowN = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 2.0), lineMat);
-      arrowN.rotation.x = -Math.PI / 2;
-      arrowN.position.set(19.65, 0.032, az);
-      this.roadGroup.add(arrowN);
-
-      const headN = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.8, 3), lineMat);
-      headN.rotation.x = -Math.PI / 2;
-      headN.rotation.z = Math.PI;
-      headN.position.set(19.65, 0.033, az - 1.2);
-      this.roadGroup.add(headN);
-
-      // Southbound arrow (x = 24.35)
-      const arrowS = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 2.0), lineMat);
-      arrowS.rotation.x = -Math.PI / 2;
-      arrowS.position.set(24.35, 0.032, az);
-      this.roadGroup.add(arrowS);
-
-      const headS = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.8, 3), lineMat);
-      headS.rotation.x = -Math.PI / 2;
-      headS.position.set(24.35, 0.033, az + 1.2);
-      this.roadGroup.add(headS);
-    });
 
     // Concrete Sidewalk along road
     const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 });
-    const sidewalkGeo = new THREE.BoxGeometry(3.2, 0.24, 200);
-    const sidewalk = new THREE.Mesh(sidewalkGeo, sidewalkMat);
-    sidewalk.position.set(22 - roadWidth / 2 - 1.6, 0.12, 0);
+    const sidewalk = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.24, 200), sidewalkMat);
+    sidewalk.position.set(31.6, 0.12, 0);
     sidewalk.receiveShadow = true;
     this.roadGroup.add(sidewalk);
 
-    // Curb edge stone along road
-    const curbMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.6 });
-    const curbGeo = new THREE.BoxGeometry(0.3, 0.28, 200);
-    const curb = new THREE.Mesh(curbGeo, curbMat);
-    curb.position.set(22 - roadWidth / 2 - 0.15, 0.14, 0);
-    this.roadGroup.add(curb);
+    // Solid Protective Road Guardrail (Blocks vehicles from entering pedestrian plaza!)
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
+    const guardrail = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.95, 200), railMat);
+    guardrail.position.set(33.6, 0.48, 0);
+    this.roadGroup.add(guardrail);
 
-    // ---------------------------------------------------------------
-    // Realistic City Feature: Cyber Bus Stop Transit Shelter (x = 15.6, z = -14)
-    // ---------------------------------------------------------------
+    // Glowing Neon Edge on guardrail
+    const railGlow = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 200), new THREE.MeshBasicMaterial({ color: 0x00d2d3 }));
+    railGlow.position.set(33.4, 0.96, 0);
+    this.roadGroup.add(railGlow);
+
+    // Cyber Bus Stop Transit Shelter on Sidewalk (x = 31.0, z = -14)
     const shelterGroup = new THREE.Group();
-    shelterGroup.position.set(15.6, 0.24, -14);
+    shelterGroup.position.set(31.0, 0.24, -14);
     const steelDark = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85, roughness: 0.25 });
     const glassShelter = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.45 });
 
-    // Shelter Roof Canopy
     const roof = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 5.2), steelDark);
     roof.position.set(0, 2.7, 0);
     shelterGroup.add(roof);
 
-    // Glowing Neon Edge on Canopy
-    const roofNeon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 5.22), new THREE.MeshBasicMaterial({ color: 0x00d2d3 }));
-    roofNeon.position.set(1.2, 2.7, 0);
-    shelterGroup.add(roofNeon);
-
-    // Rear Glass Wall
     const backGlass = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.4, 5.0), glassShelter);
     backGlass.position.set(-1.0, 1.35, 0);
     shelterGroup.add(backGlass);
 
-    // Support Pillars
     [-2.4, 2.4].forEach((pz) => {
       const col = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.6, 0.14), steelDark);
       col.position.set(-1.0, 1.3, pz);
       shelterGroup.add(col);
     });
 
-    // Transit Digital Schedule Board
-    const schedCanvas = document.createElement('canvas');
-    schedCanvas.width = 512;
-    schedCanvas.height = 128;
-    const sctx = schedCanvas.getContext('2d');
-    sctx.fillStyle = '#0f172a';
-    sctx.fillRect(0, 0, 512, 128);
-    sctx.strokeStyle = '#00d2d3';
-    sctx.lineWidth = 4;
-    sctx.strokeRect(4, 4, 504, 120);
-    sctx.fillStyle = '#00d2d3';
-    sctx.font = 'bold 36px Fredoka, sans-serif';
-    sctx.fillText('METAVERSE TRANSIT · LINE 7', 24, 52);
-    sctx.fillStyle = '#facc15';
-    sctx.font = '600 28px Fredoka, sans-serif';
-    sctx.fillText('NEXT ARRIVAL: 2 MIN · ON TIME', 24, 98);
-
-    const schedMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.2, 0.55),
-      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(schedCanvas) })
-    );
-    schedMesh.position.set(-0.95, 2.1, 0);
-    schedMesh.rotation.y = Math.PI / 2;
-    shelterGroup.add(schedMesh);
-
-    // Bus Shelter Bench
     const sbench = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.08, 3.4), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }));
     sbench.position.set(-0.5, 0.45, 0);
     shelterGroup.add(sbench);
 
     this.roadGroup.add(shelterGroup);
 
-    // ---------------------------------------------------------------
-    // Realistic City Feature: Overhead Cyber Highway Gantry Sign (x = 22, z = -45)
-    // ---------------------------------------------------------------
+    // Overhead Cyber Highway Gantry Sign (x = 38.5, z = -45)
     const gantryGroup = new THREE.Group();
-    gantryGroup.position.set(22, 0, -45);
+    gantryGroup.position.set(38.5, 0, -45);
 
-    // Two Steel Truss Towers on both sides of road
-    [-6.2, 6.2].forEach((tx) => {
+    [-5.6, 5.6].forEach((tx) => {
       const tower = new THREE.Mesh(new THREE.BoxGeometry(0.4, 7.2, 0.4), steelDark);
       tower.position.set(tx, 3.6, 0);
       gantryGroup.add(tower);
     });
 
-    // Horizontal Truss spanning over road
-    const spanTruss = new THREE.Mesh(new THREE.BoxGeometry(12.8, 0.45, 0.45), steelDark);
+    const spanTruss = new THREE.Mesh(new THREE.BoxGeometry(11.6, 0.45, 0.45), steelDark);
     spanTruss.position.set(0, 6.8, 0);
     gantryGroup.add(spanTruss);
 
-    // Digital Highway Destination Board
     const gCanvas = document.createElement('canvas');
     gCanvas.width = 1024;
     gCanvas.height = 256;
@@ -367,7 +299,7 @@ export class LivingWorld {
     gctx.fillText('⇡ CENTRAL PLAZA   |   ⇡ MULTIPLAYER ARENAS', 512, 100);
     gctx.fillStyle = '#facc15';
     gctx.font = '700 42px Fredoka, sans-serif';
-    gctx.fillText('COIN CATCHER  ·  HOT POTATO  ·  CYBER CAFE', 512, 185);
+    gctx.fillText('🪙 COIN CATCHER (LEFT)  ·  🔥 HOT POTATO (RIGHT)', 512, 185);
 
     const gantrySign = new THREE.Mesh(
       new THREE.PlaneGeometry(9.5, 2.3),
@@ -1108,159 +1040,143 @@ export class LivingWorld {
     });
   }
 
-  // ---------------------------------------------------------------- 4. ARCADE Building (Compact with 2 Doors: Coin Catcher & Hot Potato)
-  buildArcadeEntrance() {
-    this.arcadeGroup = new THREE.Group();
-    // Positioned neatly north-east of the plaza with 16m+ clear open walking space to the fountain
-    this.arcadeGroup.position.set(16.0, 0, -18.0);
-    this.arcadeGroup.rotation.y = -Math.PI * 0.12;
-    this.root.add(this.arcadeGroup);
+  // ---------------------------------------------------------------- 4. COIN CATCHER ARENA BUILDING (Left Building at -18, 0, -18)
+  buildCoinCatcherBuilding() {
+    this.coinCatcherGroup = new THREE.Group();
+    this.coinCatcherGroup.position.set(-18.0, 0, -18.0);
+    this.root.add(this.coinCatcherGroup);
 
-    const facadeMat = new THREE.MeshStandardMaterial({ color: 0x140e26, roughness: 0.45, metalness: 0.35 });
-    const trimMat = new THREE.MeshStandardMaterial({ color: 0x241842, roughness: 0.3, metalness: 0.6 });
+    const facadeMat = new THREE.MeshStandardMaterial({ color: 0x141026, roughness: 0.45, metalness: 0.4 });
+    const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0x3d2c0b, roughness: 0.3, metalness: 0.7 });
+    const goldNeonMat = new THREE.MeshBasicMaterial({ color: 0xffbf1f });
     const cyanLedMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
-    const pinkLedMat = new THREE.MeshBasicMaterial({ color: 0xff4757 });
 
-    // 1. Compact Arcade Building Facade (width 15.0m, height 7.2m, depth 4.0m)
-    const facadeGeo = new THREE.BoxGeometry(15.0, 7.2, 4.0);
+    // 1. Grand Left Building Facade (width 16.0m, height 8.0m, depth 5.0m)
+    const facadeGeo = new THREE.BoxGeometry(16.0, 8.0, 5.0);
     const facade = new THREE.Mesh(facadeGeo, facadeMat);
-    facade.position.set(0, 3.6, 0);
+    facade.position.set(0, 4.0, 0);
     facade.castShadow = true;
     facade.receiveShadow = true;
-    this.arcadeGroup.add(facade);
+    this.coinCatcherGroup.add(facade);
 
-    // 2. Front Entrance Terrace (width 16.0m, depth 3.2m, height 0.22m)
-    const terraceGeo = new THREE.BoxGeometry(16.0, 0.22, 3.2);
-    const terrace = new THREE.Mesh(terraceGeo, trimMat);
-    terrace.position.set(0, 0.11, 2.5);
+    // 2. Front Entrance Terrace (width 17.0m, depth 3.6m, height 0.22m)
+    const terraceGeo = new THREE.BoxGeometry(17.0, 0.22, 3.6);
+    const terrace = new THREE.Mesh(terraceGeo, goldTrimMat);
+    terrace.position.set(0, 0.11, 2.7);
     terrace.receiveShadow = true;
-    this.arcadeGroup.add(terrace);
+    this.coinCatcherGroup.add(terrace);
 
-    // Glowing LED trim along terrace edge
-    const terraceGlow = new THREE.Mesh(new THREE.BoxGeometry(16.1, 0.06, 0.12), cyanLedMat);
-    terraceGlow.position.set(0, 0.22, 4.05);
-    this.arcadeGroup.add(terraceGlow);
+    // Glowing Golden LED trim along terrace edge
+    const terraceGlow = new THREE.Mesh(new THREE.BoxGeometry(17.1, 0.08, 0.12), goldNeonMat);
+    terraceGlow.position.set(0, 0.22, 4.45);
+    this.coinCatcherGroup.add(terraceGlow);
 
-    // 3. Cyber Columns (Outer framing and subtle center divider)
-    [-7.2, 0, 7.2].forEach((cx) => {
-      const col = new THREE.Mesh(new THREE.BoxGeometry(0.8, 7.3, 0.9), trimMat);
-      col.position.set(cx, 3.65, 2.05);
-      this.arcadeGroup.add(col);
+    // 3. Cyber Columns Framing Entrance
+    [-7.6, -3.2, 3.2, 7.6].forEach((cx) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(0.8, 8.1, 0.9), goldTrimMat);
+      col.position.set(cx, 4.05, 2.55);
+      this.coinCatcherGroup.add(col);
 
-      // Vertical neon accent strip
-      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 6.2, 0.06), cyanLedMat);
-      strip.position.set(cx, 3.5, 2.52);
-      this.arcadeGroup.add(strip);
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 7.2, 0.06), goldNeonMat);
+      strip.position.set(cx, 4.0, 3.02);
+      this.coinCatcherGroup.add(strip);
     });
 
-    // 4. Glowing Neon Gamepad Controller Silhouette on Roof
-    const ctrlGroup = new THREE.Group();
-    ctrlGroup.position.set(0, 7.8, 2.05);
-    const ctrlOutline = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.5, 0.2), cyanLedMat);
-    ctrlGroup.add(ctrlOutline);
+    // 4. Grand Glowing Golden Neon Archway Portal
+    const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.36, 4.6, 0.4), goldNeonMat);
+    archLeft.position.set(-2.0, 2.3, 2.58);
+    this.coinCatcherGroup.add(archLeft);
 
-    const dpad = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.65, 0.22), pinkLedMat);
-    dpad.position.set(-0.95, 0, 0.04);
-    ctrlGroup.add(dpad);
+    const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.36, 4.6, 0.4), goldNeonMat);
+    archRight.position.set(2.0, 2.3, 2.58);
+    this.coinCatcherGroup.add(archRight);
 
-    const btnA = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.22, 16), pinkLedMat);
-    btnA.rotation.x = Math.PI / 2;
-    btnA.position.set(0.95, 0, 0.04);
-    ctrlGroup.add(btnA);
-    this.arcadeGroup.add(ctrlGroup);
+    const archTop = new THREE.Mesh(new THREE.BoxGeometry(4.36, 0.4, 0.4), goldNeonMat);
+    archTop.position.set(0, 4.6, 2.58);
+    this.coinCatcherGroup.add(archTop);
 
-    // 5. Sleek Neon "ARCADE" Marquee Sign
+    // 5. Interactive Double Sliding Glass Doors
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0xffbf1f,
+      roughness: 0.1,
+      metalness: 0.8,
+      emissive: 0xff9f00,
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.45,
+    });
+    this.ccLeftDoor = new THREE.Mesh(new THREE.BoxGeometry(1.7, 4.2, 0.08), glassMat);
+    this.ccLeftDoor.position.set(-0.9, 2.1, 2.54);
+    this.coinCatcherGroup.add(this.ccLeftDoor);
+
+    this.ccRightDoor = new THREE.Mesh(new THREE.BoxGeometry(1.7, 4.2, 0.08), glassMat);
+    this.ccRightDoor.position.set(0.9, 2.1, 2.54);
+    this.coinCatcherGroup.add(this.ccRightDoor);
+
+    // Door Open/Close Animation
+    this.updatables.push((t, dt) => {
+      const dist = Math.hypot(this.player.x - (-18), this.player.z - (-16));
+      const shouldOpen = dist < 4.2;
+      const targetOffset = shouldOpen ? 1.4 : 0.0;
+      this.ccLeftDoor.position.x = THREE.MathUtils.lerp(this.ccLeftDoor.position.x, -0.9 - targetOffset, dt * 6);
+      this.ccRightDoor.position.x = THREE.MathUtils.lerp(this.ccRightDoor.position.x, 0.9 + targetOffset, dt * 6);
+    });
+
+    // 6. Floating Rotating 3D Holographic Gold Coin on Rooftop
+    const coinRooftopGroup = new THREE.Group();
+    coinRooftopGroup.position.set(0, 9.6, 2.5);
+    const bigCoinGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.28, 32);
+    const bigCoinMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.2, emissive: 0xffaa00, emissiveIntensity: 0.4 });
+    const bigCoin = new THREE.Mesh(bigCoinGeo, bigCoinMat);
+    bigCoin.rotation.x = Math.PI / 2;
+    coinRooftopGroup.add(bigCoin);
+
+    const ringGeo = new THREE.TorusGeometry(2.1, 0.06, 12, 36);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
+    const orbitRing = new THREE.Mesh(ringGeo, ringMat);
+    coinRooftopGroup.add(orbitRing);
+    this.coinCatcherGroup.add(coinRooftopGroup);
+
+    this.updatables.push((t, dt) => {
+      bigCoin.rotation.z += dt * 1.8;
+      orbitRing.rotation.x = Math.sin(t * 1.5) * 0.4;
+      orbitRing.rotation.y += dt * 1.2;
+    });
+
+    // 7. Sleek Illuminated Marquee Sign: "🪙 COIN CATCHER ARENA"
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 160;
+    canvas.width = 768;
+    canvas.height = 200;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#0a0f1d';
-    ctx.fillRect(0, 0, 512, 160);
+    ctx.fillStyle = '#0b0f19';
+    ctx.fillRect(0, 0, 768, 200);
 
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(10, 10, 492, 140);
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(12, 12, 744, 176);
 
-    ctx.fillStyle = '#00d2d3';
-    ctx.font = '900 68px Fredoka, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('ARCADE', 256, 82);
-
-    ctx.font = '700 22px Fredoka, sans-serif';
     ctx.fillStyle = '#facc15';
-    ctx.fillText('🪙 COIN CATCHER  ·  🔥 HOT POTATO', 256, 126);
+    ctx.font = '900 64px Fredoka, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🪙 COIN CATCHER ARENA', 384, 95);
 
-    const arcadeTex = new THREE.CanvasTexture(canvas);
-    const arcadeSign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.0), new THREE.MeshBasicMaterial({ map: arcadeTex }));
-    arcadeSign.position.set(0, 5.8, 2.12);
-    this.arcadeGroup.add(arcadeSign);
+    ctx.font = '700 26px Fredoka, sans-serif';
+    ctx.fillStyle = '#00d2d3';
+    ctx.fillText('COLLECT COINS · DODGE RUGS · COMPETE WITH PLAYERS', 384, 150);
 
-    // 6. EXACTLY TWO GRAND DOORS: COIN CATCHER (Left) & HOT POTATO (Right)
-    const portals = [
-      { id: 'coincatcher', title: 'Coin Catcher', x: -3.8, color: 0xffbf1f, colorHex: '#ffbf1f', icon: '🪙' },
-      { id: 'hotpotato', title: 'HOT POTATO', x: 3.8, color: 0xff3838, colorHex: '#ff3838', icon: '🔥' },
-    ];
+    const marqueeTex = new THREE.CanvasTexture(canvas);
+    const marqueeSign = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 2.3), new THREE.MeshBasicMaterial({ map: marqueeTex }));
+    marqueeSign.position.set(0, 6.4, 2.62);
+    this.coinCatcherGroup.add(marqueeSign);
 
-    portals.forEach((p) => {
-      const pGroup = new THREE.Group();
-      pGroup.position.set(p.x, 0, 2.05);
-
-      // Glowing Neon Archway
-      const archMat = new THREE.MeshBasicMaterial({ color: p.color });
-      const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.32, 4.2, 0.35), archMat);
-      archLeft.position.set(-1.6, 2.1, 0);
-      pGroup.add(archLeft);
-
-      const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.32, 4.2, 0.35), archMat);
-      archRight.position.set(1.6, 2.1, 0);
-      pGroup.add(archRight);
-
-      const archTop = new THREE.Mesh(new THREE.BoxGeometry(3.52, 0.36, 0.35), archMat);
-      archTop.position.set(0, 4.2, 0);
-      pGroup.add(archTop);
-
-      // Glass Sliding Door Panel
-      const glassMat = new THREE.MeshStandardMaterial({
-        color: p.color,
-        roughness: 0.1,
-        emissive: p.color,
-        emissiveIntensity: 0.45,
-        transparent: true,
-        opacity: 0.4,
-      });
-      const glass = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 3.9), glassMat);
-      glass.position.set(0, 1.95, 0.05);
-      pGroup.add(glass);
-
-      // Illuminated Title above Door
-      const tCanvas = document.createElement('canvas');
-      tCanvas.width = 384;
-      tCanvas.height = 80;
-      const tCtx = tCanvas.getContext('2d');
-      tCtx.fillStyle = '#0f172a';
-      tCtx.fillRect(0, 0, 384, 80);
-      tCtx.fillStyle = p.colorHex;
-      tCtx.font = 'bold 36px Fredoka, sans-serif';
-      tCtx.textAlign = 'center';
-      tCtx.fillText(`${p.icon} ${p.title}`, 192, 54);
-
-      const pTitle = new THREE.Mesh(
-        new THREE.PlaneGeometry(3.0, 0.75),
-        new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tCanvas) })
-      );
-      pTitle.position.set(0, 4.7, 0.1);
-      pGroup.add(pTitle);
-
-      this.arcadeGroup.add(pGroup);
-
-      this.gamePortals.push({
-        id: p.id,
-        title: p.title,
-        group: pGroup,
-        localX: p.x,
-        pos: new THREE.Vector3(),
-        colorHex: p.colorHex,
-      });
+    // Register Portal for interaction & prompt
+    this.gamePortals.push({
+      id: 'coincatcher',
+      title: 'Coin Catcher Arena',
+      group: this.coinCatcherGroup,
+      localX: 0,
+      pos: new THREE.Vector3(-18.0, 0, -15.5),
+      colorHex: '#facc15',
     });
   }
 
@@ -1405,98 +1321,231 @@ export class LivingWorld {
   }
 
   // ---------------------------------------------------------------- 6. Interactive Building Entrance (Panel 5)
-  buildInteractiveBuilding() {
-    this.buildingGroup = new THREE.Group();
-    this.buildingGroup.position.set(-18, 0, -18);
-    this.root.add(this.buildingGroup);
+  // ---------------------------------------------------------------- 6. HOT POTATO COLOSSEUM BUILDING (Right Building at 18, 0, -18)
+  buildHotPotatoBuilding() {
+    this.hotPotatoGroup = new THREE.Group();
+    this.hotPotatoGroup.position.set(18.0, 0, -18.0);
+    this.root.add(this.hotPotatoGroup);
 
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
+    const facadeMat = new THREE.MeshStandardMaterial({ color: 0x1f0d14, roughness: 0.45, metalness: 0.4 });
+    const redTrimMat = new THREE.MeshStandardMaterial({ color: 0x3d0e1c, roughness: 0.3, metalness: 0.7 });
+    const redNeonMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
+    const orangeNeonMat = new THREE.MeshBasicMaterial({ color: 0xff9f1a });
+
+    // 1. Grand Right Building Facade (width 16.0m, height 8.0m, depth 5.0m)
+    const facadeGeo = new THREE.BoxGeometry(16.0, 8.0, 5.0);
+    const facade = new THREE.Mesh(facadeGeo, facadeMat);
+    facade.position.set(0, 4.0, 0);
+    facade.castShadow = true;
+    facade.receiveShadow = true;
+    this.hotPotatoGroup.add(facade);
+
+    // 2. Front Entrance Terrace (width 17.0m, depth 3.6m, height 0.22m)
+    const terraceGeo = new THREE.BoxGeometry(17.0, 0.22, 3.6);
+    const terrace = new THREE.Mesh(terraceGeo, redTrimMat);
+    terrace.position.set(0, 0.11, 2.7);
+    terrace.receiveShadow = true;
+    this.hotPotatoGroup.add(terrace);
+
+    // Glowing Crimson LED trim along terrace edge
+    const terraceGlow = new THREE.Mesh(new THREE.BoxGeometry(17.1, 0.08, 0.12), redNeonMat);
+    terraceGlow.position.set(0, 0.22, 4.45);
+    this.hotPotatoGroup.add(terraceGlow);
+
+    // 3. Cyber Columns Framing Entrance
+    [-7.6, -3.2, 3.2, 7.6].forEach((cx) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(0.8, 8.1, 0.9), redTrimMat);
+      col.position.set(cx, 4.05, 2.55);
+      this.hotPotatoGroup.add(col);
+
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 7.2, 0.06), redNeonMat);
+      strip.position.set(cx, 4.0, 3.02);
+      this.hotPotatoGroup.add(strip);
+    });
+
+    // 4. Grand Glowing Neon Crimson Archway Portal
+    const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.36, 4.6, 0.4), redNeonMat);
+    archLeft.position.set(-2.0, 2.3, 2.58);
+    this.hotPotatoGroup.add(archLeft);
+
+    const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.36, 4.6, 0.4), redNeonMat);
+    archRight.position.set(2.0, 2.3, 2.58);
+    this.hotPotatoGroup.add(archRight);
+
+    const archTop = new THREE.Mesh(new THREE.BoxGeometry(4.36, 0.4, 0.4), redNeonMat);
+    archTop.position.set(0, 4.6, 2.58);
+    this.hotPotatoGroup.add(archTop);
+
+    // 5. Interactive Double Sliding Glass Doors
     const glassMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
+      color: 0xff3838,
       roughness: 0.1,
       metalness: 0.8,
+      emissive: 0xff2222,
+      emissiveIntensity: 0.5,
       transparent: true,
       opacity: 0.45,
     });
+    this.hpLeftDoor = new THREE.Mesh(new THREE.BoxGeometry(1.7, 4.2, 0.08), glassMat);
+    this.hpLeftDoor.position.set(-0.9, 2.1, 2.54);
+    this.hotPotatoGroup.add(this.hpLeftDoor);
 
-    // Modern glass office building facade
-    const body = new THREE.Mesh(new THREE.BoxGeometry(16, 8.5, 6), wallMat);
-    body.position.y = 4.25;
-    body.castShadow = true;
-    this.buildingGroup.add(body);
+    this.hpRightDoor = new THREE.Mesh(new THREE.BoxGeometry(1.7, 4.2, 0.08), glassMat);
+    this.hpRightDoor.position.set(0.9, 2.1, 2.54);
+    this.hotPotatoGroup.add(this.hpRightDoor);
 
-    // Glass Double Doors
-    this.leftBuildingDoor = new THREE.Mesh(new THREE.BoxGeometry(1.3, 3.4, 0.08), glassMat);
-    this.leftBuildingDoor.position.set(-0.65, 1.7, 3.02);
-    this.buildingGroup.add(this.leftBuildingDoor);
-
-    this.rightBuildingDoor = new THREE.Mesh(new THREE.BoxGeometry(1.3, 3.4, 0.08), glassMat);
-    this.rightBuildingDoor.position.set(0.65, 1.7, 3.02);
-    this.buildingGroup.add(this.rightBuildingDoor);
-
-    // Door Open/Close animation
+    // Door Open/Close Animation
     this.updatables.push((t, dt) => {
-      const dist = Math.hypot(this.player.x - (-18), this.player.z - (-15));
-      const shouldOpen = dist < 3.8;
-      const targetOffset = shouldOpen ? 1.1 : 0.0;
-      this.leftBuildingDoor.position.x = THREE.MathUtils.lerp(this.leftBuildingDoor.position.x, -0.65 - targetOffset, dt * 6);
-      this.rightBuildingDoor.position.x = THREE.MathUtils.lerp(this.rightBuildingDoor.position.x, 0.65 + targetOffset, dt * 6);
+      const dist = Math.hypot(this.player.x - 18, this.player.z - (-16));
+      const shouldOpen = dist < 4.2;
+      const targetOffset = shouldOpen ? 1.4 : 0.0;
+      this.hpLeftDoor.position.x = THREE.MathUtils.lerp(this.hpLeftDoor.position.x, -0.9 - targetOffset, dt * 6);
+      this.hpRightDoor.position.x = THREE.MathUtils.lerp(this.hpRightDoor.position.x, 0.9 + targetOffset, dt * 6);
+    });
+
+    // 6. Floating 3D Holographic Fire Bomb on Rooftop
+    const bombGroup = new THREE.Group();
+    bombGroup.position.set(0, 9.6, 2.5);
+    const bombSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(1.3, 24, 24),
+      new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.7, roughness: 0.3, emissive: 0xff2200, emissiveIntensity: 0.35 })
+    );
+    bombGroup.add(bombSphere);
+
+    const fuse = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.7, 12), redTrimMat);
+    fuse.position.set(0, 1.45, 0);
+    bombGroup.add(fuse);
+
+    const flameSpark = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffd000 })
+    );
+    flameSpark.position.set(0, 1.85, 0);
+    bombGroup.add(flameSpark);
+
+    const bombRing = new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.06, 12, 36), orangeNeonMat);
+    bombGroup.add(bombRing);
+    this.hotPotatoGroup.add(bombGroup);
+
+    this.updatables.push((t, dt) => {
+      const scale = 1.0 + Math.sin(t * 5.0) * 0.08;
+      bombGroup.scale.set(scale, scale, scale);
+      bombRing.rotation.y += dt * 2.2;
+      flameSpark.scale.setScalar(0.8 + Math.sin(t * 12.0) * 0.3);
+    });
+
+    // 7. Sleek Illuminated Marquee Sign: "🔥 HOT POTATO COLOSSEUM"
+    const canvas = document.createElement('canvas');
+    canvas.width = 768;
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#14080e';
+    ctx.fillRect(0, 0, 768, 200);
+
+    ctx.strokeStyle = '#ff3838';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(12, 12, 744, 176);
+
+    ctx.fillStyle = '#ff3838';
+    ctx.font = '900 64px Fredoka, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🔥 HOT POTATO COLOSSEUM', 384, 95);
+
+    ctx.font = '700 26px Fredoka, sans-serif';
+    ctx.fillStyle = '#ff9f1a';
+    ctx.fillText('PASS THE BOMB · SURVIVE THE BLAST · BATTLE ROYALE', 384, 150);
+
+    const marqueeTex = new THREE.CanvasTexture(canvas);
+    const marqueeSign = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 2.3), new THREE.MeshBasicMaterial({ map: marqueeTex }));
+    marqueeSign.position.set(0, 6.4, 2.62);
+    this.hotPotatoGroup.add(marqueeSign);
+
+    // Register Portal for interaction & prompt
+    this.gamePortals.push({
+      id: 'hotpotato',
+      title: 'Hot Potato Colosseum',
+      group: this.hotPotatoGroup,
+      localX: 0,
+      pos: new THREE.Vector3(18.0, 0, -15.5),
+      colorHex: '#ff3838',
     });
   }
 
-  // ---------------------------------------------------------------- 7. Cars & Realistic City Traffic System
+  // ---------------------------------------------------------------- 7. Cars & Outer Boulevard Traffic System
   buildTrafficSystem() {
     this.trafficGroup = new THREE.Group();
     this.root.add(this.trafficGroup);
 
-    // Build Dual-Side Traffic Light & Pedestrian Signals at Crosswalk (z = 4)
+    // Build Dual-Side Traffic Light at Outer Crosswalk (x = 34.0, z = 4)
     this.buildTrafficLight();
 
     // ---------------------------------------------------------------
-    // 6 Distinct Futuristic Vehicles on Two-Way Multi-Lane Boulevard
+    // 6 Distinct Futuristic Vehicles on Outer Highway Boulevard
+    // Placed strictly on the outer lanes (x = 36.25 and 40.75), 18m+ from pedestrian plaza!
     // ---------------------------------------------------------------
-    // Lane 1: NORTHBOUND (x = 19.65, traveling toward -z, heading = 0)
+    // Lane 1: NORTHBOUND (x = 36.25, traveling toward -z, heading = 0)
     const car1 = this.createSportsCar(0xfacc15, 'PLAY', 0x00d2d3);
-    car1.position.set(19.65, 0, 35);
+    car1.position.set(36.25, 0, 35);
     car1.userData = { speed: 11.0, baseSpeed: 11.0, dir: -1, lane: 'north', wheels: car1.userData.wheels };
 
     const car2 = this.createTaxiCar();
-    car2.position.set(19.65, 0, -18);
+    car2.position.set(36.25, 0, -18);
     car2.userData = { speed: 8.5, baseSpeed: 8.5, dir: -1, lane: 'north', wheels: car2.userData.wheels };
 
     const car3 = this.createCityBus();
-    car3.position.set(19.65, 0, 85);
+    car3.position.set(36.25, 0, 85);
     car3.userData = { speed: 7.2, baseSpeed: 7.2, dir: -1, lane: 'north', wheels: car3.userData.wheels };
 
-    // Lane 2: SOUTHBOUND (x = 24.35, traveling toward +z, heading = Math.PI)
+    // Lane 2: SOUTHBOUND (x = 40.75, traveling toward +z, heading = Math.PI)
     const car4 = this.createSportsCar(0x9333ea, 'NEON', 0xff007f);
     car4.rotation.y = Math.PI;
-    car4.position.set(24.35, 0, -45);
+    car4.position.set(40.75, 0, -45);
     car4.userData = { speed: 10.5, baseSpeed: 10.5, dir: 1, lane: 'south', wheels: car4.userData.wheels };
 
     const car5 = this.createCyberTruck();
     car5.rotation.y = Math.PI;
-    car5.position.set(24.35, 0, 15);
+    car5.position.set(40.75, 0, 15);
     car5.userData = { speed: 7.8, baseSpeed: 7.8, dir: 1, lane: 'south', wheels: car5.userData.wheels };
 
     const car6 = this.createSportsCar(0x22c55e, 'VOLT', 0x22c55e);
     car6.rotation.y = Math.PI;
-    car6.position.set(24.35, 0, -85);
+    car6.position.set(40.75, 0, -85);
     car6.userData = { speed: 9.8, baseSpeed: 9.8, dir: 1, lane: 'south', wheels: car6.userData.wheels };
 
     this.vehicles = [car1, car2, car3, car4, car5, car6];
     this.vehicles.forEach((v) => this.trafficGroup.add(v));
 
+    // Futuristic High-Altitude Sky-Cruisers (flying between skyline skyscrapers at y = 52m)
+    this.skyCruisers = [];
+    [
+      { x: -45, y: 52, speed: 16, color: 0x00d2d3 },
+      { x: 0, y: 56, speed: 20, color: 0xfacc15 },
+      { x: 45, y: 50, speed: 14, color: 0xff4757 }
+    ].forEach((cfg, idx) => {
+      const sc = this.createSportsCar(cfg.color, `SKY${idx}`, cfg.color);
+      sc.position.set(cfg.x, cfg.y, (idx - 1) * 45);
+      sc.userData = { speed: cfg.speed, dir: idx % 2 === 0 ? 1 : -1, isSky: true };
+      if (sc.userData.dir === 1) sc.rotation.y = Math.PI;
+      this.trafficGroup.add(sc);
+      this.skyCruisers.push(sc);
+    });
+
     // Traffic System Loop
     this.updatables.push((t, dt) => {
       this.updateTrafficLights(dt);
       this.updateVehicles(dt);
+      // Sky-Cruisers glide seamlessly in high airspace
+      this.skyCruisers.forEach((sc) => {
+        sc.position.z += sc.userData.dir * sc.userData.speed * dt;
+        if (sc.userData.dir === -1 && sc.position.z < -140) sc.position.z = 140;
+        else if (sc.userData.dir === 1 && sc.position.z > 140) sc.position.z = -140;
+      });
     });
   }
 
   buildTrafficLight() {
     const group = new THREE.Group();
-    group.position.set(17, 0, 4);
+    group.position.set(34.0, 0, 4);
 
     const poleMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.3 });
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 5.5, 12), poleMat);
@@ -2977,21 +3026,9 @@ export class LivingWorld {
         }
       });
 
-      const distArcade = Math.hypot(this.player.x - 16.0, this.player.z - (-18.0));
-      const distBuilding = Math.hypot(this.player.x - (-18), this.player.z - (-15));
-
       if (nearPortal) {
-        this.setPrompt(`Press E to play ${nearPortal.title}`, () => {
+        this.setPrompt(`Press E to enter ${nearPortal.title}`, () => {
           this.options.onOpenGame?.(nearPortal.id);
-        });
-      } else if (distArcade < 4.2) {
-        this.setPrompt('Press E to select Arcade Game', () => {
-          const modal = this.hudContainer.querySelector('#lw-main-menu-modal');
-          if (modal) modal.style.display = 'block';
-        });
-      } else if (distBuilding < 3.5) {
-        this.setPrompt('Press E to open doors', () => {
-          // Slide open
         });
       } else if (!this.benches.some((b) => Math.hypot(this.player.x - b.pos.x, this.player.z - b.pos.z) < 1.9)) {
         this.clearPrompt();

@@ -118,39 +118,73 @@ export class GlobalCollisionSystem {
     });
   }
 
-  // Add all static structures from living_world.js (Arcade, bus stop, market, cafe, barriers)
+  // Add all static structures from living_world.js (Coin Catcher Arena, Hot Potato Colosseum, skyscrapers, tables, chairs, dome)
   loadLivingWorldObstacles() {
-    // 1. Arcade Building Facade & Solid Enclosure (16.0, 3.6, -18.0)
-    // The facade spans 15.0m wide, 4.0m deep
-    this.addBox('lw_arcade_facade_body', 16.0, -18.5, 16.0, 4.5, 'Arcade Facade Complex');
-    // Solid wings flanking the doors
-    this.addBox('lw_arcade_left_wall', 10.5, -17.5, 3.2, 3.0, 'Arcade Left Solid Wing');
-    this.addBox('lw_arcade_right_wall', 22.5, -17.5, 3.2, 3.0, 'Arcade Right Solid Wing');
-    this.addBox('lw_arcade_mid_wall', 16.75, -17.8, 3.8, 3.2, 'Arcade Divider Wall');
+    // 1. LEFT BUILDING: Coin Catcher Cyber Arena (-18.0, 0, -18.0)
+    this.addBox('lw_coincatcher_facade_body', -18.0, -18.5, 16.0, 5.5, 'Coin Catcher Arena Body');
+    this.addBox('lw_coincatcher_left_wing', -23.5, -17.5, 4.2, 3.5, 'Coin Catcher Left Wing');
+    this.addBox('lw_coincatcher_right_wing', -12.5, -17.5, 4.2, 3.5, 'Coin Catcher Right Wing');
+    this.addBox('lw_coincatcher_door_wall', -18.0, -15.8, 3.8, 0.8, 'Coin Catcher Entrance Door');
 
-    // Solid Glass Doors (Allow player to stand directly in front to press E, but stop walking through!)
-    this.addBox('lw_arcade_door_coincatch', 12.3, -16.8, 3.6, 0.7, 'Arcade Coin Catcher Solid Glass Door');
-    this.addBox('lw_arcade_door_hotpotato', 19.3, -14.3, 3.6, 0.7, 'Arcade Hot Potato Solid Glass Door');
+    // 2. RIGHT BUILDING: Hot Potato Colosseum (18.0, 0, -18.0)
+    this.addBox('lw_hotpotato_facade_body', 18.0, -18.5, 16.0, 5.5, 'Hot Potato Colosseum Body');
+    this.addBox('lw_hotpotato_left_wing', 12.5, -17.5, 4.2, 3.5, 'Hot Potato Left Wing');
+    this.addBox('lw_hotpotato_right_wing', 23.5, -17.5, 4.2, 3.5, 'Hot Potato Right Wing');
+    this.addBox('lw_hotpotato_door_wall', 18.0, -15.8, 3.8, 0.8, 'Hot Potato Entrance Door');
 
-    // 2. Bus Stop Transit Shelter (15.6, 0.24, -14.0)
-    // Back glass wall and roof structure
-    this.addBox('lw_bus_shelter_back', 14.6, -14.0, 0.8, 5.4, 'Bus Shelter Back Wall');
-    this.addBox('lw_bus_shelter_bench', 15.1, -14.0, 1.0, 3.8, 'Bus Shelter Seating Bench');
-    this.addCircle('lw_bus_shelter_post_n', 14.6, -16.4, 0.45, 'Bus Shelter North Post');
-    this.addCircle('lw_bus_shelter_post_s', 14.6, -11.6, 0.45, 'Bus Shelter South Post');
+    // 3. ALL 19 SKYLINE SKYSCRAPER TOWERS (Prevents walking into skyscraper walls anywhere in map!)
+    const cityTowers = [
+      { id: 'tw_n1', x: -16, z: -42, w: 14, d: 14 },
+      { id: 'tw_n2', x: -32, z: -38, w: 16, d: 15 },
+      { id: 'tw_n3', x: -46, z: -35, w: 18, d: 16 },
+      { id: 'tw_n4', x: 34, z: -40, w: 15, d: 15 },
+      { id: 'tw_n5', x: 48, z: -36, w: 20, d: 18 },
+      { id: 'tw_e1', x: 38, z: -18, w: 16, d: 14 },
+      { id: 'tw_e2', x: 42, z: 2, w: 18, d: 16 },
+      { id: 'tw_e3', x: 40, z: 22, w: 16, d: 15 },
+      { id: 'tw_e4', x: 44, z: 40, w: 18, d: 18 },
+      { id: 'tw_se1', x: 26, z: 42, w: 16, d: 14 },
+      { id: 'tw_se2', x: 14, z: 46, w: 15, d: 15 },
+      { id: 'tw_s1', x: -2, z: 48, w: 18, d: 16 },
+      { id: 'tw_s2', x: -18, z: 46, w: 15, d: 15 },
+      { id: 'tw_s3', x: -30, z: 44, w: 16, d: 14 },
+      { id: 'tw_sw1', x: -42, z: 36, w: 18, d: 16 },
+      { id: 'tw_sw2', x: -48, z: 18, w: 16, d: 15 },
+      { id: 'tw_w1', x: -44, z: -4, w: 20, d: 18 },
+      { id: 'tw_w2', x: -40, z: -20, w: 16, d: 14 },
+      { id: 'tw_w3', x: -26, z: -28, w: 12, d: 12 },
+    ];
+    cityTowers.forEach((t) => {
+      this.addBox(t.id, t.x, t.z, t.w + 0.6, t.d + 0.6, `Skyline Skyscraper ${t.id}`);
+    });
 
-    // 3. Overhead Cyber Highway Gantry Towers (22, 0, -45)
-    this.addBox('lw_gantry_tower_west', 15.8, -45.0, 1.2, 1.2, 'Highway Gantry West Tower');
-    this.addBox('lw_gantry_tower_east', 28.2, -45.0, 1.2, 1.2, 'Highway Gantry East Tower');
+    // 4. HERO LANDMARKS: The Great Rotunda & Center Spire Tower
+    this.addCircle('lw_rotunda_landmark', 18.0, -36.0, 16.4, 'Rotunda Landmark Cylinder');
+    this.addBox('lw_center_spire_tower', 0, -48.0, 17.2, 17.2, 'Center Spire Tower Body');
 
-    // 4. Cyber Cafe Center Tower (0, 0, -0.3)
-    // The cafe building body sits behind the entrance
+    // 5. CAFE TABLES, CHAIRS & PATIO UMBRELLAS
+    this.addCircle('lw_cafe_patio_table_1', -3.2, 3.6, 1.25, 'Patio Table and Chairs Left');
+    this.addCircle('lw_cafe_patio_table_2', 3.2, 3.6, 1.25, 'Patio Table and Chairs Right');
+    this.addCircle('lw_cafe_patio_table_3', -9.0, 8.5, 1.35, 'Patio Umbrella Table West');
+    this.addCircle('lw_cafe_patio_table_4', 9.0, 8.5, 1.35, 'Patio Umbrella Table East');
+
+    // 6. DOME STRUCTURES (Lab / Greenhouse Domes)
+    this.addCircle('lw_lab_dome_left', -23.25, 0.25, 1.65, 'Lab Left Glass Dome');
+    this.addCircle('lw_lab_dome_right', -16.75, 0.25, 1.65, 'Lab Right Glass Dome');
+    this.addBox('lw_lab_center_dome_room', -20.0, 0.25, 8.5, 5.2, 'Lab Center Dome Structure');
+
+    // 7. Overhead Cyber Highway Gantry Towers (38.5, 0, -45)
+    this.addBox('lw_gantry_tower_west', 32.2, -45.0, 1.2, 1.2, 'Highway Gantry West Tower');
+    this.addBox('lw_gantry_tower_east', 44.8, -45.0, 1.2, 1.2, 'Highway Gantry East Tower');
+    this.addBox('lw_road_guardrail', 33.6, 0, 0.6, 194, 'Pedestrian Plaza Protective Road Barrier');
+
+    // 8. Cyber Cafe Center Tower (0, 0, -0.3)
     this.addBox('lw_cafe_main_tower', 0, -1.8, 5.2, 4.2, 'Cyber Cafe Main Tower Body');
     this.addCircle('lw_cafe_beacon_post', 1.1, -1.2, 0.55, 'Cyber Cafe Corner Post');
     this.addBox('lw_cafe_vending_left', -4.15, 0.2, 1.3, 1.2, 'Cafe Left Vending Machine');
     this.addBox('lw_cafe_vending_right', 4.15, 0.2, 1.3, 1.2, 'Cafe Right Vending Machine');
 
-    // 5. Market Stalls & Live Trades Board (10.6, 0, 7.2)
+    // 9. Market Stalls & Live Trades Board (10.6, 0, 7.2)
     this.addBox('lw_market_counter', 10.6, 7.2, 4.2, 2.8, 'Market Trading Counter');
 
     // 6. Central Plaza Fountain (0, 0, 0)
