@@ -223,8 +223,11 @@ export function buildPerson(look = DEFAULT_LOOK, { seed = 7, lite = false } = {}
   if (!lite) {
     try {
       const raw = localStorage.getItem('aa_human_avatar_config');
-      const cfg = raw ? JSON.parse(raw) : { characterId: 'man_uploaded' };
-      const charId = cfg?.characterId || 'man_uploaded';
+      const cfg = raw ? JSON.parse(raw) : { characterId: 'chibi_netkid' };
+      const rawCharId = cfg?.characterId || 'chibi_netkid';
+      const charId = (rawCharId.includes('uploaded') || rawCharId === 'man_uploaded' || rawCharId === 'woman_uploaded' || rawCharId === 'child_uploaded')
+        ? 'chibi_netkid'
+        : rawCharId;
 
       if (charId === 'chibi_netkid') {
         const mergedLook = {
@@ -242,7 +245,7 @@ export function buildPerson(look = DEFAULT_LOOK, { seed = 7, lite = false } = {}
         try { return makePerson(mergedLook, seed); } finally { LITE = false; }
       }
 
-      const charDef = CHARACTER_CATALOG.find(c => c.id === charId) || CHARACTER_CATALOG.find(c => c.id === 'chibi_net_kid') || CHARACTER_CATALOG[0];
+      const charDef = CHARACTER_CATALOG.find(c => c.id === charId) || CHARACTER_CATALOG[0];
       if (charDef) {
         const root = new THREE.Group();
         const manager = new HumanAvatarManager();

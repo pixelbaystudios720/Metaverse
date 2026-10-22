@@ -1526,6 +1526,47 @@ export class LivingWorld {
         padding: 8px 16px 8px 10px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         pointer-events: auto; z-index: 50; transition: all 0.2s ease;
       }
+      #lw-token-bar {
+        position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(16px);
+        border: 1.5px solid rgba(250, 204, 21, 0.45);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(250, 204, 21, 0.18);
+        border-radius: 999px; padding: 6px 12px 6px 14px;
+        pointer-events: auto; z-index: 50; transition: all 0.2s ease;
+      }
+      .lw-token-live-dot {
+        width: 8px; height: 8px; border-radius: 50%; background: #22c55e;
+        box-shadow: 0 0 10px #22c55e; animation: lw-pulse 1.8s infinite;
+      }
+      @keyframes lw-pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.85); }
+      }
+      .lw-token-tag { display: flex; flex-direction: column; line-height: 1.1; }
+      .lw-token-name { font-weight: 900; font-size: 13.5px; color: #fde047; letter-spacing: 0.4px; }
+      .lw-token-status { font-size: 9px; font-weight: 800; color: #22c55e; letter-spacing: 0.5px; }
+      .lw-token-ca-box {
+        display: flex; align-items: center; gap: 5px;
+        background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 999px; padding: 3px 9px; font-size: 11px; color: #cbd5e1;
+        cursor: pointer; transition: all 0.15s ease;
+      }
+      .lw-token-ca-box:hover { background: rgba(250, 204, 21, 0.18); border-color: #facc15; color: #fff; }
+      .lw-ca-chip { background: #facc15; color: #0f172a; font-weight: 900; font-size: 9.5px; padding: 1px 5px; border-radius: 4px; }
+      .lw-btn-token-buy {
+        background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 999px;
+        color: #fff; font-size: 11.5px; font-weight: 800; padding: 6px 14px; text-decoration: none;
+        display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        transition: transform 0.15s ease, filter 0.15s ease;
+      }
+      .lw-btn-token-buy:hover { transform: translateY(-1px); filter: brightness(1.1); }
+      .lw-btn-token-airdrop {
+        background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 999px;
+        color: #38bdf8; font-size: 11.5px; font-weight: 800; padding: 5px 12px; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;
+      }
+      .lw-btn-token-airdrop:hover { background: rgba(56, 189, 248, 0.3); color: #fff; }
       #lw-minimap-card {
         position: absolute; top: 18px; right: 18px; display: flex; flex-direction: column; align-items: center; gap: 6px;
         pointer-events: auto; z-index: 50; transition: all 0.2s ease;
@@ -1583,6 +1624,20 @@ export class LivingWorld {
           font-size: 14px !important;
           margin-left: 4px !important;
         }
+
+        #lw-token-bar {
+          top: 56px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          padding: 4px 10px !important;
+          gap: 6px !important;
+          max-width: calc(100vw - 20px) !important;
+        }
+        .lw-token-name { font-size: 11.5px !important; }
+        .lw-token-status { display: none !important; }
+        .lw-token-ca-box { padding: 2px 7px !important; font-size: 10px !important; }
+        .lw-btn-token-buy { padding: 4px 10px !important; font-size: 10.5px !important; }
+        .lw-btn-token-airdrop { display: none !important; }
 
         #lw-minimap-card {
           top: 10px !important;
@@ -1700,6 +1755,26 @@ export class LivingWorld {
         ">☰</button>
       </div>
 
+      <!-- Top Center Web3 Token Launchpad Ticker -->
+      <div id="lw-token-bar">
+        <div class="lw-token-live-dot"></div>
+        <div class="lw-token-tag">
+          <span class="lw-token-name">🪙 $METAVERSE</span>
+          <span class="lw-token-status">TOKEN LAUNCH LIVE</span>
+        </div>
+        <div class="lw-token-ca-box" id="lw-copy-ca-hud" title="Click to copy Contract Address">
+          <span class="lw-ca-chip">CA</span>
+          <span class="lw-ca-digits">75gG...pump</span>
+          <span class="lw-ca-copy-icon">📋</span>
+        </div>
+        <a href="https://pump.fun/coin/75gGuxuqKhQQiHae8JKDQaetK3XguKf1rUJ1csispump" target="_blank" rel="noopener" class="lw-btn-token-buy">
+          🚀 Buy Token
+        </a>
+        <button id="lw-btn-open-airdrop" type="button" class="lw-btn-token-airdrop">
+          🎁 Airdrop Tier
+        </button>
+      </div>
+
       <!-- Top-Right Compass Minimap -->
       <div id="lw-minimap-card">
         <div class="lw-minimap-circle" style="
@@ -1773,7 +1848,8 @@ export class LivingWorld {
               </div>
 
               <div class="lw-modal-tabs" style="display: flex; flex-direction: column; gap: 8px;">
-                <button id="lw-tab-games" style="display: flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #fff; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🕹️ Game Selection</button>
+                <button id="lw-tab-token" style="display: flex; align-items: center; gap: 8px; background: rgba(250, 204, 21, 0.18); border: 1.5px solid #facc15; color: #fde047; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 800; box-shadow: 0 2px 10px rgba(250, 204, 21, 0.2);">🪙 Token & Airdrop</button>
+                <button id="lw-tab-games" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🕹️ Game Selection</button>
                 <button id="lw-tab-map" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🗺️ District Map</button>
                 <button id="lw-tab-leaderboard" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">🏆 Leaderboard</button>
                 <button id="lw-tab-profile" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: #94a3b8; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; font-weight: 700;">👤 Profile & Avatars</button>
@@ -1786,8 +1862,98 @@ export class LivingWorld {
 
           <!-- Right Content Area -->
           <div id="lw-menu-content" style="flex: 1; padding: 22px; overflow-y: auto;">
+            <!-- Web3 Token Launchpad & Airdrop View -->
+            <div id="lw-view-token">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <h2 style="margin: 0; color: #facc15; font-size: 22px; font-weight: 900; display: flex; align-items: center; gap: 8px;">
+                    🪙 $METAVERSE Token Launchpad
+                  </h2>
+                  <div style="color: #94a3b8; font-size: 12.5px;">Official Attention Agents Metaverse Currency (Solana SPL)</div>
+                </div>
+                <div style="background: rgba(34, 197, 94, 0.15); border: 1.5px solid #22c55e; border-radius: 999px; padding: 4px 12px; color: #4ade80; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></span> LIVE ON SOLANA
+                </div>
+              </div>
+
+              <!-- Contract Address Card -->
+              <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95)); border: 1.5px solid rgba(250, 204, 21, 0.4); border-radius: 16px; padding: 14px 18px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <div style="font-size: 11px; font-weight: 800; color: #fde047; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;">Verified Contract Address (Solana SPL)</div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; font-family: monospace; font-size: 12.5px; color: #e2e8f0; overflow-x: auto;">
+                  <span id="lw-ca-full-text" style="word-break: break-all;">75gGuxuqKhQQiHae8JKDQaetK3XguKf1rUJ1csispump</span>
+                  <button id="lw-btn-copy-ca-modal" type="button" style="background: #facc15; border: none; border-radius: 6px; padding: 5px 12px; color: #0f172a; font-weight: 900; font-size: 11px; cursor: pointer; flex-shrink: 0; transition: transform 0.1s ease;">📋 Copy CA</button>
+                </div>
+              </div>
+
+              <!-- Action Links (Pump.fun, DexScreener, Solscan, Share on X) -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;">
+                <a href="https://pump.fun/coin/75gGuxuqKhQQiHae8JKDQaetK3XguKf1rUJ1csispump" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 12px 10px; border-radius: 14px; text-decoration: none; text-align: center; font-weight: 900; font-size: 12.5px; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+                  <span style="font-size: 20px;">🚀</span>
+                  <span>Buy on Pump.fun</span>
+                </a>
+                <a href="https://dexscreener.com/solana/75gGuxuqKhQQiHae8JKDQaetK3XguKf1rUJ1csispump" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #38bdf8, #0284c7); color: #fff; padding: 12px 10px; border-radius: 14px; text-decoration: none; text-align: center; font-weight: 900; font-size: 12.5px; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);">
+                  <span style="font-size: 20px;">📈</span>
+                  <span>DexScreener Chart</span>
+                </a>
+                <a href="https://solscan.io/token/75gGuxuqKhQQiHae8JKDQaetK3XguKf1rUJ1csispump" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; padding: 12px 10px; border-radius: 14px; text-decoration: none; text-align: center; font-weight: 900; font-size: 12.5px; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);">
+                  <span style="font-size: 20px;">🔍</span>
+                  <span>Solscan Explorer</span>
+                </a>
+                <a id="lw-btn-share-x" href="https://twitter.com/intent/tweet?text=Exploring%20the%20Metaverse%203D%20GameFi%20world%20and%20farming%20%24METAVERSE%20tokens!%20%F0%9F%AA%99%F0%9F%8E%AE%20Play%20mini-games%2C%20earn%20airdrop%20rewards%20and%20trade%20live%3A%20https%3A%2F%2Fpump.fun%2Fcoin%2F75gGuxuqKhQQiHae8JKDQaetK3XguKf1rUJ1csispump%20%23Solana%20%23GameFi" target="_blank" rel="noopener" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 12px 10px; border-radius: 14px; text-decoration: none; text-align: center; font-weight: 900; font-size: 12.5px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                  <span style="font-size: 20px;">🐦</span>
+                  <span>Share on X</span>
+                </a>
+              </div>
+
+              <!-- Play-to-Earn Airdrop Tracker -->
+              <div style="background: linear-gradient(135deg, rgba(250, 204, 21, 0.12), rgba(15, 23, 42, 0.95)); border: 2px solid #facc15; border-radius: 18px; padding: 16px; margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                  <span style="font-size: 15px; font-weight: 800; color: #fde047;">🎁 Your Play-to-Earn Airdrop Status</span>
+                  <span style="background: #facc15; color: #0f172a; font-weight: 900; font-size: 11px; padding: 3px 9px; border-radius: 999px;">Tier 2 · Cyber Alpha</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
+                  <div>
+                    <div style="font-size: 12px; color: #94a3b8;">Coins Farmed in Metaverse:</div>
+                    <div style="font-size: 24px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
+                      <span>🪙</span> <span id="lw-airdrop-coins">${this.coinsCollected}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size: 12px; color: #94a3b8;">Airdrop Multiplier:</div>
+                    <div style="font-size: 20px; font-weight: 900; color: #38bdf8;">1.5x Multiplier</div>
+                  </div>
+                  <button id="lw-btn-farm-now" style="background: linear-gradient(135deg, #00d2d3, #0284c7); border: none; border-radius: 10px; color: #0f172a; font-weight: 900; padding: 8px 16px; font-size: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,210,211,0.3);">
+                    🎮 Farm Coins in Mini-Games
+                  </button>
+                </div>
+                <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.4;">
+                  💡 <b>How it works:</b> Every coin collected in <b>Coin Catcher</b> or <b>Hot Potato</b> directly increases your allocation in the upcoming $METAVERSE token airdrop pool. Play more, climb the leaderboard, and earn real tokens!
+                </div>
+              </div>
+
+              <!-- Tokenomics Summary -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px;">
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+                  <div style="font-size: 10.5px; color: #94a3b8;">Total Supply</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #fff;">1,000,000,000</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+                  <div style="font-size: 10.5px; color: #94a3b8;">Buy / Sell Tax</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #22c55e;">0% / 0%</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+                  <div style="font-size: 10.5px; color: #94a3b8;">Liquidity Pool</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #38bdf8;">100% Fair Launch</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center;">
+                  <div style="font-size: 10.5px; color: #94a3b8;">Security</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #facc15;">Mint Revoked</div>
+                </div>
+              </div>
+            </div>
+
             <!-- Game Selection View (ONLY HOT POTATO & COIN CATCHER - ROOFTOP RUN REMOVED) -->
-            <div id="lw-view-games">
+            <div id="lw-view-games" style="display: none;">
               <h2 style="margin: 0 0 16px 0; color: #38bdf8; font-size: 22px;">Select Game</h2>
               <div style="display: flex; flex-direction: column; gap: 14px;">
                 <div id="lw-launch-hotpotato" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #ef4444; border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.15s ease;">
@@ -1916,23 +2082,36 @@ export class LivingWorld {
         this.coinsCollected = e.detail.coins;
         const countEl = document.querySelector('#lw-coins-count');
         if (countEl) countEl.textContent = String(this.coinsCollected);
+        const airdropCountEl = document.querySelector('#lw-airdrop-coins');
+        if (airdropCountEl) airdropCountEl.textContent = String(this.coinsCollected);
       }
     });
 
     // Tab switching
+    const tabToken = this.hudContainer.querySelector('#lw-tab-token');
     const tabGames = this.hudContainer.querySelector('#lw-tab-games');
     const tabMap = this.hudContainer.querySelector('#lw-tab-map');
     const tabLdr = this.hudContainer.querySelector('#lw-tab-leaderboard');
+    const viewToken = this.hudContainer.querySelector('#lw-view-token');
     const viewGames = this.hudContainer.querySelector('#lw-view-games');
     const viewMap = this.hudContainer.querySelector('#lw-view-map');
     const viewLdr = this.hudContainer.querySelector('#lw-view-leaderboard');
 
     const resetTabs = () => {
-      [tabGames, tabMap, tabLdr].forEach((t) => {
-        if (t) { t.style.background = 'transparent'; t.style.borderColor = 'transparent'; t.style.color = '#94a3b8'; }
+      [tabToken, tabGames, tabMap, tabLdr].forEach((t) => {
+        if (t) { t.style.background = 'transparent'; t.style.borderColor = 'transparent'; t.style.color = '#94a3b8'; t.style.boxShadow = 'none'; }
       });
-      [viewGames, viewMap, viewLdr].forEach((v) => { if (v) v.style.display = 'none'; });
+      [viewToken, viewGames, viewMap, viewLdr].forEach((v) => { if (v) v.style.display = 'none'; });
     };
+
+    tabToken?.addEventListener('click', () => {
+      resetTabs();
+      tabToken.style.background = 'rgba(250, 204, 21, 0.18)';
+      tabToken.style.borderColor = '#facc15';
+      tabToken.style.color = '#fde047';
+      tabToken.style.boxShadow = '0 2px 10px rgba(250, 204, 21, 0.2)';
+      viewToken.style.display = 'block';
+    });
 
     tabGames?.addEventListener('click', () => {
       resetTabs();
@@ -1956,6 +2135,57 @@ export class LivingWorld {
       tabLdr.style.borderColor = '#facc15';
       tabLdr.style.color = '#fff';
       viewLdr.style.display = 'block';
+    });
+
+    // CA Copy Handlers
+    const CA_ADDRESS = '75gGuxuqKhQQiHae8JKDQaetK3XguKf1rUJ1csispump';
+    const copyToClipboard = (btn, originalText) => {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(CA_ADDRESS).then(() => {
+          btn.innerHTML = '✅ Copied!';
+          setTimeout(() => { btn.innerHTML = originalText; }, 1800);
+        }).catch(() => {
+          btn.innerHTML = '✅ 75gG...pump';
+          setTimeout(() => { btn.innerHTML = originalText; }, 1800);
+        });
+      }
+    };
+
+    const copyBtnHud = this.hudContainer.querySelector('#lw-copy-ca-hud');
+    copyBtnHud?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const digits = copyBtnHud.querySelector('.lw-ca-digits');
+      if (digits) {
+        const orig = digits.textContent;
+        navigator.clipboard?.writeText(CA_ADDRESS);
+        digits.textContent = 'Copied!';
+        setTimeout(() => { digits.textContent = orig; }, 1800);
+      }
+    });
+
+    const copyBtnModal = this.hudContainer.querySelector('#lw-btn-copy-ca-modal');
+    copyBtnModal?.addEventListener('click', () => {
+      copyToClipboard(copyBtnModal, '📋 Copy CA');
+    });
+
+    // Token Hub HUD click opens Token Launch modal
+    const tokenBar = this.hudContainer.querySelector('#lw-token-bar');
+    tokenBar?.addEventListener('click', (e) => {
+      if (e.target.closest('a') || e.target.closest('#lw-copy-ca-hud')) return;
+      modal.style.display = 'block';
+      tabToken?.click();
+    });
+
+    const btnOpenAirdrop = this.hudContainer.querySelector('#lw-btn-open-airdrop');
+    btnOpenAirdrop?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      modal.style.display = 'block';
+      tabToken?.click();
+    });
+
+    const btnFarmNow = this.hudContainer.querySelector('#lw-btn-farm-now');
+    btnFarmNow?.addEventListener('click', () => {
+      tabGames?.click();
     });
 
     // District Fast Travel Clicks

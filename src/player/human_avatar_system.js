@@ -101,11 +101,11 @@ export const CHARACTER_CATALOG = [
   {
     id: 'agent_gumdrop',
     name: 'Agent Gumdrop',
-    category: 'Attention Agents',
+    category: 'Metaverse Mascots',
     gender: 'Candy Agent',
     icon: '🍬',
     tagline: 'Cyber-Cafe Agent Mascot',
-    description: 'The official Attention Agents gumdrop: candy gloss body, blush cheeks, cap, beanie, headphones, glasses & accessories.',
+    description: 'The official Metaverse gumdrop: candy gloss body, blush cheeks, cap, beanie, headphones, glasses & accessories.',
     isAgent: true,
     isRigged: false,
     targetHeight: 1.35,
@@ -114,56 +114,15 @@ export const CHARACTER_CATALOG = [
   {
     id: 'plush_mascot',
     name: 'Plush Fur Mascot',
-    category: 'Attention Agents',
+    category: 'Metaverse Mascots',
     gender: 'Fluffy Plush',
     icon: '🧸',
     tagline: 'Stacked Fur Shells Mascot',
-    description: 'The official Attention Agents plush mascot with layered fur shells, bead eyes and cute smile.',
+    description: 'The official Metaverse plush mascot with layered fur shells, bead eyes and cute smile.',
     isVisitor: true,
     visitorKind: 'plush',
     isRigged: false,
     targetHeight: 1.6,
-    yOffset: 0
-  },
-
-  // --- USER UPLOADED 3D SCANS ---
-  {
-    id: 'man_uploaded',
-    name: 'Realistic Streetwear Male',
-    category: 'Photoreal Scans',
-    gender: 'Male Scan',
-    path: '/models/man.glb',
-    icon: '🧍‍♂️',
-    tagline: 'User Uploaded 4K Streetwear Scan',
-    description: 'Realistic high-poly 3D scan with 268,000 polygons, bomber jacket, textured denim & clean sneakers.',
-    isRigged: false,
-    targetHeight: 1.80,
-    yOffset: 0
-  },
-  {
-    id: 'woman_uploaded',
-    name: 'Realistic Streetwear Female',
-    category: 'Photoreal Scans',
-    gender: 'Female Scan',
-    path: '/models/woman.glb',
-    icon: '🧍‍♀️',
-    tagline: 'User Uploaded 4K Athleisure Scan',
-    description: 'Realistic high-poly 3D female scan with stylish textured streetwear outfit, joggers & kicks.',
-    isRigged: false,
-    targetHeight: 1.70,
-    yOffset: 0
-  },
-  {
-    id: 'child_uploaded',
-    name: 'Realistic Streetwear Youth',
-    category: 'Photoreal Scans',
-    gender: 'Youth Scan',
-    path: '/models/child.glb',
-    icon: '🧒',
-    tagline: 'User Uploaded 4K Junior Scan',
-    description: 'Realistic high-poly 3D youth scan with casual sneakers and youthful streetwear proportions.',
-    isRigged: false,
-    targetHeight: 1.35,
     yOffset: 0
   }
 ];
@@ -180,26 +139,30 @@ export class HumanAvatarManager {
       const raw = localStorage.getItem('aa_human_avatar_config');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && parsed.characterId && parsed.characterId !== 'man_uploaded') {
-          return {
-            characterId: parsed.characterId,
-            style: parsed.style || 'ears',
-            skinColor: parsed.skinColor || '#ffc7a6',
-            hairColor: parsed.hairColor || '#3b2a24',
-            topColor: parsed.topColor || '#8f7cf2',
-            bottomColor: parsed.bottomColor || '#33364d',
-            shoeColor: parsed.shoeColor || '#dcd8d0',
-            glowColor: parsed.glowColor || '#3ff0e0',
-            name: parsed.name || localStorage.getItem('aa.name.v1') || 'Alex'
-          };
-        }
+        // Sanitize out old static scans
+        const badIds = ['man_uploaded', 'woman_uploaded', 'child_uploaded'];
+        const chosenId = (parsed && parsed.characterId && !badIds.includes(parsed.characterId)) 
+          ? parsed.characterId 
+          : 'chibi_netkid';
+
+        return {
+          characterId: chosenId,
+          style: parsed.style || 'ears',
+          skinColor: parsed.skinColor || '#ffc7a6',
+          hairColor: parsed.hairColor || '#3b2a24',
+          topColor: parsed.topColor || '#8f7cf2',
+          bottomColor: parsed.bottomColor || '#33364d',
+          shoeColor: parsed.shoeColor || '#dcd8d0',
+          glowColor: parsed.glowColor || '#3ff0e0',
+          name: parsed.name || localStorage.getItem('aa.name.v1') || 'Alex'
+        };
       }
     } catch (e) {
       console.warn('Failed to read saved avatar config:', e);
     }
 
     return {
-      characterId: 'chibi_net_kid',
+      characterId: 'chibi_netkid',
       style: 'ears',
       skinColor: '#ffc7a6',
       hairColor: '#3b2a24',
@@ -342,71 +305,57 @@ export class HumanAvatarManager {
       return avatarInstance;
     }
 
-    // 4. Photoreal User Scans (man.glb, woman.glb, child.glb)
-    const gltf = await this.loadGLTF(charDef.path);
-    const root = gltf.scene.clone(true);
+    // Fallback: Default to fully rigged Chibi Net Kid avatar
+    const look = {
+      skin: config.skinColor || '#ffc7a6',
+      hair: config.hairColor || '#3b2a24',
+      style: config.style || 'ears',
+      hoodie: config.topColor || '#8f7cf2',
+      pants: config.bottomColor || '#33364d',
+      kicks: config.shoeColor || '#dcd8d0',
+      glow: config.glowColor || '#3ff0e0'
+    };
 
-    const bbox = new THREE.Box3().setFromObject(root);
-    const size = bbox.getSize(new THREE.Vector3());
-
-    if (charDef.targetHeight && size.y > 0) {
-      const scaleFactor = charDef.targetHeight / size.y;
-      root.scale.setScalar(scaleFactor);
-    }
-
-    const groundedBox = new THREE.Box3().setFromObject(root);
-    const groundedCenter = groundedBox.getCenter(new THREE.Vector3());
-    root.position.x = -groundedCenter.x;
-    root.position.z = -groundedCenter.z;
-    root.position.y = -groundedBox.min.y + (charDef.yOffset || 0);
-
-    const materials = [];
-    const meshes = [];
-
-    root.traverse((node) => {
-      if (node.isMesh) {
-        node.castShadow = true;
-        node.receiveShadow = true;
-        meshes.push(node);
-
-        if (Array.isArray(node.material)) {
-          node.material = node.material.map(m => m.clone());
-          materials.push(...node.material);
-        } else if (node.material) {
-          node.material = node.material.clone();
-          materials.push(node.material);
-        }
-      }
-    });
+    const root = new THREE.Group();
+    let person = makePerson(look, 7);
+    person.scale.setScalar(0.95);
+    root.add(person);
 
     const avatarInstance = {
       root,
-      definition: charDef,
-      materials,
-      meshes,
+      definition: CHARACTER_CATALOG[0],
+      materials: person.userData.creature?.mats || [],
+      meshes: [],
       mixer: null,
       actions: {},
       activeAction: null,
-      config: { ...config },
+      config: { ...config, ...look },
       isRigged: false,
-      walkPhase: 0,
-      baseY: root.position.y,
       update: (delta, isMoving = false, isRunning = false) => {
-        if (isMoving) {
-          avatarInstance.walkPhase += delta * (isRunning ? 12 : 7);
-          root.position.y = avatarInstance.baseY + Math.abs(Math.sin(avatarInstance.walkPhase)) * 0.05;
-          root.rotation.z = Math.sin(avatarInstance.walkPhase) * 0.03;
-        } else {
-          const time = performance.now() * 0.002;
-          root.position.y = avatarInstance.baseY + Math.sin(time) * 0.008;
-          root.rotation.z = 0;
+        const creature = person.userData.creature;
+        if (creature) {
+          creature.walk = isMoving ? (isRunning ? 1.4 : 0.8) : 0;
+          if (isMoving) creature.walkPhase += delta * (isRunning ? 14 : 9);
+          creature.update(performance.now() * 0.001, delta);
         }
       },
       applyColors: (newConfig) => {
         Object.assign(avatarInstance.config, newConfig);
+        const nextLook = {
+          skin: avatarInstance.config.skinColor || look.skin,
+          hair: avatarInstance.config.hairColor || look.hair,
+          style: avatarInstance.config.style || look.style,
+          hoodie: avatarInstance.config.topColor || look.hoodie,
+          pants: avatarInstance.config.bottomColor || look.pants,
+          kicks: avatarInstance.config.shoeColor || look.kicks,
+          glow: avatarInstance.config.glowColor || look.glow
+        };
+        root.remove(person);
+        person = makePerson(nextLook, 7);
+        person.scale.setScalar(0.95);
+        root.add(person);
       }
     };
-
     return avatarInstance;
   }
 

@@ -56,7 +56,7 @@ const CSS = `
 .g-pill, .g-btn { background: #fff8e8; color: #6a5440; border-radius: 999px; padding: 10px 16px; font: 600 15px/1 "Fredoka", system-ui, sans-serif; box-shadow: 0 4px 0 rgba(134, 98, 52, .18); border: 0; }
 .g-pill.brand { background: rgba(255, 255, 255, 0.94); color: #2c3a4a; }
 .g-x { display: grid; place-items: center; padding: 10px 14px; text-decoration: none; }
-.g-ca { display: flex; gap: 6px; pointer-events: auto; } .g-ca a { display: none !important; } /* owner: no pump.fun button */
+.g-ca { display: flex; gap: 6px; pointer-events: auto; } .g-ca a { display: inline-flex; }
 .g-ca-copy { font-family: "Martian Mono", ui-monospace, monospace !important; font-size: 13px !important; } .g-ca-copy b { color: #2c3a4a; font-family: "Fredoka", system-ui, sans-serif; font-size: 15px; margin-right: 6px; }
 .g-top { position: absolute; right: 16px; top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 8px; }
 .g-btn { cursor: pointer; } .g-btn:hover { transform: translateY(-1px); } .g-btn:focus-visible, .g-a:focus-visible { outline: 3px solid #ffbf1f; outline-offset: 2px; }

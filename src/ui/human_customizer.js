@@ -1056,7 +1056,7 @@ export class HumanAvatarCustomizer {
     this.spinner.style.pointerEvents = 'all';
 
     try {
-      const charId = this.activeConfig.characterId || 'man_uploaded';
+      const charId = (this.activeConfig.characterId && !this.activeConfig.characterId.includes('uploaded')) ? this.activeConfig.characterId : 'chibi_netkid';
       const charDef = CHARACTER_CATALOG.find(c => c.id === charId) || CHARACTER_CATALOG[0];
 
       // Clean up previous avatar
@@ -1113,7 +1113,7 @@ export class HumanAvatarCustomizer {
 
   renderTabs() {
     const tabs = [
-      { id: 'characters', label: '👤 Characters' },
+      { id: 'characters', label: '👤 Avatars' },
       { id: 'style', label: '🐱 Hood Style' },
       { id: 'skin', label: '🎨 Skin' },
       { id: 'hair', label: '💇 Hair' },
@@ -1144,44 +1144,25 @@ export class HumanAvatarCustomizer {
 
     // 1. Character Selector Tab
     if (this.activeTab === 'characters') {
-      const filter = this.characterFilter || 'all';
-      let filteredChars = CHARACTER_CATALOG;
-
-      if (filter === 'aa') {
-        filteredChars = CHARACTER_CATALOG.filter(c => c.category === 'Attention Agents');
-      } else if (filter === 'scans') {
-        filteredChars = CHARACTER_CATALOG.filter(c => c.category === 'Photoreal Scans');
-      }
-
       body.innerHTML = `
-        <div class="hc-filter-pills">
-          <button type="button" class="hc-pill ${filter === 'all' ? 'active' : ''}" data-filter="all">🔥 All Avatars (${CHARACTER_CATALOG.length})</button>
-          <button type="button" class="hc-pill ${filter === 'aa' ? 'active' : ''}" data-filter="aa">🐱 Metaverse Avatars (4)</button>
-          <button type="button" class="hc-pill ${filter === 'scans' ? 'active' : ''}" data-filter="scans">🧍 3D Scans (3)</button>
+        <div style="margin-bottom: 12px; font-size: 13px; color: #94a3b8; font-weight: 600;">
+          Select your Metaverse identity. Fully rigged with procedural walking, running, jumping & emotes:
         </div>
         <div class="hc-chars-grid">
-          ${filteredChars.map(c => `
+          ${CHARACTER_CATALOG.map(c => `
             <div class="hc-char-card ${this.activeConfig.characterId === c.id ? 'active' : ''}" data-char-id="${c.id}">
               <div class="hc-char-card-left">
                 <div class="hc-char-avatar-icon">${c.icon}</div>
                 <div class="hc-char-info">
                   <strong>${c.name}</strong>
+                  <small style="color: #64748b; font-size: 11px;">${c.tagline || ''}</small>
                 </div>
               </div>
-              <span class="hc-char-tag ${c.category === 'Attention Agents' ? 'hc-tag-meme' : 'hc-tag-human'}">${c.gender}</span>
+              <span class="hc-char-tag hc-tag-meme">${c.gender}</span>
             </div>
           `).join('')}
         </div>
       `;
-
-      // Filter pill click listeners
-      body.querySelectorAll('.hc-pill').forEach(pill => {
-        pill.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.characterFilter = pill.dataset.filter;
-          this.renderActiveTabContent();
-        });
-      });
 
       // Character card click listeners
       body.querySelectorAll('.hc-char-card').forEach(card => {
