@@ -1069,19 +1069,26 @@ export class HumanAvatarCustomizer {
       this.characterGroup.rotation.y = 0;
 
       // Update Badge & Info Display
-      document.getElementById('hc-char-badge').textContent = `${charDef.icon} ${charDef.name} · ${charDef.category}`;
-      document.getElementById('hc-info-title').textContent = `${charDef.name} ${charDef.tagline ? `("${charDef.tagline}")` : ''}`;
-      document.getElementById('hc-info-desc').textContent = charDef.description;
+      const badgeEl = document.getElementById('hc-char-badge');
+      if (badgeEl) badgeEl.textContent = `${charDef.icon || '👤'} ${charDef.name} · ${charDef.category || 'Avatar'}`;
+      const titleEl = document.getElementById('hc-info-title');
+      if (titleEl) titleEl.textContent = `${charDef.name} ${charDef.tagline ? `("${charDef.tagline}")` : ''}`;
+      const descEl = document.getElementById('hc-info-desc');
+      if (descEl) descEl.textContent = charDef.description || '';
 
       // Render interactive emote preview buttons
-      this.renderEmoteButtons(this.currentAvatarInstance, charDef);
-
+      if (document.getElementById('hc-emotes-bar')) {
+        this.renderEmoteButtons(this.currentAvatarInstance, charDef);
+      }
     } catch (e) {
       console.error('Error loading avatar preview:', e);
-      document.getElementById('hc-char-badge').textContent = 'Error loading model';
+      const badgeEl = document.getElementById('hc-char-badge');
+      if (badgeEl) badgeEl.textContent = `${charDef.name || 'Avatar'}`;
     } finally {
-      this.spinner.style.opacity = '0';
-      this.spinner.style.pointerEvents = 'none';
+      if (this.spinner) {
+        this.spinner.style.opacity = '0';
+        this.spinner.style.pointerEvents = 'none';
+      }
     }
   }
 

@@ -760,10 +760,12 @@ export class Stage {
       this.composer.addPass(new OutputPass());
     }
     this.tubes = []; this.inView = !observe; this.suspended = false;
+    new ResizeObserver(() => this.resize()).observe(canvas);
     if (observe) {
-      new ResizeObserver(() => this.resize()).observe(canvas);
       new IntersectionObserver(([e]) => { this.inView = e.isIntersecting; }, { rootMargin: '80px' }).observe(canvas);
     }
+    window.addEventListener('resize', () => this.resize(), { passive: true });
+    window.addEventListener('orientationchange', () => setTimeout(() => this.resize(), 100), { passive: true });
     this.resize(); stages.push(this);
   }
   lights(hemiSky, hemiGround, hemiI, keyI) {
