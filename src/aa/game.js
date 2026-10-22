@@ -13,6 +13,8 @@ import { LivingWorld } from '../world/living_world.js';
 import { HotPotatoGame } from '../games/hotpotato.js';
 import { CoinCatcherGame } from '../games/coincatcher.js';
 import { RooftopRunGame } from '../games/rooftoprun.js';
+import { globalCollision } from '../engine/collision.js';
+import collisionData from '../collision_data.json';
 const LOOK_KEY = 'aa.look.v2'; // v2: the net kid (hoodie, headphones, kicks)
 const NAME_KEY = 'aa.name.v1'; // the name the player picked (the presence server checks it, see server/names.mjs)
 
@@ -715,6 +717,13 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     world = buildWorld(outS.scene, { shadows: !isMobile, seed: 7 }); if (window.AA_TEST) Object.assign(window.AA_TEST, { world, player, cafe: () => room }); // test hooks (only when a test page sets AA_TEST)
     world.setFog(70, 260); world.setTime(0); // authentic cyberpunk atmosphere matching attentionagents.fun
     world.onAct = (fa, id) => (fa.data?.pipId ? realAct(fa, id) : onAct ? onAct(fa, id) : null); world.onBaby = onBaby; // real agents show what they really did, never the sample simulator
+
+    // Initialize Global Continuous Collision System with all world obstacles
+    globalCollision.clear();
+    globalCollision.loadFromCollisionData(collisionData);
+    globalCollision.loadLivingWorldObstacles();
+    globalCollision.loadLegacyObstacles(world.obstacles);
+
     player.roots.out = makePlayer(world.group);
     syncAgents();
     world.refreshText();
@@ -890,9 +899,19 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     player.land = Math.max(0, player.land - dt * 5);
     const speed = (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 6.525 : 4.5) * (1 - player.duck * .55);
     player.vx = lerp(player.vx, ix * speed, Math.min(1, dt * 14)); player.vz = lerp(player.vz, iz * speed, Math.min(1, dt * 14));
-    player.x += player.vx * dt; player.z += player.vz * dt;
-    const v = Math.hypot(player.vx, player.vz), root = player.roots[rootKey(where)], u = root.userData.creature;
-    if (v > .15) player.heading = turn(player.heading, Math.atan2(player.vx, player.vz), dt * 12);
+    
+    // Continuous Move-and-Slide collision resolution for buttery-smooth movement without tunneling
+    let v;
+    if (where === 'out' && !hotPotatoGame?.isActive && !coinCatcherGame?.isActive && !rooftopRunGame?.isActive) {
+      v = globalCollision.moveAndSlide(player, dt);
+    } else {
+      player.x += player.vx * dt;
+      player.z += player.vz * dt;
+      v = Math.hypot(player.vx, player.vz);
+    }
+
+    const root = player.roots[rootKey(where)], u = root.userData.creature;
+    if (Math.hypot(player.vx, player.vz) > .15) player.heading = turn(player.heading, Math.atan2(player.vx, player.vz), dt * 12);
     else if (styling) player.heading = turn(player.heading, -.35, dt * 5);
     // a longer stride as you speed up; the cadence comes from how far the planted foot travels per radian of
     // phase (u.strideFor), capped so short legs stay readable, which lets the feet slip a little at a run
@@ -1077,28 +1096,15 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
       st.fadeMats.forEach((m) => { const tr = on || m.userData.base[1]; if (m.transparent !== tr) { m.transparent = tr; m.needsUpdate = true; } m.opacity = m.userData.base[0] * st.fade; });
     }
   }
-  // the outside is an open world of zones joined by streets (world.walkable): step back along whichever axis left it
+  // the outside is an open world with continuous boundary enforcement
   const lastOk = { x: 0, z: 4 }, zone = { now: 'town' };
   function keepOnMap() {
     if (hotPotatoGame?.isActive || coinCatcherGame?.isActive || rooftopRunGame?.isActive) return;
-    if (world.walkable(player.x, player.z)) { lastOk.x = player.x; lastOk.z = player.z; return; }
-    if (world.walkable(player.x, lastOk.z)) player.z = lastOk.z; else if (world.walkable(lastOk.x, player.z)) player.x = lastOk.x; else { player.x = lastOk.x; player.z = lastOk.z; }
+    player.x = clamp(player.x, -91.5, 91.5);
+    player.z = clamp(player.z, -91.5, 91.5);
   }
   function collide() {
-    if (hotPotatoGame?.isActive || coinCatcherGame?.isActive || rooftopRunGame?.isActive) return;
-    keepOnMap();
-    for (const o of world.obstacles) {
-      if (o.rect) {
-        const [x0, z0, x1, z1] = o.rect, m = player.r * .8;
-        if (player.x > x0 - m && player.x < x1 + m && player.z > z0 - m && player.z < z1 + m) {
-          const pl = player.x - (x0 - m), pr = x1 + m - player.x, pt = player.z - (z0 - m), pb = z1 + m - player.z, mn = Math.min(pl, pr, pt, pb);
-          if (mn === pl) player.x = x0 - m; else if (mn === pr) player.x = x1 + m; else if (mn === pt) player.z = z0 - m; else player.z = z1 + m;
-        }
-      } else {
-        const dx = player.x - o.x, dz = player.z - o.z, d = Math.hypot(dx, dz), min = o.r + player.r * .8;
-        if (d < min && d > 1e-4) { player.x = o.x + (dx / d) * min; player.z = o.z + (dz / d) * min; }
-      }
-    }
+    // Handled with continuous sub-stepping and sliding in globalCollision.moveAndSlide()
   }
   // the world follows the player's own clock; the darkest hours show as a blue evening so it stays readable
   function hourForWorld() { const d = new Date(), h = d.getHours() + d.getMinutes() / 60; return h < 5.5 || h > 20.6 ? 20.4 : h; }

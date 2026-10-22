@@ -432,8 +432,20 @@ export class LivingWorld {
     this.plazaGroup = new THREE.Group();
     this.root.add(this.plazaGroup);
 
-    // Warm polished stone plaza pavers - EXPANDED GRAND WORLD PLATFORM (radius 80m, diameter 160m)
-    const plazaGeo = new THREE.CylinderGeometry(80, 81, 0.22, 64);
+    // Grand Vast City Ground Platform (200m x 200m base + 190m circular inlay)
+    const baseFoundationGeo = new THREE.BoxGeometry(204, 0.4, 204);
+    const baseFoundationMat = new THREE.MeshStandardMaterial({
+      color: 0x1e2230,
+      roughness: 0.8,
+      metalness: 0.15,
+    });
+    const baseFoundation = new THREE.Mesh(baseFoundationGeo, baseFoundationMat);
+    baseFoundation.position.set(0, -0.1, 0);
+    baseFoundation.receiveShadow = true;
+    this.plazaGroup.add(baseFoundation);
+
+    // Warm polished stone plaza pavers - EXPANDED TO R=94m
+    const plazaGeo = new THREE.CylinderGeometry(94, 95, 0.22, 64);
     const plazaMat = new THREE.MeshStandardMaterial({
       map: this.createPlazaPaverTexture(),
       roughness: 0.62,
@@ -444,9 +456,52 @@ export class LivingWorld {
     plaza.receiveShadow = true;
     this.plazaGroup.add(plaza);
 
+    // Continuous Perimeter Glass Safety Balustrade with Neon Cyan Railing (R = 92m)
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.4,
+      roughness: 0.1,
+      metalness: 0.8,
+    });
+    const railMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.9, roughness: 0.2 });
+
+    const barrierGroup = new THREE.Group();
+    for (let i = 0; i < 48; i++) {
+      const a = (i / 48) * Math.PI * 2;
+      const aNext = ((i + 1) / 48) * Math.PI * 2;
+      const px = Math.cos(a) * 92.0;
+      const pz = Math.sin(a) * 92.0;
+      const nx = Math.cos(aNext) * 92.0;
+      const nz = Math.sin(aNext) * 92.0;
+      const mx = (px + nx) / 2;
+      const mz = (pz + nz) / 2;
+      const segLen = Math.hypot(nx - px, nz - pz);
+      const segAng = Math.atan2(nx - px, nz - pz);
+
+      // Support post
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.4, 8), postMat);
+      post.position.set(px, 0.7, pz);
+      barrierGroup.add(post);
+
+      // Glass panel
+      const glass = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.1, segLen - 0.1), glassMat);
+      glass.position.set(mx, 0.65, mz);
+      glass.rotation.y = segAng;
+      barrierGroup.add(glass);
+
+      // Top glowing neon rail
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, segLen), railMat);
+      rail.position.set(mx, 1.25, mz);
+      rail.rotation.y = segAng;
+      barrierGroup.add(rail);
+    }
+    this.plazaGroup.add(barrierGroup);
+
     // Decorative Grand Plaza Inlay Rings
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x9e8e7a });
-    [8, 18, 32, 50, 70].forEach((r) => {
+    [8, 18, 32, 50, 70, 85].forEach((r) => {
       const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.16, 64), ringMat);
       ring.rotation.x = -Math.PI / 2;
       ring.position.set(0, 0.222, 0);

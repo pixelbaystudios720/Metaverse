@@ -83,8 +83,8 @@ export class CoinCatcherGame {
   }
 
   buildArena() {
-    // 1. Arena Floor (36m x 36m)
-    const floorGeo = new THREE.BoxGeometry(36, 1, 36);
+    // 1. Grand Stadium Floor (76m x 56m)
+    const floorGeo = new THREE.BoxGeometry(76, 1, 56);
     const floorMat = new THREE.MeshStandardMaterial({
       color: 0x140b28,
       roughness: 0.6,
@@ -96,21 +96,21 @@ export class CoinCatcherGame {
     this.group.add(floor);
 
     // Grid Floor Overlay
-    const grid = new THREE.GridHelper(36, 18, 0xff5fd2, 0x221345);
+    const grid = new THREE.GridHelper(76, 38, 0xff5fd2, 0x221345);
     grid.position.y = 0.02;
     this.group.add(grid);
 
-    // Neon Perimeter Fencing
+    // Neon Perimeter Fencing & Bleachers
     const fenceMat = new THREE.MeshBasicMaterial({ color: 0xff5fd2 });
-    const wallHeight = 1.2;
+    const wallHeight = 1.4;
 
     const walls = [
-      { x: 0, z: -18, w: 36, d: 0.4 },
-      { x: 18, z: 0, w: 0.4, d: 36 },
-      { x: -18, z: 0, w: 0.4, d: 36 },
-      // Leave opening at z: 18 for exit doorway
-      { x: -11, z: 18, w: 14, d: 0.4 },
-      { x: 11, z: 18, w: 14, d: 0.4 },
+      { x: 0, z: -27, w: 76, d: 0.6 },
+      { x: 38, z: 0, w: 0.6, d: 54 },
+      { x: -38, z: 0, w: 0.6, d: 54 },
+      // Leave opening at z: 27 for exit doorway
+      { x: -21, z: 27, w: 34, d: 0.6 },
+      { x: 21, z: 27, w: 34, d: 0.6 },
     ];
 
     walls.forEach((w) => {
@@ -120,16 +120,45 @@ export class CoinCatcherGame {
       this.group.add(wall);
     });
 
-    // Speed Boost Pads
+    // Multi-tier Spectator Bleachers along North wall
+    const bleacherMat = new THREE.MeshStandardMaterial({ color: 0x1e1633, metalness: 0.4, roughness: 0.6 });
+    for (let tier = 1; tier <= 3; tier++) {
+      const bTier = new THREE.Mesh(new THREE.BoxGeometry(72, 0.8, 1.8), bleacherMat);
+      bTier.position.set(0, tier * 0.8 - 0.4, -27 - tier * 1.6);
+      this.group.add(bTier);
+    }
+
+    // 4 Grand Floodlight Pylons at Arena Corners
+    [[-36, -25], [36, -25], [-36, 25], [36, 25]].forEach(([px, pz]) => {
+      const pylonMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.3 });
+      const pylon = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 14, 8), pylonMat);
+      pylon.position.set(px, 7, pz);
+      this.group.add(pylon);
+
+      const lampHead = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.8, 1.2), new THREE.MeshBasicMaterial({ color: 0xffe066 }));
+      lampHead.position.set(px, 14, pz);
+      lampHead.rotation.y = Math.atan2(-px, -pz);
+      this.group.add(lampHead);
+
+      const cornerLight = new THREE.PointLight(0xffd166, 2.0, 45, 1.2);
+      cornerLight.position.set(px, 13.5, pz);
+      this.group.add(cornerLight);
+    });
+
+    // 8 Distributed Speed Boost Pads
     const boostPositions = [
-      [-10, -10],
-      [10, -10],
-      [-10, 10],
-      [10, 10],
+      [-24, -14],
+      [0, -16],
+      [24, -14],
+      [-24, 14],
+      [0, 16],
+      [24, 14],
+      [-14, 0],
+      [14, 0],
     ];
 
     boostPositions.forEach(([bx, bz]) => {
-      const padGeo = new THREE.BoxGeometry(3.5, 0.08, 3.5);
+      const padGeo = new THREE.BoxGeometry(3.6, 0.08, 3.6);
       const padMat = new THREE.MeshBasicMaterial({ color: 0x3ff0e0 });
       const pad = new THREE.Mesh(padGeo, padMat);
       pad.position.set(bx, 0.05, bz);
@@ -137,16 +166,16 @@ export class CoinCatcherGame {
       this.boostPads.push({ x: bx, z: bz, radius: 2.2 });
     });
 
-    // Arena Lighting
-    const arenaLight = new THREE.PointLight(0xffbf1f, 2.5, 50, 1.2);
-    arenaLight.position.set(0, 12, 0);
+    // Arena Central Ambience Lighting
+    const arenaLight = new THREE.PointLight(0xffbf1f, 3.0, 70, 1.2);
+    arenaLight.position.set(0, 16, 0);
     this.group.add(arenaLight);
 
     // -------------------------------------------------------------
-    // In-World 3D Exit Portal Doorway to Arcade (At South z = 16.8)
+    // In-World 3D Exit Portal Doorway to Arcade (At South z = 24.8)
     // -------------------------------------------------------------
     const portalGroup = new THREE.Group();
-    portalGroup.position.set(0, 0, 16.8);
+    portalGroup.position.set(0, 0, 24.8);
 
     const frameMat = new THREE.MeshStandardMaterial({
       color: 0xef4444,
@@ -360,9 +389,9 @@ export class CoinCatcherGame {
       isGold ? this.goldCoinMat : this.coinMat
     );
 
-    // Random position within arena bounds
-    const rx = (Math.random() - 0.5) * 28;
-    const rz = (Math.random() - 0.5) * 28;
+    // Random position within wide stadium bounds
+    const rx = (Math.random() - 0.5) * 64;
+    const rz = (Math.random() - 0.5) * 44;
     mesh.position.set(rx, 1.2, rz);
     mesh.rotation.z = Math.PI / 2;
     mesh.castShadow = true;
@@ -460,8 +489,8 @@ export class CoinCatcherGame {
       }
     }
 
-    // 3. Exit Doorway / Portal Detection (Doorway is at z = 16.8)
-    const exitDist = Math.hypot(arenaPlayerPos.x, arenaPlayerPos.z - 16.8);
+    // 3. Exit Doorway / Portal Detection (Doorway is at z = 24.8)
+    const exitDist = Math.hypot(arenaPlayerPos.x, arenaPlayerPos.z - 24.8);
     const promptEl = this.uiContainer?.querySelector('#cc-exit-prompt');
 
     if (exitDist < 2.5) {
@@ -485,8 +514,8 @@ export class CoinCatcherGame {
     }
 
     // 5. Boundary Enforcement
-    if (Math.abs(playerPos.x) > 17.5) playerPos.x = Math.sign(playerPos.x) * 17.5;
-    if (Math.abs(playerPos.z) > 17.5) playerPos.z = Math.sign(playerPos.z) * 17.5;
+    if (Math.abs(playerPos.x) > 36.5) playerPos.x = Math.sign(playerPos.x) * 36.5;
+    if (Math.abs(playerPos.z) > 25.5) playerPos.z = Math.sign(playerPos.z) * 25.5;
   }
 
   completeMatch() {

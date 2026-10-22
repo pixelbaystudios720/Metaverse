@@ -34,10 +34,10 @@ export class HotPotatoGame {
     this.fuseDuration = 10 + Math.random() * 5; // 10 to 15s random fuse
     this.tagCooldownDuration = 2.0; // 2s anti-tagback cooldown
     this.tagRadius = 1.2; // Proximity tag distance in meters (no E key needed)
-    this.arenaRadius = 24; // Stadium pitch radius
-    this.targetArenaRadius = 24;
-    this.minArenaRadius = 10;
-    this.shrinkPerRound = 3.5;
+    this.arenaRadius = 44; // Grand stadium pitch radius (diameter 88m)
+    this.targetArenaRadius = 44;
+    this.minArenaRadius = 18;
+    this.shrinkPerRound = 5.0;
     this.maxMatchDuration = 180; // 180s max match duration
 
     // State Variables
@@ -73,8 +73,8 @@ export class HotPotatoGame {
     this.arenaGroup = new THREE.Group();
     this.group.add(this.arenaGroup);
 
-    // Green Grass Pitch Floor
-    const grassGeo = new THREE.CylinderGeometry(28, 28.5, 1.2, 48);
+    // Grand Green Grass Pitch Floor (Radius 48m)
+    const grassGeo = new THREE.CylinderGeometry(48, 48.5, 1.2, 64);
     const grassMat = new THREE.MeshStandardMaterial({
       color: 0x55b83b,
       roughness: 0.8,
@@ -85,15 +85,15 @@ export class HotPotatoGame {
     grass.receiveShadow = true;
     this.arenaGroup.add(grass);
 
-    // Inner White Pitch Boundary Circle
+    // Inner White Pitch Boundary Circle (Radius 43.8m to 44.2m)
     const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const pitchCircle = new THREE.Mesh(new THREE.RingGeometry(23.8, 24.1, 64), lineMat);
-    pitchCircle.rotation.x = -Math.PI / 2;
-    pitchCircle.position.y = 0.02;
-    this.arenaGroup.add(pitchCircle);
+    this.boundaryRing = new THREE.Mesh(new THREE.RingGeometry(43.8, 44.2, 64), lineMat);
+    this.boundaryRing.rotation.x = -Math.PI / 2;
+    this.boundaryRing.position.y = 0.02;
+    this.arenaGroup.add(this.boundaryRing);
 
-    // Stadium Spectator Perimeter Wall (Cobblestone / Brick wall surrounding pitch)
-    const wallGeo = new THREE.CylinderGeometry(28.2, 28.2, 3.8, 48, 1, true);
+    // Stadium Spectator Perimeter Wall (Radius 48.2m)
+    const wallGeo = new THREE.CylinderGeometry(48.2, 48.2, 4.8, 64, 1, true);
     const wallMat = new THREE.MeshStandardMaterial({
       color: 0x475569,
       roughness: 0.7,
@@ -101,38 +101,64 @@ export class HotPotatoGame {
       side: THREE.BackSide,
     });
     const wall = new THREE.Mesh(wallGeo, wallMat);
-    wall.position.y = 1.9;
+    wall.position.y = 2.4;
     this.arenaGroup.add(wall);
 
-    // Golden Crown Arch / Banner at Stadium North (As in Image 2!)
+    // Tiered Spectator Bleachers ringing the stadium
+    const bleacherMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
+    for (let t = 1; t <= 3; t++) {
+      const bRing = new THREE.Mesh(new THREE.RingGeometry(48.2 + (t - 1) * 2.2, 48.2 + t * 2.2, 64), bleacherMat);
+      bRing.rotation.x = -Math.PI / 2;
+      bRing.position.y = t * 1.2;
+      this.arenaGroup.add(bRing);
+    }
+
+    // 4 Grand Overhead Stadium Floodlights
+    [[-32, -32], [32, -32], [-32, 32], [32, 32]].forEach(([fx, fz]) => {
+      const flMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 18, 8), flMat);
+      pole.position.set(fx, 9, fz);
+      this.arenaGroup.add(pole);
+
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.0, 1.4), new THREE.MeshBasicMaterial({ color: 0xffedd5 }));
+      lamp.position.set(fx, 18, fz);
+      lamp.rotation.y = Math.atan2(-fx, -fz);
+      this.arenaGroup.add(lamp);
+
+      const light = new THREE.PointLight(0xfff7ed, 2.2, 65, 1.2);
+      light.position.set(fx, 17.5, fz);
+      this.arenaGroup.add(light);
+    });
+
+    // Golden Crown Arch / Banner at Stadium North (z = -44.0)
     const archGroup = new THREE.Group();
-    archGroup.position.set(0, 0, -25.5);
+    archGroup.position.set(0, 0, -44.0);
 
     const archMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.4 });
-    const archPostL = new THREE.Mesh(new THREE.BoxGeometry(1.6, 6.5, 1.6), archMat);
-    archPostL.position.set(-4.5, 3.25, 0);
+    const archPostL = new THREE.Mesh(new THREE.BoxGeometry(1.8, 7.5, 1.8), archMat);
+    archPostL.position.set(-5.5, 3.75, 0);
     archGroup.add(archPostL);
 
-    const archPostR = new THREE.Mesh(new THREE.BoxGeometry(1.6, 6.5, 1.6), archMat);
-    archPostR.position.set(4.5, 3.25, 0);
+    const archPostR = new THREE.Mesh(new THREE.BoxGeometry(1.8, 7.5, 1.8), archMat);
+    archPostR.position.set(5.5, 3.75, 0);
     archGroup.add(archPostR);
 
-    const archBeam = new THREE.Mesh(new THREE.BoxGeometry(10.6, 1.8, 1.8), archMat);
-    archBeam.position.set(0, 5.8, 0);
+    const archBeam = new THREE.Mesh(new THREE.BoxGeometry(12.8, 2.0, 2.0), archMat);
+    archBeam.position.set(0, 6.8, 0);
     archGroup.add(archBeam);
 
     // Gold Crown Emblem on Arch
     const crownMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.85, roughness: 0.2 });
-    const crown = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 0.8, 1.1, 5), crownMat);
-    crown.position.set(0, 7.2, 0);
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.0, 1.4, 5), crownMat);
+    crown.position.set(0, 8.4, 0);
     crown.rotation.y = Math.PI / 5;
     archGroup.add(crown);
 
     this.arenaGroup.add(archGroup);
 
-    // Return to Arcade Portal Doorway at Stadium South (z = 22.8)
+    // Return to Arcade Portal Doorway at Stadium South (z = 42.0)
     const exitGroup = new THREE.Group();
-    exitGroup.position.set(0, 0, 22.8);
+    exitGroup.position.set(0, 0, 42.0);
 
     const exitFrameMat = new THREE.MeshStandardMaterial({
       color: 0xef4444,
@@ -772,7 +798,7 @@ export class HotPotatoGame {
     // Shrink Stadium Ring
     if (this.arenaRadius > this.targetArenaRadius) {
       this.arenaRadius = Math.max(this.targetArenaRadius, this.arenaRadius - deltaTime * 1.5);
-      this.boundaryRing.scale.set(this.arenaRadius / 24, this.arenaRadius / 24, 1);
+      if (this.boundaryRing) this.boundaryRing.scale.set(this.arenaRadius / 44, this.arenaRadius / 44, 1);
     }
 
     // Sync Human Player Position
@@ -780,8 +806,8 @@ export class HotPotatoGame {
     if (localP && localP.isAlive) {
       localP.pos.set(this.player.x, 160, this.player.z);
 
-      // Check Distance to Exit Portal Doorway (at x = 0, z = 22.8)
-      const exitDist = Math.hypot(this.player.x - 0, this.player.z - 22.8);
+      // Check Distance to Exit Portal Doorway (at x = 0, z = 42.0)
+      const exitDist = Math.hypot(this.player.x - 0, this.player.z - 42.0);
       const exitPrompt = this.uiContainer?.querySelector('#hp-exit-prompt');
       if (exitDist < 2.6) {
         sound.playPortal();
@@ -795,7 +821,7 @@ export class HotPotatoGame {
 
       const d = Math.hypot(this.player.x, this.player.z);
       // Allow passing through doorway to exit at south
-      const isNearDoorway = Math.abs(this.player.x) < 3.0 && this.player.z > 20.0;
+      const isNearDoorway = Math.abs(this.player.x) < 3.5 && this.player.z > 39.0;
       if (!isNearDoorway && d > this.arenaRadius - 0.5) {
         const a = Math.atan2(this.player.z, this.player.x);
         this.player.x = Math.cos(a) * (this.arenaRadius - 0.5);
