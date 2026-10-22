@@ -3,7 +3,8 @@
 > **For Backend Developer Integration (Colyseus & Authority Server)**  
 > **Repository:** `https://github.com/pixelbaystudios720/Metaverse.git`  
 > **Branch:** `main`  
-> **File Reference:** `shared/collision_data.json`
+> **File Reference:** `shared/collision_data.json`  
+> **Specification Version:** `1.2.0`
 
 ---
 
@@ -12,18 +13,18 @@
 All avatar archetypes, styles, and color options are indexed starting from `0` to allow flat, memory-efficient `uint8` serialization in Colyseus schema state.
 
 ### Primary Avatars (Archetype Index: `0` to `3`)
-| Index | Avatar ID | Name | Category | Gender / Tag | Target Height |
-|:---:|:---|:---|:---|:---|:---:|
-| **0** | `chibi_netkid` | **Chibi Net Kid** | Nexora Heroes | Hero Chibi | 1.48 m |
-| **1** | `muse_mascot` | **Musebot Sprout** | Nexora Mascots | Fluffy Mascot | 1.45 m |
-| **2** | `agent_gumdrop` | **Agent Gumdrop** | Nexora Mascots | Candy Agent | 1.35 m |
-| **3** | `plush_mascot` | **Plush Fur Mascot** | Nexora Mascots | Fluffy Plush | 1.60 m |
+| Index | Avatar ID | Name | Category | Gender / Tag | Customization Scope | Target Height |
+|:---:|:---|:---|:---|:---|:---|:---:|
+| **0** | `chibi_netkid` | **Chibi Net Kid** | Nexora Heroes | Hero Chibi | **Full Modular (Hood, Skin, Hair, Clothes, Glow)** | 1.48 m |
+| **1** | `muse_mascot` | **Musebot Sprout** | Nexora Mascots | Fluffy Mascot | Preset mascot (glow only, clothes ignored) | 1.45 m |
+| **2** | `agent_gumdrop` | **Agent Gumdrop** | Nexora Mascots | Candy Agent | Preset mascot (glow only, clothes ignored) | 1.35 m |
+| **3** | `plush_mascot` | **Plush Fur Mascot** | Nexora Mascots | Fluffy Plush | Preset mascot (glow only, clothes ignored) | 1.60 m |
 
-> *Note: Static unrigged scans (`man.glb`, `woman.glb`, `child.glb`) have been fully retired to prevent T-pose glitches and mesh collisions.*
+> *Note: Static unrigged scans (`man.glb`, `woman.glb`, `child.glb`) have been fully retired to prevent T-pose glitches and mesh collisions. Archetypes 1, 2, and 3 use preset meshes; the server can default all modular clothing/hair fields to `0` for them.*
 
 ---
 
-### Customization Options for Chibi Net Kid (`0`)
+### Modular Customization Options for Chibi Net Kid (`0`)
 
 #### A. Hood Style (`hoodStyleIndex`: `0` to `2`)
 | Index | Style ID | Name | Icon | Description |
@@ -71,6 +72,7 @@ All avatar archetypes, styles, and color options are indexed starting from `0` t
 | **9** | Warm Cream | `#c9b8a0` |
 
 #### E. LED Glow Colors (`glowColorIndex`: `0` to `5`)
+*Note: Headphone LED on/off is unified into this property (0–5). A separate toggle boolean is not required.*
 | Index | Name | Hex Color |
 |:---:|:---|:---:|
 | **0** | Cyber Cyan | `#3ff0e0` |
@@ -84,32 +86,47 @@ All avatar archetypes, styles, and color options are indexed starting from `0` t
 
 ## 2. Sprint Speed Multiplier & Movement Physics
 
+- **Standard Walk Velocity:** `4.5 m/s` *(discard any previous 7.0 test speed)*
 - **Sprint Speed Multiplier:** `1.45x`
-- **Standard Walk Velocity:** `4.5 m/s` (or `7.0 m/s` in high-velocity outdoor areas)
-- **Standard Sprint Velocity:** `6.525 m/s` (`4.5 * 1.45`)
-- **Jump Impulse:** `8.8 m/s`
-- **Gravity:** `-24.0 m/s²`
-- **Server Tick Rate:** `20 Hz` (50ms per tick)
+- **Standard Sprint Velocity:** `6.525 m/s` (`4.5 × 1.45`)
+- **Stamina System:** **Dropped for MVP** *(unlimited sprint while held; prevents stamina desync & saves tick bandwidth)*
+- **Collision Model:** **Flat 2D Infinite-Height Footprint Collision**
+  - Jump is **purely visual/cosmetic**.
+  - Players **cannot** clear or stand on raised objects, fountains, or benches.
+  - Horizontal movement is fully blocked by the 2D bounding footprint regardless of player height or jump state.
+- **Authoritative Server Tick Rate:** `20 Hz` (50 ms per tick)
 - **Client Interpolation (Lerp Factor):** `0.15`
 - **Client Input Payload:** `{ seq: number, moveX: number, moveZ: number, jump: boolean, sprint: boolean }`
 
 ---
 
-## 3. Authoritative Collision & Arena Data (`collision_data.json`)
+## 3. Authoritative Collision & Arena Data (`shared/collision_data.json`)
 
-The authoritative file is committed in the repository at:  
+The updated authoritative configuration is committed at:  
 👉 [`shared/collision_data.json`](file:///e:/Game/shared/collision_data.json)  
 GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/collision_data.json`
+
+### Key Fixes in Version 1.2.0:
+1. **Coin Catcher Arena Walls:** Centered at **`x = 160, z = 0`** (Walls at `x ∈ [148, 172], z ∈ [-8, 8]`).
+2. **Hot Potato Court Walls:** Centered at **`x = -160, z = 0`** (Walls at `x ∈ [-175, -145], z ∈ [-8, 8]`).
+3. **Dedicated Arena Floors:** Added `coin_arena_floor` (at `x = 160`) and `potato_court_floor` (at `x = -160`).
+4. **All Benches Included:** 4 curved Plaza benches, Park pond bench, and Social park east/west benches.
+5. **Project Name:** Updated `mapName` to `"NexoraPlazaAndArenas"`.
 
 ### Full Raw JSON Content:
 ```json
 {
-  "version": "1.1.0",
-  "mapName": "AttentionAgentsPlazaAndArenas",
+  "version": "1.2.0",
+  "mapName": "NexoraPlazaAndArenas",
   "coordinateSystem": "Y-up, right-handed",
   "authoritativeServerTickRateHz": 20,
   "clientInterpolationLerpFactor": 0.15,
+  "walkSpeed": 4.5,
   "sprintSpeedMultiplier": 1.45,
+  "sprintSpeed": 6.525,
+  "staminaEnabled": false,
+  "jumpCosmeticOnly": true,
+  "collisionMode": "2d_infinite_height_footprint",
   "chatMaxCharacters": 140,
   "gameRules": {
     "coinCatcher": {
@@ -177,10 +194,25 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
   ],
   "collisionBoxes": [
     {
-      "id": "ground_plane",
+      "id": "ground_plane_plaza",
       "type": "box",
       "pos": [0, -0.2, 0],
-      "size": [260, 0.4, 260]
+      "size": [260, 0.4, 260],
+      "desc": "Main plaza, boulevard, and park ground surface"
+    },
+    {
+      "id": "coin_arena_floor",
+      "type": "box",
+      "pos": [160, -0.2, 0],
+      "size": [40, 0.4, 30],
+      "desc": "Dedicated ground floor for Coin Catcher Arena at x=160"
+    },
+    {
+      "id": "potato_court_floor",
+      "type": "box",
+      "pos": [-160, -0.2, 0],
+      "size": [40, 0.4, 30],
+      "desc": "Dedicated ground floor for Hot Potato Court at x=-160"
     },
     {
       "id": "arcade_building_facade",
@@ -227,64 +259,94 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
       "radius": 1.15
     },
     {
-      "id": "bench_left_plaza",
+      "id": "bench_plaza_northwest",
       "type": "box",
-      "pos": [-6.8, 0.45, 4.2],
-      "size": [2.5, 0.9, 0.6]
+      "pos": [-5.5, 0.45, -4.5],
+      "size": [0.9, 0.9, 2.5]
     },
     {
-      "id": "bench_right_plaza",
+      "id": "bench_plaza_northeast",
       "type": "box",
-      "pos": [6.2, 0.45, 4.2],
-      "size": [2.5, 0.9, 0.6]
+      "pos": [5.5, 0.45, -4.5],
+      "size": [0.9, 0.9, 2.5]
     },
     {
-      "id": "potato_court_boundary_north",
+      "id": "bench_plaza_southwest",
       "type": "box",
-      "pos": [-42, 2.5, 14],
-      "size": [30, 5.0, 0.8]
+      "pos": [-6.5, 0.45, 6.5],
+      "size": [2.2, 0.9, 2.2]
     },
     {
-      "id": "potato_court_boundary_south",
+      "id": "bench_plaza_southeast",
       "type": "box",
-      "pos": [-42, 2.5, 30],
-      "size": [30, 5.0, 0.8]
+      "pos": [6.5, 0.45, 6.5],
+      "size": [2.2, 0.9, 2.2]
     },
     {
-      "id": "potato_court_boundary_west",
+      "id": "bench_park_pond",
       "type": "box",
-      "pos": [-57, 2.5, 22],
-      "size": [0.8, 5.0, 16]
+      "pos": [-25, 0.45, 8.2],
+      "size": [2.5, 0.9, 0.9]
     },
     {
-      "id": "potato_court_boundary_east",
+      "id": "bench_social_park_west",
       "type": "box",
-      "pos": [-27, 2.5, 22],
-      "size": [0.8, 5.0, 16]
+      "pos": [-8.0, 0.45, 42.0],
+      "size": [2.5, 0.9, 0.9]
+    },
+    {
+      "id": "bench_social_park_east",
+      "type": "box",
+      "pos": [8.0, 0.45, 42.0],
+      "size": [2.5, 0.9, 0.9]
     },
     {
       "id": "coin_arena_boundary_north",
       "type": "box",
-      "pos": [-42, 2.5, -28],
-      "size": [24, 5.0, 0.8]
+      "pos": [160, 2.5, -8.0],
+      "size": [24.0, 5.0, 0.8]
     },
     {
       "id": "coin_arena_boundary_south",
       "type": "box",
-      "pos": [-42, 2.5, -12],
-      "size": [24, 5.0, 0.8]
+      "pos": [160, 2.5, 8.0],
+      "size": [24.0, 5.0, 0.8]
     },
     {
       "id": "coin_arena_boundary_west",
       "type": "box",
-      "pos": [-54, 2.5, -20],
-      "size": [0.8, 5.0, 16]
+      "pos": [148.0, 2.5, 0],
+      "size": [0.8, 5.0, 16.0]
     },
     {
       "id": "coin_arena_boundary_east",
       "type": "box",
-      "pos": [-30, 2.5, -20],
-      "size": [0.8, 5.0, 16]
+      "pos": [172.0, 2.5, 0],
+      "size": [0.8, 5.0, 16.0]
+    },
+    {
+      "id": "potato_court_boundary_north",
+      "type": "box",
+      "pos": [-160, 2.5, -8.0],
+      "size": [30.0, 5.0, 0.8]
+    },
+    {
+      "id": "potato_court_boundary_south",
+      "type": "box",
+      "pos": [-160, 2.5, 8.0],
+      "size": [30.0, 5.0, 0.8]
+    },
+    {
+      "id": "potato_court_boundary_west",
+      "type": "box",
+      "pos": [-175.0, 2.5, 0],
+      "size": [0.8, 5.0, 16.0]
+    },
+    {
+      "id": "potato_court_boundary_east",
+      "type": "box",
+      "pos": [-145.0, 2.5, 0],
+      "size": [0.8, 5.0, 16.0]
     }
   ]
 }
@@ -292,7 +354,18 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
 
 ---
 
-## 4. Repository Access & Clone Instructions
+## 4. Doors & Matchmaking Queue Integration
+1. The server retains authoritative control over room entry and matchmaking queues.
+2. When the player presses **E** (or taps the interact button on mobile) within 3.5 m of a portal door, the client sends:
+   ```json
+   { "action": "interact_door", "doorId": "door_coin_catcher" }
+   ```
+3. The server places the player in the queue. When the countdown completes or the room is ready, the server responds with room join credentials.
+4. The client plays the visual warp/portal animation upon receiving confirmation from the server.
+
+---
+
+## 5. Repository Access & Clone Instructions
 
 - **GitHub Repository:** `https://github.com/pixelbaystudios720/Metaverse.git`
 - **Clone Command:**
@@ -300,5 +373,5 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
   git clone https://github.com/pixelbaystudios720/Metaverse.git
   cd Metaverse
   ```
-- **Shared Folder for Server & Client:**  
-  `Metaverse/shared/collision_data.json` can be imported or read directly via `fs.readFileSync` or Colyseus module imports.
+- **Shared Collision Data File:**  
+  Copy or directly read `Metaverse/shared/collision_data.json` into your server's `shared/` directory. Whenever this file is updated, changes are versioned and synced here.
