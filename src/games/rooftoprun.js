@@ -137,6 +137,7 @@ export class RooftopRunGame {
     this.player.teleport(0, 201, 0);
 
     sound.playPortal();
+    window.dispatchEvent(new CustomEvent('gamemode-changed', { detail: { mode: 'rooftoprun', gameRef: this } }));
   }
 
   update(deltaTime, totalTime) {
@@ -216,6 +217,7 @@ export class RooftopRunGame {
     }
 
     sound.playVictory();
+    window.dispatchEvent(new CustomEvent('gamemode-changed', { detail: { mode: 'city' } }));
 
     const formattedTime = this.elapsedTime.toFixed(1) + 's';
     const playerTimeVal = this.elapsedTime;

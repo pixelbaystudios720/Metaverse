@@ -373,6 +373,7 @@ export class CoinCatcherGame {
     }
 
     sound.playPortal();
+    window.dispatchEvent(new CustomEvent('gamemode-changed', { detail: { mode: 'coincatcher', gameRef: this } }));
   }
 
   clearItems() {
@@ -551,6 +552,8 @@ export class CoinCatcherGame {
 
     results.rank = results.participants.findIndex((p) => p.isPlayer) + 1;
 
+    window.dispatchEvent(new CustomEvent('gamemode-changed', { detail: { mode: 'city' } }));
+
     if (this.onMatchEnd) {
       this.onMatchEnd(results);
     }
@@ -566,5 +569,6 @@ export class CoinCatcherGame {
     } else {
       this.player.teleport(-28, 0, -10);
     }
+    window.dispatchEvent(new CustomEvent('gamemode-changed', { detail: { mode: 'city' } }));
   }
 }

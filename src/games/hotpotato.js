@@ -512,6 +512,7 @@ export class HotPotatoGame {
 
     this.initPlayers();
     sound.playPortal();
+    window.dispatchEvent(new CustomEvent('gamemode-changed', { detail: { mode: 'hotpotato', gameRef: this } }));
   }
 
   initPlayers() {
@@ -772,6 +773,7 @@ export class HotPotatoGame {
       if (!p.isPlayer && p.mesh) this.group.remove(p.mesh);
     });
     this.players = [];
+    window.dispatchEvent(new CustomEvent('gamemode-changed', { detail: { mode: 'city' } }));
   }
 
   // ---------------------------------------------------------------- 6. Frame Loop

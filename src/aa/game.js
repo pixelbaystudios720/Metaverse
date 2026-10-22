@@ -13,7 +13,9 @@ import { LivingWorld } from '../world/living_world.js';
 import { HotPotatoGame } from '../games/hotpotato.js';
 import { CoinCatcherGame } from '../games/coincatcher.js';
 import { RooftopRunGame } from '../games/rooftoprun.js';
+import { CyberSpeedwayGame } from '../games/cyberspeedway.js';
 import { globalCollision } from '../engine/collision.js';
+import { map3DEngine } from '../engine/map3d.js';
 import collisionData from '../collision_data.json';
 const LOOK_KEY = 'aa.look.v2'; // v2: the net kid (hoodie, headphones, kicks)
 const NAME_KEY = 'aa.name.v1'; // the name the player picked (the presence server checks it, see server/names.mjs)
@@ -378,7 +380,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
 
   // places: 'in' (the cyber cafe), 'out' (the world), or one of the HALLS, which share one stage and one player
   let where = 'in', isOpen = false, busy = false, inS = null, outS = null, hallS = null, hall = null, world = null, room = null, lastFocus = null;
-  let livingWorld = null, hotPotatoGame = null, coinCatcherGame = null, rooftopRunGame = null;
+  let livingWorld = null, hotPotatoGame = null, coinCatcherGame = null, rooftopRunGame = null, cyberSpeedwayGame = null;
   const halls = {}, isHall = (w) => w in HALLS, rootKey = (w) => (isHall(w) ? 'hall' : w);
   const stageOf = (w) => (w === 'in' ? inS : w === 'out' ? outS : hallS), canvasOf = (w) => (w === 'in' ? cvIn : w === 'out' ? cvOut : cvHall);
   const placeName = (w) => (w === 'in' ? (level ? `Cyber cafe · Level ${level}` : 'Cyber cafe') : w === 'out' ? 'Outside' : HALLS[w].name), doorName = (w) => (matchMedia('(max-width: 760px)').matches ? ({ in: 'Outside', out: 'Cafe' })[w] || 'Back' : ({ in: 'Go outside', out: 'Back to the cafe' })[w] || 'Back outside');
@@ -769,6 +771,8 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
           coinCatcherGame?.startMatch();
         } else if (gameId === 'rooftoprun') {
           rooftopRunGame?.startMatch();
+        } else if (gameId === 'cyberspeedway') {
+          cyberSpeedwayGame?.start();
         }
       }
     });
@@ -783,6 +787,10 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
 
     rooftopRunGame = new RooftopRunGame(outS.scene, playerAdapter, (res) => {
       say('Rooftop Run', '#38bdf8', `Finished course in ${res.score}!`);
+    });
+
+    cyberSpeedwayGame = new CyberSpeedwayGame(outS.scene, playerAdapter, (res) => {
+      say('Cyber Speedway', '#00ff88', `Completed Grand Prix! Best Lap: ${res.bestLap ? res.bestLap.toFixed(1) + 's' : '--'}`);
     });
 
     // Keep world stations and full authentic cyber cafe visible
@@ -902,7 +910,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     
     // Continuous Move-and-Slide collision resolution for buttery-smooth movement without tunneling
     let v;
-    if (where === 'out' && !hotPotatoGame?.isActive && !coinCatcherGame?.isActive && !rooftopRunGame?.isActive) {
+    if (where === 'out' && !hotPotatoGame?.isActive && !coinCatcherGame?.isActive && !rooftopRunGame?.isActive && !cyberSpeedwayGame?.isActive) {
       v = globalCollision.moveAndSlide(player, dt);
     } else {
       player.x += player.vx * dt;
@@ -1053,6 +1061,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     if (hotPotatoGame?.isActive) hotPotatoGame.update(dt, t);
     if (coinCatcherGame?.isActive) coinCatcherGame.update(dt, t);
     if (rooftopRunGame?.isActive) rooftopRunGame.update(dt, t);
+    if (cyberSpeedwayGame?.isActive) cyberSpeedwayGame.update(dt, t);
     // Agents step around the player instead of walking through
     world.agents.forEach((fa) => { const dx = fa.pos.x - player.x, dz = fa.pos.y - player.z, d = Math.hypot(dx, dz), min = fa.radius + player.r; if (d < min && d > 1e-4) { fa.pos.x = player.x + (dx / d) * min; fa.pos.y = player.z + (dz / d) * min; fa.place(); } });
     const c = outS.camera, ok = Math.min(1, dt * 10);
@@ -1099,7 +1108,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
   // the outside is an open world with continuous boundary enforcement
   const lastOk = { x: 0, z: 4 }, zone = { now: 'town' };
   function keepOnMap() {
-    if (hotPotatoGame?.isActive || coinCatcherGame?.isActive || rooftopRunGame?.isActive) return;
+    if (hotPotatoGame?.isActive || coinCatcherGame?.isActive || rooftopRunGame?.isActive || cyberSpeedwayGame?.isActive) return;
     player.x = clamp(player.x, -91.5, 91.5);
     player.z = clamp(player.z, -91.5, 91.5);
   }

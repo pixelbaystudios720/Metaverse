@@ -43,6 +43,7 @@
 
 import * as THREE from 'three';
 import { sound } from '../engine/audio.js';
+import { map3DEngine } from '../engine/map3d.js';
 
 export class LivingWorld {
   constructor(scene, playerController, options = {}) {
@@ -2246,21 +2247,34 @@ export class LivingWorld {
         </button>
       </div>
 
-      <!-- Top-Right Compass Minimap -->
-      <div id="lw-minimap-card">
-        <div class="lw-minimap-circle" style="
-          width: 100px; height: 100px; border-radius: 50%; background: rgba(15, 23, 42, 0.85);
-          backdrop-filter: blur(12px); border: 3px solid #00d2d3; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-          position: relative; overflow: hidden;
-        ">
-          <canvas id="lw-minimap-canvas" width="110" height="110" style="width: 100%; height: 100%;"></canvas>
+      <!-- Top-Right 3D Tactical Minimap Radar -->
+      <div id="lw-minimap-card" style="pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+        <div style="position: relative;">
+          <div class="lw-minimap-circle" style="
+            width: 124px; height: 124px; border-radius: 50%; background: rgba(8, 12, 22, 0.92);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border: 2.5px solid #00d2d3; box-shadow: 0 0 24px rgba(0, 210, 211, 0.4), inset 0 0 14px rgba(0, 210, 211, 0.15);
+            position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+          " title="Click to open Fullscreen 3D Tactical Holo-Map (M)">
+            <canvas id="lw-minimap-canvas" width="124" height="124" style="width: 100%; height: 100%; display: block;"></canvas>
+          </div>
+
+          <!-- Radar Quick Actions (Zoom In, Zoom Out, Expand 3D Map) -->
+          <div style="position: absolute; left: -28px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px;">
+            <button id="lw-mm-zoom-in" title="Zoom In" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(15, 23, 42, 0.85); border: 1px solid #00d2d3; color: #fff; font-weight: 900; font-size: 13px; line-height: 1; cursor: pointer; display: grid; place-items: center;">+</button>
+            <button id="lw-mm-zoom-out" title="Zoom Out" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(15, 23, 42, 0.85); border: 1px solid #00d2d3; color: #fff; font-weight: 900; font-size: 13px; line-height: 1; cursor: pointer; display: grid; place-items: center;">−</button>
+            <button id="lw-mm-expand" title="Fullscreen 3D Map (M)" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(0, 210, 211, 0.2); border: 1px solid #00d2d3; color: #00d2d3; font-weight: 900; font-size: 11px; line-height: 1; cursor: pointer; display: grid; place-items: center;">⛶</button>
+          </div>
         </div>
-        <div class="lw-loc-badge" style="
-          background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);
-          padding: 3px 10px; border-radius: 10px; color: #f8fafc; font-size: 11px; font-weight: 700;
-          display: flex; align-items: center; gap: 4px;
+
+        <!-- Location Badge with Live Telemetry -->
+        <div id="lw-loc-badge" style="
+          background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(10px); border: 1px solid rgba(0, 210, 211, 0.4);
+          padding: 4px 12px; border-radius: 999px; color: #f8fafc; font-size: 11px; font-weight: 800;
+          display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); cursor: pointer;
         ">
-          <span>📍</span> Central Plaza
+          <span style="color: #00d2d3; font-size: 8px;">🟢</span>
+          <span id="lw-loc-badge-text">🏙️ Central Plaza</span>
         </div>
       </div>
 
@@ -2440,9 +2454,18 @@ export class LivingWorld {
                   <span style="font-size: 36px;">🪙</span>
                   <div style="flex: 1;">
                     <div style="font-size: 16px; font-weight: 800; color: #fde047;">Coin Catcher</div>
-                    <div style="font-size: 12px; color: #94a3b8;">Collect spawned items during a timed round</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Collect spawned items in the 76m × 56m Cyber Stadium</div>
                   </div>
                   <span style="font-size: 20px; color: #facc15;">▶</span>
+                </div>
+
+                <div id="lw-launch-cyberspeedway" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(15, 23, 42, 0.8)); border: 2px solid #00ff88; border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.15s ease;">
+                  <span style="font-size: 36px;">🏁</span>
+                  <div style="flex: 1;">
+                    <div style="font-size: 16px; font-weight: 800; color: #00ff88;">CYBER SPEEDWAY GP (New!)</div>
+                    <div style="font-size: 12px; color: #94a3b8;">High-speed neon circuit with boost gates & lap records</div>
+                  </div>
+                  <span style="font-size: 20px; color: #00ff88;">▶</span>
                 </div>
               </div>
             </div>
@@ -2471,9 +2494,28 @@ export class LivingWorld {
 
             <!-- District Fast-Travel Map View -->
             <div id="lw-view-map" style="display: none;">
+              <!-- 3D Holo-Map Hero Banner -->
+              <div id="lw-btn-open-holo-map" style="
+                background: radial-gradient(circle at 50% 0%, rgba(0, 210, 211, 0.35), rgba(15, 23, 42, 0.95));
+                border: 2px solid #00d2d3; border-radius: 18px; padding: 16px 20px; margin-bottom: 16px;
+                display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+                box-shadow: 0 0 25px rgba(0, 210, 211, 0.3); transition: transform 0.15s;
+              ">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <span style="font-size: 38px;">🌐</span>
+                  <div>
+                    <div style="font-size: 17px; font-weight: 900; color: #fff;">LIVE 3D TACTICAL HOLO-MAP</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Full visual 3D aerial map with live character FOV, pan/zoom & waypoints</div>
+                  </div>
+                </div>
+                <button style="background: #00d2d3; border: none; border-radius: 999px; padding: 8px 18px; color: #080c16; font-weight: 900; font-size: 13px; cursor: pointer;">
+                  Launch 3D Map (M) ➔
+                </button>
+              </div>
+
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
                 <div>
-                  <h2 style="margin: 0; color: #38bdf8; font-size: 22px; font-weight: 900;">🗺️ District Fast-Travel</h2>
+                  <h2 style="margin: 0; color: #38bdf8; font-size: 20px; font-weight: 900;">🗺️ Instant District Fast-Travel</h2>
                   <div style="color: #94a3b8; font-size: 12.5px;">Tap any district card to jump there instantly</div>
                 </div>
                 <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 999px; padding: 4px 12px; color: #38bdf8; font-size: 11.5px; font-weight: 700;">
@@ -2534,9 +2576,12 @@ export class LivingWorld {
 
     document.body.appendChild(this.hudContainer);
 
-    // Setup Minimap Canvas
+    // Setup Minimap Canvas with 3D Holographic Map Engine
     const canvas = this.hudContainer.querySelector('#lw-minimap-canvas');
-    if (canvas) this.minimapCtx = canvas.getContext('2d');
+    if (canvas) {
+      this.minimapCtx = canvas.getContext('2d');
+      map3DEngine.bindMinimapCanvas(canvas);
+    }
 
     // Menu handlers
     const modal = this.hudContainer.querySelector('#lw-main-menu-modal');
@@ -2676,10 +2721,30 @@ export class LivingWorld {
       });
     });
 
-    // Clicking Minimap opens District Map
-    this.hudContainer.querySelector('#lw-minimap-card')?.addEventListener('click', () => {
-      modal.style.display = 'block';
-      tabMap?.click();
+    // Minimap Radar Quick Action Buttons
+    this.hudContainer.querySelector('#lw-mm-zoom-in')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      map3DEngine.zoom = Math.min(3.5, map3DEngine.zoom * 1.25);
+    });
+    this.hudContainer.querySelector('#lw-mm-zoom-out')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      map3DEngine.zoom = Math.max(0.4, map3DEngine.zoom * 0.8);
+    });
+    this.hudContainer.querySelector('#lw-mm-expand')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      map3DEngine.openModal();
+    });
+
+    // Clicking Minimap opens 3D Tactical Holo-Map directly
+    this.hudContainer.querySelector('#lw-minimap-card')?.addEventListener('click', (e) => {
+      if (e.target.closest('#lw-mm-zoom-in') || e.target.closest('#lw-mm-zoom-out') || e.target.closest('#lw-mm-expand')) return;
+      map3DEngine.openModal();
+    });
+
+    // Hero 3D Holo-Map Banner in modal
+    this.hudContainer.querySelector('#lw-btn-open-holo-map')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+      map3DEngine.openModal();
     });
 
     const tabProfile = this.hudContainer.querySelector('#lw-tab-profile');
@@ -2694,7 +2759,7 @@ export class LivingWorld {
       window.openHumanCustomizer?.();
     });
 
-    // Game launchers from modal (HOT POTATO & COIN CATCHER ONLY)
+    // Game launchers from modal
     this.hudContainer.querySelector('#lw-launch-hotpotato')?.addEventListener('click', () => {
       modal.style.display = 'none';
       this.options.onOpenGame?.('hotpotato');
@@ -2702,6 +2767,10 @@ export class LivingWorld {
     this.hudContainer.querySelector('#lw-launch-coincatcher')?.addEventListener('click', () => {
       modal.style.display = 'none';
       this.options.onOpenGame?.('coincatcher');
+    });
+    this.hudContainer.querySelector('#lw-launch-cyberspeedway')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+      this.options.onOpenGame?.('cyberspeedway');
     });
 
     // Chat minimize toggle (especially for mobile devices)
@@ -2872,10 +2941,28 @@ export class LivingWorld {
     ctx.restore();
   }
 
-  // ---------------------------------------------------------------- Frame Loop
   update(totalTime, deltaTime) {
     this.updatables.forEach((fn) => fn(totalTime, deltaTime));
-    this.drawMinimap();
+
+    // Dynamic 3D Live Map & Telemetry Engine (Updates visual map, compass, live FOV cone & tactical map)
+    map3DEngine.player = this.player;
+    map3DEngine.update(totalTime, deltaTime);
+
+    // Update Live Location Badge in HUD
+    const locBadge = this.hudContainer?.querySelector('#lw-loc-badge-text');
+    if (locBadge) {
+      if (this.player.y > 250) locBadge.textContent = '🏁 Cyber Speedway GP';
+      else if (this.player.y > 180) locBadge.textContent = '🏃 Rooftop Run';
+      else if (this.player.y > 140) locBadge.textContent = '🥔 Hot Potato Colosseum';
+      else if (this.player.y > 80) locBadge.textContent = '🪙 Coin Catcher Stadium';
+      else {
+        const distArcade = Math.hypot(this.player.x - 16, this.player.z - (-18));
+        if (distArcade < 18) locBadge.textContent = '🕹️ Neon Arcade';
+        else if (this.player.z > 35) locBadge.textContent = '🌸 Sakura Zen Park';
+        else if (Math.abs(this.player.x - 22) < 8) locBadge.textContent = '🚏 Transit Avenue';
+        else locBadge.textContent = '🏙️ Central Plaza';
+      }
+    }
 
     // Check Portal / Door Triggers
     if (!this.isSitting) {
