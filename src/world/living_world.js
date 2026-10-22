@@ -215,11 +215,44 @@ export class LivingWorld {
       this.roadGroup.add(stripe);
     }
 
-    // Stop Line on road before crosswalk
-    const stopLine = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth * 0.45, 0.6), lineMat);
-    stopLine.rotation.x = -Math.PI / 2;
-    stopLine.position.set(22 + roadWidth * 0.25, 0.033, 7.5);
-    this.roadGroup.add(stopLine);
+    // Two-way Stop Lines on road before crosswalk:
+    // 1. Northbound Stop Line (left lane, x = 19.65, z = 7.2)
+    const stopLineNorth = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth * 0.44, 0.65), lineMat);
+    stopLineNorth.rotation.x = -Math.PI / 2;
+    stopLineNorth.position.set(19.65, 0.033, 7.2);
+    this.roadGroup.add(stopLineNorth);
+
+    // 2. Southbound Stop Line (right lane, x = 24.35, z = 0.8)
+    const stopLineSouth = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth * 0.44, 0.65), lineMat);
+    stopLineSouth.rotation.x = -Math.PI / 2;
+    stopLineSouth.position.set(24.35, 0.033, 0.8);
+    this.roadGroup.add(stopLineSouth);
+
+    // Painted Lane Direction Straight Arrows on Asphalt
+    [-60, -20, 25, 65].forEach((az) => {
+      // Northbound arrow (x = 19.65)
+      const arrowN = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 2.0), lineMat);
+      arrowN.rotation.x = -Math.PI / 2;
+      arrowN.position.set(19.65, 0.032, az);
+      this.roadGroup.add(arrowN);
+
+      const headN = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.8, 3), lineMat);
+      headN.rotation.x = -Math.PI / 2;
+      headN.rotation.z = Math.PI;
+      headN.position.set(19.65, 0.033, az - 1.2);
+      this.roadGroup.add(headN);
+
+      // Southbound arrow (x = 24.35)
+      const arrowS = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 2.0), lineMat);
+      arrowS.rotation.x = -Math.PI / 2;
+      arrowS.position.set(24.35, 0.032, az);
+      this.roadGroup.add(arrowS);
+
+      const headS = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.8, 3), lineMat);
+      headS.rotation.x = -Math.PI / 2;
+      headS.position.set(24.35, 0.033, az + 1.2);
+      this.roadGroup.add(headS);
+    });
 
     // Concrete Sidewalk along road
     const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 });
@@ -235,6 +268,114 @@ export class LivingWorld {
     const curb = new THREE.Mesh(curbGeo, curbMat);
     curb.position.set(22 - roadWidth / 2 - 0.15, 0.14, 0);
     this.roadGroup.add(curb);
+
+    // ---------------------------------------------------------------
+    // Realistic City Feature: Cyber Bus Stop Transit Shelter (x = 15.6, z = -14)
+    // ---------------------------------------------------------------
+    const shelterGroup = new THREE.Group();
+    shelterGroup.position.set(15.6, 0.24, -14);
+    const steelDark = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85, roughness: 0.25 });
+    const glassShelter = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.45 });
+
+    // Shelter Roof Canopy
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 5.2), steelDark);
+    roof.position.set(0, 2.7, 0);
+    shelterGroup.add(roof);
+
+    // Glowing Neon Edge on Canopy
+    const roofNeon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 5.22), new THREE.MeshBasicMaterial({ color: 0x00d2d3 }));
+    roofNeon.position.set(1.2, 2.7, 0);
+    shelterGroup.add(roofNeon);
+
+    // Rear Glass Wall
+    const backGlass = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.4, 5.0), glassShelter);
+    backGlass.position.set(-1.0, 1.35, 0);
+    shelterGroup.add(backGlass);
+
+    // Support Pillars
+    [-2.4, 2.4].forEach((pz) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.6, 0.14), steelDark);
+      col.position.set(-1.0, 1.3, pz);
+      shelterGroup.add(col);
+    });
+
+    // Transit Digital Schedule Board
+    const schedCanvas = document.createElement('canvas');
+    schedCanvas.width = 512;
+    schedCanvas.height = 128;
+    const sctx = schedCanvas.getContext('2d');
+    sctx.fillStyle = '#0f172a';
+    sctx.fillRect(0, 0, 512, 128);
+    sctx.strokeStyle = '#00d2d3';
+    sctx.lineWidth = 4;
+    sctx.strokeRect(4, 4, 504, 120);
+    sctx.fillStyle = '#00d2d3';
+    sctx.font = 'bold 36px Fredoka, sans-serif';
+    sctx.fillText('METAVERSE TRANSIT · LINE 7', 24, 52);
+    sctx.fillStyle = '#facc15';
+    sctx.font = '600 28px Fredoka, sans-serif';
+    sctx.fillText('NEXT ARRIVAL: 2 MIN · ON TIME', 24, 98);
+
+    const schedMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.2, 0.55),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(schedCanvas) })
+    );
+    schedMesh.position.set(-0.95, 2.1, 0);
+    schedMesh.rotation.y = Math.PI / 2;
+    shelterGroup.add(schedMesh);
+
+    // Bus Shelter Bench
+    const sbench = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.08, 3.4), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }));
+    sbench.position.set(-0.5, 0.45, 0);
+    shelterGroup.add(sbench);
+
+    this.roadGroup.add(shelterGroup);
+
+    // ---------------------------------------------------------------
+    // Realistic City Feature: Overhead Cyber Highway Gantry Sign (x = 22, z = -45)
+    // ---------------------------------------------------------------
+    const gantryGroup = new THREE.Group();
+    gantryGroup.position.set(22, 0, -45);
+
+    // Two Steel Truss Towers on both sides of road
+    [-6.2, 6.2].forEach((tx) => {
+      const tower = new THREE.Mesh(new THREE.BoxGeometry(0.4, 7.2, 0.4), steelDark);
+      tower.position.set(tx, 3.6, 0);
+      gantryGroup.add(tower);
+    });
+
+    // Horizontal Truss spanning over road
+    const spanTruss = new THREE.Mesh(new THREE.BoxGeometry(12.8, 0.45, 0.45), steelDark);
+    spanTruss.position.set(0, 6.8, 0);
+    gantryGroup.add(spanTruss);
+
+    // Digital Highway Destination Board
+    const gCanvas = document.createElement('canvas');
+    gCanvas.width = 1024;
+    gCanvas.height = 256;
+    const gctx = gCanvas.getContext('2d');
+    gctx.fillStyle = '#090d16';
+    gctx.fillRect(0, 0, 1024, 256);
+    gctx.strokeStyle = '#38bdf8';
+    gctx.lineWidth = 8;
+    gctx.strokeRect(10, 10, 1004, 236);
+
+    gctx.fillStyle = '#00d2d3';
+    gctx.font = '900 52px Fredoka, sans-serif';
+    gctx.textAlign = 'center';
+    gctx.fillText('⇡ CENTRAL PLAZA   |   ⇡ MULTIPLAYER ARENAS', 512, 100);
+    gctx.fillStyle = '#facc15';
+    gctx.font = '700 42px Fredoka, sans-serif';
+    gctx.fillText('COIN CATCHER  ·  HOT POTATO  ·  CYBER CAFE', 512, 185);
+
+    const gantrySign = new THREE.Mesh(
+      new THREE.PlaneGeometry(9.5, 2.3),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gCanvas) })
+    );
+    gantrySign.position.set(0, 6.8, 0.25);
+    gantryGroup.add(gantrySign);
+
+    this.roadGroup.add(gantryGroup);
   }
 
   // ---------------------------------------------------------------- 3. Central Plaza & Skyline (Panel 1)
@@ -1247,27 +1388,48 @@ export class LivingWorld {
     });
   }
 
-  // ---------------------------------------------------------------- 7. Cars & Traffic System (Panel 4)
+  // ---------------------------------------------------------------- 7. Cars & Realistic City Traffic System
   buildTrafficSystem() {
     this.trafficGroup = new THREE.Group();
     this.root.add(this.trafficGroup);
 
-    // Build Traffic Light at the Crosswalk (x = 17, z = 4)
+    // Build Dual-Side Traffic Light & Pedestrian Signals at Crosswalk (z = 4)
     this.buildTrafficLight();
 
-    // Yellow Sports Coupe (Matching Image 2 Panel 4)
-    this.yellowSportsCar = this.createSportsCar(0xfacc15, 'PLAY');
-    this.yellowSportsCar.position.set(20.5, 0, 16);
-    this.yellowSportsCar.userData = { speed: 10.5, targetSpeed: 10.5 };
-    this.trafficGroup.add(this.yellowSportsCar);
+    // ---------------------------------------------------------------
+    // 6 Distinct Futuristic Vehicles on Two-Way Multi-Lane Boulevard
+    // ---------------------------------------------------------------
+    // Lane 1: NORTHBOUND (x = 19.65, traveling toward -z, heading = 0)
+    const car1 = this.createSportsCar(0xfacc15, 'PLAY', 0x00d2d3);
+    car1.position.set(19.65, 0, 35);
+    car1.userData = { speed: 11.0, baseSpeed: 11.0, dir: -1, lane: 'north', wheels: car1.userData.wheels };
 
-    // Red City Transit Bus (Matching Image 2 Panel 4)
-    this.redCityBus = this.createCityBus();
-    this.redCityBus.position.set(23.5, 0, -22);
-    this.redCityBus.userData = { speed: 7.5, targetSpeed: 7.5 };
-    this.trafficGroup.add(this.redCityBus);
+    const car2 = this.createTaxiCar();
+    car2.position.set(19.65, 0, -18);
+    car2.userData = { speed: 8.5, baseSpeed: 8.5, dir: -1, lane: 'north', wheels: car2.userData.wheels };
 
-    this.vehicles = [this.yellowSportsCar, this.redCityBus];
+    const car3 = this.createCityBus();
+    car3.position.set(19.65, 0, 85);
+    car3.userData = { speed: 7.2, baseSpeed: 7.2, dir: -1, lane: 'north', wheels: car3.userData.wheels };
+
+    // Lane 2: SOUTHBOUND (x = 24.35, traveling toward +z, heading = Math.PI)
+    const car4 = this.createSportsCar(0x9333ea, 'NEON', 0xff007f);
+    car4.rotation.y = Math.PI;
+    car4.position.set(24.35, 0, -45);
+    car4.userData = { speed: 10.5, baseSpeed: 10.5, dir: 1, lane: 'south', wheels: car4.userData.wheels };
+
+    const car5 = this.createCyberTruck();
+    car5.rotation.y = Math.PI;
+    car5.position.set(24.35, 0, 15);
+    car5.userData = { speed: 7.8, baseSpeed: 7.8, dir: 1, lane: 'south', wheels: car5.userData.wheels };
+
+    const car6 = this.createSportsCar(0x22c55e, 'VOLT', 0x22c55e);
+    car6.rotation.y = Math.PI;
+    car6.position.set(24.35, 0, -85);
+    car6.userData = { speed: 9.8, baseSpeed: 9.8, dir: 1, lane: 'south', wheels: car6.userData.wheels };
+
+    this.vehicles = [car1, car2, car3, car4, car5, car6];
+    this.vehicles.forEach((v) => this.trafficGroup.add(v));
 
     // Traffic System Loop
     this.updatables.push((t, dt) => {
@@ -1303,10 +1465,10 @@ export class LivingWorld {
       group.add(visor);
     });
 
-    // 3 Lamps
+    // 3 Vehicle Signal Lamps
     const redMat = new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff0000, emissiveIntensity: 0.1 });
     const yellowMat = new THREE.MeshStandardMaterial({ color: 0x222200, emissive: 0xffaa00, emissiveIntensity: 0.1 });
-    const greenMat = new THREE.MeshStandardMaterial({ color: 0x002200, emissive: 0x00ff66, emissiveIntensity: 1.8 });
+    const greenMat = new THREE.MeshStandardMaterial({ color: 0x002200, emissive: 0x00ff66, emissiveIntensity: 2.2 });
 
     const redLamp = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), redMat);
     redLamp.position.set(3.2, 4.9, 0.22);
@@ -1320,13 +1482,31 @@ export class LivingWorld {
     greenLamp.position.set(3.2, 3.9, 0.22);
     group.add(greenLamp);
 
+    // Pedestrian Signal Head on Pole facing sidewalk
+    const pedBox = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.65, 0.35), boxMat);
+    pedBox.position.set(0, 2.4, 0.25);
+    group.add(pedBox);
+
+    const pedWalkMat = new THREE.MeshStandardMaterial({ color: 0x002200, emissive: 0x00ff66, emissiveIntensity: 0.1 });
+    const pedStopMat = new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff0000, emissiveIntensity: 2.2 });
+
+    const pedStop = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), pedStopMat);
+    pedStop.position.set(0, 2.55, 0.43);
+    group.add(pedStop);
+
+    const pedWalk = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), pedWalkMat);
+    pedWalk.position.set(0, 2.25, 0.43);
+    group.add(pedWalk);
+
     this.trafficLight = {
       group,
       state: 'green',
-      timer: 8.0,
+      timer: 9.0,
       redMat,
       yellowMat,
       greenMat,
+      pedWalkMat,
+      pedStopMat,
     };
 
     this.trafficGroup.add(group);
@@ -1341,106 +1521,275 @@ export class LivingWorld {
       tl.state = 'yellow';
       tl.timer = 2.5;
       tl.greenMat.emissiveIntensity = 0.1;
-      tl.yellowMat.emissiveIntensity = 1.8;
+      tl.yellowMat.emissiveIntensity = 2.0;
       tl.redMat.emissiveIntensity = 0.1;
+      tl.pedWalkMat.emissiveIntensity = 0.1;
+      tl.pedStopMat.emissiveIntensity = 2.2;
     } else if (tl.state === 'yellow' && tl.timer <= 0) {
       tl.state = 'red';
-      tl.timer = 6.0;
+      tl.timer = 7.0;
       tl.greenMat.emissiveIntensity = 0.1;
       tl.yellowMat.emissiveIntensity = 0.1;
-      tl.redMat.emissiveIntensity = 2.0;
+      tl.redMat.emissiveIntensity = 2.2;
+      tl.pedWalkMat.emissiveIntensity = 2.2;
+      tl.pedStopMat.emissiveIntensity = 0.1;
     } else if (tl.state === 'red' && tl.timer <= 0) {
       tl.state = 'green';
-      tl.timer = 8.0;
-      tl.greenMat.emissiveIntensity = 2.0;
+      tl.timer = 9.0;
+      tl.greenMat.emissiveIntensity = 2.2;
       tl.yellowMat.emissiveIntensity = 0.1;
       tl.redMat.emissiveIntensity = 0.1;
+      tl.pedWalkMat.emissiveIntensity = 0.1;
+      tl.pedStopMat.emissiveIntensity = 2.2;
     }
   }
 
   updateVehicles(dt) {
-    const isStoppingLight = this.trafficLight && (this.trafficLight.state === 'red' || this.trafficLight.state === 'yellow');
-    const stopZ = 8.5;
+    const isStopping = this.trafficLight && (this.trafficLight.state === 'red' || this.trafficLight.state === 'yellow');
 
-    this.vehicles.forEach((car) => {
-      let desiredSpeed = car === this.yellowSportsCar ? 10.5 : 7.5;
+    for (let i = 0; i < this.vehicles.length; i++) {
+      const car = this.vehicles[i];
+      const dir = car.userData.dir; // -1 for Northbound, +1 for Southbound
+      let desiredSpeed = car.userData.baseSpeed;
 
-      // Check if approaching crosswalk when light is red/yellow
-      if (isStoppingLight && car.position.z > stopZ && car.position.z < stopZ + 14) {
-        desiredSpeed = 0;
+      // 1. Traffic Light Stop Line Check
+      if (isStopping) {
+        if (dir === -1 && car.position.z > 7.5 && car.position.z < 26.0) {
+          desiredSpeed = 0;
+        } else if (dir === 1 && car.position.z < 0.5 && car.position.z > -18.0) {
+          desiredSpeed = 0;
+        }
       }
 
-      // Smooth acceleration / braking
-      car.userData.speed = THREE.MathUtils.lerp(car.userData.speed, desiredSpeed, dt * 3.5);
-
-      // Move forward along road
-      car.position.z -= car.userData.speed * dt;
-
-      // Loop circuit
-      if (car.position.z < -48) {
-        car.position.z = 48;
+      // 2. Intelligent Car-Following Distance (Collision Avoidance in same lane)
+      for (let j = 0; j < this.vehicles.length; j++) {
+        if (i === j) continue;
+        const other = this.vehicles[j];
+        if (other.userData.lane === car.userData.lane) {
+          // Distance ahead along direction of travel
+          const distAhead = (other.position.z - car.position.z) * dir;
+          if (distAhead > 0 && distAhead < 14.0) {
+            if (distAhead < 6.5) {
+              desiredSpeed = 0;
+            } else {
+              desiredSpeed = Math.min(desiredSpeed, other.userData.speed * 0.85);
+            }
+          }
+        }
       }
-    });
+
+      // 3. Smooth Acceleration and Braking (Realistic vehicle inertia)
+      car.userData.speed = THREE.MathUtils.lerp(car.userData.speed, desiredSpeed, dt * 3.8);
+
+      // 4. Position Update along Z
+      car.position.z += dir * car.userData.speed * dt;
+
+      // 5. Realistic Wheel Rotation
+      if (car.userData.wheels) {
+        const rotStep = dir * car.userData.speed * dt * 2.8;
+        for (let w = 0; w < car.userData.wheels.length; w++) {
+          car.userData.wheels[w].rotation.x += rotStep;
+        }
+      }
+
+      // 6. Seamless Two-Way Circuit Looping
+      if (dir === -1 && car.position.z < -98) {
+        car.position.z = 98;
+      } else if (dir === 1 && car.position.z > 98) {
+        car.position.z = -98;
+      }
+    }
   }
 
-  createSportsCar(bodyColor, plateText) {
+  createSportsCar(bodyColor, plateText, glowColor = 0x00d2d3) {
     const group = new THREE.Group();
+    const wheels = [];
 
     const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.2, metalness: 0.85 });
     const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 });
+    const glowMat = new THREE.MeshBasicMaterial({ color: glowColor });
 
-    // Chassis
-    const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.6, 4.4), bodyMat);
+    // Aerodynamic Chassis
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.58, 4.3), bodyMat);
     chassis.position.y = 0.55;
     chassis.castShadow = true;
     group.add(chassis);
 
-    // Aerodynamic Cabin
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.58, 2.3), glassMat);
-    cabin.position.set(0, 1.05, -0.3);
+    // Sleek Cockpit
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.55, 2.2), glassMat);
+    cabin.position.set(0, 1.05, -0.25);
     group.add(cabin);
 
     // Rear Spoiler
-    const spoiler = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 0.4), bodyMat);
-    spoiler.position.set(0, 1.15, 1.9);
+    const spoiler = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.08, 0.4), bodyMat);
+    spoiler.position.set(0, 1.15, 1.85);
     group.add(spoiler);
+
+    // Underglow Neon Strip
+    const underglow = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.05, 3.6), glowMat);
+    underglow.position.set(0, 0.18, 0);
+    group.add(underglow);
 
     // Red LED Taillights
     const tailMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
-    const tail = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.14, 0.1), tailMat);
-    tail.position.set(0, 0.65, 2.21);
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.14, 0.1), tailMat);
+    tail.position.set(0, 0.65, 2.16);
     group.add(tail);
 
-    // White Headlights
+    // White Xenon Headlights
     const headMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    [-0.8, 0.8].forEach((hx) => {
+    [-0.75, 0.75].forEach((hx) => {
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.14, 0.1), headMat);
+      hl.position.set(hx, 0.55, -2.16);
+      group.add(hl);
+    });
+
+    // 4 Wheels
+    const wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 16);
+    wheelGeo.rotateZ(Math.PI / 2);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.85 });
+
+    [
+      [-1.05, 0.36, 1.35],
+      [1.05, 0.36, 1.35],
+      [-1.05, 0.36, -1.35],
+      [1.05, 0.36, -1.35],
+    ].forEach(([wx, wy, wz]) => {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.position.set(wx, wy, wz);
+      group.add(wheel);
+      wheels.push(wheel);
+    });
+
+    group.userData.wheels = wheels;
+    return group;
+  }
+
+  createTaxiCar() {
+    const group = new THREE.Group();
+    const wheels = [];
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3, metalness: 0.6 });
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 });
+
+    // Chassis
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.65, 4.4), bodyMat);
+    chassis.position.y = 0.58;
+    chassis.castShadow = true;
+    group.add(chassis);
+
+    // White Accent Panels
+    const sideStripe = new THREE.Mesh(new THREE.BoxGeometry(2.14, 0.2, 4.35), whiteMat);
+    sideStripe.position.set(0, 0.65, 0);
+    group.add(sideStripe);
+
+    // Cabin
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.65, 2.4), glassMat);
+    cabin.position.set(0, 1.15, -0.15);
+    group.add(cabin);
+
+    // Rooftop Illuminated TAXI Sign
+    const taxiSign = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 0.28, 0.4),
+      new THREE.MeshBasicMaterial({ color: 0xfacc15 })
+    );
+    taxiSign.position.set(0, 1.6, -0.15);
+    group.add(taxiSign);
+
+    // Headlights and Taillights
+    const headMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    [-0.75, 0.75].forEach((hx) => {
       const hl = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.14, 0.1), headMat);
       hl.position.set(hx, 0.55, -2.21);
       group.add(hl);
     });
 
-    // Wheels
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.14, 0.1), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+    tail.position.set(0, 0.65, 2.21);
+    group.add(tail);
+
+    // 4 Wheels
     const wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 16);
     wheelGeo.rotateZ(Math.PI / 2);
-    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.85 });
 
     [
-      [-1.1, 0.36, 1.4],
-      [1.1, 0.36, 1.4],
-      [-1.1, 0.36, -1.4],
-      [1.1, 0.36, -1.4],
+      [-1.05, 0.36, 1.35],
+      [1.05, 0.36, 1.35],
+      [-1.05, 0.36, -1.35],
+      [1.05, 0.36, -1.35],
     ].forEach(([wx, wy, wz]) => {
       const wheel = new THREE.Mesh(wheelGeo, wheelMat);
       wheel.position.set(wx, wy, wz);
       group.add(wheel);
+      wheels.push(wheel);
     });
 
+    group.userData.wheels = wheels;
+    return group;
+  }
+
+  createCyberTruck() {
+    const group = new THREE.Group();
+    const wheels = [];
+
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.25, metalness: 0.85 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.95 });
+
+    // Angular Heavy Cyber Body
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.3, 1.25, 5.2), steelMat);
+    body.position.y = 1.05;
+    body.castShadow = true;
+    group.add(body);
+
+    // Angular Cabin
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.75, 2.4), glassMat);
+    cabin.position.set(0, 1.75, -0.6);
+    group.add(cabin);
+
+    // Cargo Bay Trim
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.6, 2.3), darkMat);
+    bed.position.set(0, 1.35, 1.35);
+    group.add(bed);
+
+    // Front Neon Light Bar
+    const lightBar = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 0.08), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    lightBar.position.set(0, 1.2, -2.61);
+    group.add(lightBar);
+
+    // Rear Red LED Strip
+    const rearBar = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 0.08), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+    rearBar.position.set(0, 1.1, 2.61);
+    group.add(rearBar);
+
+    // 4 Heavy Wheels
+    const wheelGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.32, 16);
+    wheelGeo.rotateZ(Math.PI / 2);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+
+    [
+      [-1.15, 0.44, 1.6],
+      [1.15, 0.44, 1.6],
+      [-1.15, 0.44, -1.6],
+      [1.15, 0.44, -1.6],
+    ].forEach(([wx, wy, wz]) => {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.position.set(wx, wy, wz);
+      group.add(wheel);
+      wheels.push(wheel);
+    });
+
+    group.userData.wheels = wheels;
     return group;
   }
 
   createCityBus() {
     const group = new THREE.Group();
-    const redMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 });
+    const wheels = [];
+
+    const redMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.35, metalness: 0.3 });
     const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.6 });
 
     // Large Bus Body (width 2.6m, height 3.2m, length 8.8m)
@@ -1454,7 +1803,27 @@ export class LivingWorld {
     winStrip.position.set(0, 2.4, 0);
     group.add(winStrip);
 
-    // Wheels
+    // Route Sign on Front
+    const routeSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.8, 0.45),
+      new THREE.MeshBasicMaterial({ color: 0xfacc15 })
+    );
+    routeSign.position.set(0, 3.1, -4.41);
+    group.add(routeSign);
+
+    // Headlights
+    [-0.9, 0.9].forEach((hx) => {
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.1), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      hl.position.set(hx, 0.75, -4.41);
+      group.add(hl);
+    });
+
+    // Taillights
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.2, 0.1), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+    tail.position.set(0, 0.85, 4.41);
+    group.add(tail);
+
+    // 4 Large Bus Wheels
     const wheelGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.32, 16);
     wheelGeo.rotateZ(Math.PI / 2);
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
@@ -1468,8 +1837,10 @@ export class LivingWorld {
       const wheel = new THREE.Mesh(wheelGeo, wheelMat);
       wheel.position.set(wx, wy, wz);
       group.add(wheel);
+      wheels.push(wheel);
     });
 
+    group.userData.wheels = wheels;
     return group;
   }
 
