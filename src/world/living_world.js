@@ -1486,6 +1486,7 @@ export class LivingWorld {
           c.respawn = 20;
           this.coinsCollected += 10;
           localStorage.setItem('aa_collected_coins', String(this.coinsCollected));
+          window.dispatchEvent(new CustomEvent('coins-updated', { detail: { coins: this.coinsCollected } }));
           sound.playCoin();
           this.showCoinPopText(c.x, c.z, '+10 Coins');
         }
@@ -1673,6 +1674,9 @@ export class LivingWorld {
           <div style="display: flex; align-items: center; gap: 6px;">
             <span class="lw-player-name" style="color: #fff; font-weight: 800; font-size: 15px;">Alex</span>
             <span class="lw-player-level" style="color: #38bdf8; font-size: 12px; font-weight: 700;">Level 1</span>
+            <span id="lw-coins-badge" style="background: rgba(250, 204, 21, 0.2); border: 1px solid #facc15; border-radius: 999px; padding: 1px 7px; color: #fde047; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">
+              <span>🪙</span> <span id="lw-coins-count">${this.coinsCollected}</span>
+            </span>
           </div>
           <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
             <div class="lw-xp-bar-wrap" style="width: 90px; height: 6px; background: rgba(255,255,255,0.18); border-radius: 4px; overflow: hidden;">
@@ -1836,6 +1840,15 @@ export class LivingWorld {
     });
     this.hudContainer.querySelector('#lw-btn-close-menu')?.addEventListener('click', () => {
       modal.style.display = 'none';
+    });
+
+    // Listen for coin updates from minigames or collectibles
+    window.addEventListener('coins-updated', (e) => {
+      if (e.detail?.coins !== undefined) {
+        this.coinsCollected = e.detail.coins;
+        const countEl = document.querySelector('#lw-coins-count');
+        if (countEl) countEl.textContent = String(this.coinsCollected);
+      }
     });
 
     // Tab switching

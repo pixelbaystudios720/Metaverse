@@ -1347,13 +1347,38 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     const o = ray.ray.origin, d = ray.ray.direction; if (d.y > -1e-3) return null;
     const k = -o.y / d.y; return { x: o.x + d.x * k, z: o.z + d.z * k };
   }
+  const camTouch = { on: false, id: null, lx: 0, ly: 0 };
+  let touchPinchDist = null;
   [cvIn, cvOut, cvHall].forEach((cv) => {
     cv.addEventListener('pointerdown', (e) => {
       if (dlg) { advance(!!chat); return; } // tapping the room ends a chat too
+      if (e.pointerType !== 'mouse') {
+        const isRightSide = e.clientX >= window.innerWidth * 0.45;
+        if (isRightSide) {
+          // Right half of mobile screen: camera rotation swivel
+          camTouch.on = true;
+          camTouch.id = e.pointerId;
+          camTouch.lx = e.clientX;
+          camTouch.ly = e.clientY;
+          cv.setPointerCapture(e.pointerId);
+          return;
+        }
+      }
       stick.on = true; stick.id = e.pointerId; stick.ox = e.clientX; stick.oy = e.clientY; stick.x = stick.y = 0; stick.moved = 0; stick.t0 = performance.now();
       cv.setPointerCapture(e.pointerId);
     });
     cv.addEventListener('pointermove', (e) => {
+      if (camTouch.on && e.pointerId === camTouch.id) {
+        const dx = e.clientX - camTouch.lx;
+        const dy = e.clientY - camTouch.ly;
+        camTouch.lx = e.clientX;
+        camTouch.ly = e.clientY;
+        orbit.drag = true;
+        orbit.tyaw -= dx * 0.009;
+        if (where === 'in') orbit.tyaw = clamp(orbit.tyaw, -.7, .7);
+        orbit.tpitch = clamp(orbit.tpitch + dy * 0.005, 0.1, 1.25);
+        return;
+      }
       if (!stick.on || e.pointerId !== stick.id) return;
       const dx = e.clientX - stick.ox, dy = e.clientY - stick.oy, l = Math.hypot(dx, dy); stick.moved = Math.max(stick.moved, l);
       if (e.pointerType === 'mouse' && (where === 'out' || where === 'in') && stick.moved > 6) { // drag to swivel the camera round the player
@@ -1366,6 +1391,11 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
       }
     });
     const end = (e) => {
+      if (camTouch.on && e.pointerId === camTouch.id) {
+        camTouch.on = false;
+        orbit.drag = false;
+        return;
+      }
       if (!stick.on || e.pointerId !== stick.id) return;
       const tap = stick.moved < 8 && performance.now() - stick.t0 < 400;
       stick.on = false; stick.x = stick.y = 0; stickEl.hidden = true; stick.lx = stick.ly = undefined; orbit.drag = false;
@@ -1374,6 +1404,24 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
     cv.addEventListener('wheel', (e) => { if (where !== 'out' && where !== 'in') return; e.preventDefault(); orbit.tdist = clamp(orbit.tdist * (1 + Math.sign(e.deltaY) * .1), 5.5, 22); }, { passive: false }); // scroll to zoom
     cv.addEventListener('contextmenu', (e) => { if (where === 'out' || where === 'in') e.preventDefault(); }); // right-drag swivels too
+  });
+
+  // Touch Pinch-to-zoom on mobile
+  window.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && (where === 'out' || where === 'in')) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (touchPinchDist !== null) {
+        const diff = touchPinchDist - dist;
+        orbit.tdist = clamp(orbit.tdist + diff * 0.04, 5.5, 22);
+      }
+      touchPinchDist = dist;
+    }
+  }, { passive: true });
+  window.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) touchPinchDist = null;
   });
   aBtn.addEventListener('click', () => { if (!advance()) interact(); });
   jumpBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); jump(); }); duckBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); duckBtn.classList.toggle('on'); });
@@ -1541,7 +1589,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
   jobEl.querySelector('.g-jobx').addEventListener('click', () => { jobEl.hidden = true; });
   // ---- the map (Club Penguin style): the town square and its districts; click one to jump there
   const mapEl = q('.g-mapbox'), mapBtn = q('.g-map'), zoneEl = q('.g-zone');
-  const ZONE_INFO = { town: ['Town Center', 'The cafe tower, market and fountain'], arcade: ['Neon Arcade', 'Coin Catcher, Card Clash, Rooftop Run and the claw machine'], docks: ['Harbor Docks', 'Dock Fishing and the Boat Race on the pier'], park: ['Sakura Park', 'Cherry trees and the wishing pond'] };
+  const ZONE_INFO = { town: ['Town Center', 'The cafe tower, market and fountain'], arcade: ['Neon Arcade', 'Coin Catcher and Hot Potato'], docks: ['Harbor Docks', 'Dock Fishing and the Boat Race on the pier'], park: ['Sakura Park', 'Cherry trees and the wishing pond'] };
   const MAP_POS = { town: [50, 70], arcade: [24, 30], docks: [84, 64], park: [70, 24] }; // over the districts in assets/map-districts.webp
   function renderMap() {
     const grid = mapEl.querySelector('.g-mapgrid');

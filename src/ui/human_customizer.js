@@ -89,15 +89,6 @@ export class HumanAvatarCustomizer {
             <!-- Content rendered dynamically -->
           </div>
 
-          <!-- Model Information & Notice -->
-          <div class="hc-model-info-box" id="hc-model-info">
-            <div class="hc-info-icon">ℹ️</div>
-            <div class="hc-info-text">
-              <strong id="hc-info-title">Model Specifications</strong>
-              <p id="hc-info-desc">Inspecting mesh attributes, materials, and skeleton.</p>
-            </div>
-          </div>
-
           <!-- Action Footer -->
           <div class="hc-footer-actions">
             <button type="button" class="hc-btn-secondary" id="hc-random-btn">
@@ -200,39 +191,122 @@ export class HumanAvatarCustomizer {
         box-sizing: border-box;
       }
 
-      @media (max-width: 960px) {
+      @media (max-width: 900px) {
+        .human-customizer-container {
+          overflow: hidden !important;
+          height: 100vh !important;
+          max-height: 100vh !important;
+          box-sizing: border-box !important;
+        }
+        .hc-top-header {
+          padding: 6px 12px 2px !important;
+        }
+        .hc-brand-pill {
+          padding: 3px 10px !important;
+        }
+        .hc-badge {
+          font-size: 9px !important;
+          padding: 2px 6px !important;
+        }
+        .hc-title {
+          font-size: 13px !important;
+        }
+        .hc-subtitle {
+          display: none !important;
+        }
         .hc-workspace {
-          grid-template-columns: minmax(0, 1fr);
-          padding: 8px 12px 24px;
-          gap: 16px;
+          display: grid !important;
+          grid-template-columns: 1fr 1.15fr !important;
+          gap: 8px !important;
+          padding: 4px 8px 10px !important;
+          height: calc(100vh - 44px) !important;
+          max-height: calc(100vh - 44px) !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          align-items: stretch !important;
         }
         .hc-viewport-card {
           min-height: unset !important;
-          width: 100%;
+          height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+          width: 100% !important;
         }
         .hc-canvas-container {
           max-width: 100% !important;
           width: 100% !important;
-          height: 320px !important;
-          max-height: 42vh !important;
+          height: 100% !important;
+          max-height: calc(100vh - 56px) !important;
           aspect-ratio: unset !important;
-          border-radius: 20px !important;
+          border-radius: 16px !important;
+        }
+        .hc-turntable-hint, .hc-emotes-row {
+          display: none !important;
+        }
+        .hc-viewport-badge {
+          font-size: 9.5px !important;
+          padding: 3px 8px !important;
+          top: 8px !important;
+          left: 8px !important;
         }
         .hc-controls-card {
-          max-height: unset !important;
-          padding: 16px !important;
-          border-radius: 20px !important;
-          width: 100% !important;
+          height: 100% !important;
+          max-height: calc(100vh - 56px) !important;
+          padding: 10px !important;
+          border-radius: 16px !important;
+          gap: 8px !important;
+          overflow-y: auto !important;
           box-sizing: border-box !important;
         }
-        .hc-top-header {
-          padding: 12px 14px 4px !important;
+        .hc-identity-row label {
+          font-size: 10px !important;
         }
-        .hc-title {
-          font-size: 15px !important;
+        .hc-input-box input {
+          padding: 5px 8px !important;
+          font-size: 12px !important;
+          border-radius: 10px !important;
         }
-        .hc-subtitle {
+        .hc-tabs-bar {
+          gap: 3px !important;
+          padding: 3px !important;
+          border-radius: 10px !important;
+        }
+        .hc-tab-btn {
+          font-size: 10.5px !important;
+          padding: 5px 6px !important;
+          min-width: 48px !important;
+        }
+        .hc-tab-body {
+          max-height: calc(100vh - 200px) !important;
+          min-height: 110px !important;
+        }
+        .hc-swatches-grid {
+          grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)) !important;
+          gap: 6px !important;
+        }
+        .hc-char-card {
+          padding: 6px 8px !important;
+        }
+        .hc-char-avatar-icon {
+          font-size: 18px !important;
+          width: 28px !important;
+        }
+        .hc-char-info strong {
+          font-size: 12px !important;
+        }
+        .hc-footer-actions {
+          padding-top: 6px !important;
+          margin-top: auto !important;
+          gap: 6px !important;
+        }
+        .hc-btn-secondary {
+          padding: 8px 12px !important;
           font-size: 11.5px !important;
+        }
+        .hc-btn-primary {
+          padding: 8px 14px !important;
+          font-size: 12px !important;
         }
       }
 
@@ -1084,8 +1158,7 @@ export class HumanAvatarCustomizer {
               <div class="hc-char-card-left">
                 <div class="hc-char-avatar-icon">${c.icon}</div>
                 <div class="hc-char-info">
-                  <strong>${c.name} ${c.tagline ? `<span class="hc-char-tagline">"${c.tagline}"</span>` : ''}</strong>
-                  <small>${c.description}</small>
+                  <strong>${c.name}</strong>
                 </div>
               </div>
               <span class="hc-char-tag ${c.category === 'Attention Agents' ? 'hc-tag-meme' : 'hc-tag-human'}">${c.gender}</span>

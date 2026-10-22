@@ -129,6 +129,77 @@ export class HotPotatoGame {
 
     this.arenaGroup.add(archGroup);
 
+    // Return to Arcade Portal Doorway at Stadium South (z = 22.8)
+    const exitGroup = new THREE.Group();
+    exitGroup.position.set(0, 0, 22.8);
+
+    const exitFrameMat = new THREE.MeshStandardMaterial({
+      color: 0xef4444,
+      metalness: 0.8,
+      roughness: 0.2,
+      emissive: 0x7f1d1d,
+    });
+
+    const exitPostL = new THREE.Mesh(new THREE.BoxGeometry(0.9, 4.8, 0.9), exitFrameMat);
+    exitPostL.position.set(-2.6, 2.4, 0);
+    exitGroup.add(exitPostL);
+
+    const exitPostR = new THREE.Mesh(new THREE.BoxGeometry(0.9, 4.8, 0.9), exitFrameMat);
+    exitPostR.position.set(2.6, 2.4, 0);
+    exitGroup.add(exitPostR);
+
+    const exitBeam = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.9, 0.9), exitFrameMat);
+    exitBeam.position.set(0, 4.75, 0);
+    exitGroup.add(exitBeam);
+
+    // Canvas Sign
+    const signCanvas = document.createElement('canvas');
+    signCanvas.width = 512;
+    signCanvas.height = 128;
+    const sCtx = signCanvas.getContext('2d');
+    sCtx.fillStyle = '#0f172a';
+    sCtx.fillRect(0, 0, 512, 128);
+    sCtx.lineWidth = 6;
+    sCtx.strokeStyle = '#ef4444';
+    sCtx.strokeRect(3, 3, 506, 122);
+    sCtx.fillStyle = '#fde047';
+    sCtx.font = '900 34px "Fredoka", sans-serif';
+    sCtx.textAlign = 'center';
+    sCtx.textBaseline = 'middle';
+    sCtx.fillText('🚪 RETURN TO ARCADE', 256, 64);
+
+    const signMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.8, 1.2),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(signCanvas), side: THREE.DoubleSide })
+    );
+    signMesh.position.set(0, 5.5, 0);
+    exitGroup.add(signMesh);
+
+    // Glowing Swirling Energy Pane
+    this.exitPortalMat = new THREE.MeshBasicMaterial({
+      color: 0xef4444,
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+    });
+    const exitPane = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 4.0), this.exitPortalMat);
+    exitPane.position.set(0, 2.1, 0);
+    exitGroup.add(exitPane);
+
+    const exitPad = new THREE.Mesh(
+      new THREE.BoxGeometry(4.8, 0.08, 2.5),
+      new THREE.MeshBasicMaterial({ color: 0xfacc15 })
+    );
+    exitPad.position.set(0, 0.04, 0);
+    exitGroup.add(exitPad);
+
+    const exitLight = new THREE.PointLight(0xef4444, 2.0, 12);
+    exitLight.position.set(0, 2.8, 0);
+    exitGroup.add(exitLight);
+
+    this.arenaGroup.add(exitGroup);
+
+
     // Colorful Stadium Obstacle Blocks (Yellow, Purple, Cyan cubes as seen in Image 2!)
     const blockConfigs = [
       { x: -18, z: -10, color: 0xa855f7, w: 2.4, h: 2.2, d: 2.4 }, // Purple Cube
@@ -300,10 +371,11 @@ export class HotPotatoGame {
           </div>
         </div>
 
-        <!-- Exit Match Button -->
-        <button id="hp-exit-btn" style="background: rgba(255,255,255,0.15); border: 0; border-radius: 50%; width: 38px; height: 38px;
-          color: #fff; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-          ✕
+        <!-- Exit Match Button: Return to Arcade -->
+        <button id="hp-exit-btn" style="background: linear-gradient(135deg, #ef4444, #dc2626); border: 2px solid #fff; border-radius: 999px;
+          padding: 8px 18px; color: #fff; font-size: 13.5px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px;
+          box-shadow: 0 4px 14px rgba(239, 68, 68, 0.55); pointer-events: auto; transition: transform 0.15s ease;">
+          <span>🚪</span> Return to Arcade
         </button>
       </div>
 
@@ -320,6 +392,14 @@ export class HotPotatoGame {
         color: #fff; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.5); pointer-events: none;">
         <span>🏃</span> <span>Tag another player!</span>
+      </div>
+
+      <!-- Exit Doorway Proximity Prompt -->
+      <div id="hp-exit-prompt" style="position: absolute; bottom: 82px; left: 50%; transform: translateX(-50%);
+        background: rgba(15, 23, 42, 0.94); border: 2px solid #ef4444; border-radius: 999px; padding: 10px 24px;
+        color: #fff; font-size: 14.5px; font-weight: 800; display: none; align-items: center; gap: 8px;
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5); pointer-events: none; z-index: 95;">
+        <span>🚪</span> <span>Walk through glowing doorway or click "Return to Arcade" to exit</span>
       </div>
 
       <!-- Bottom-Left Spectator Status & Controls (Image 2) -->
@@ -698,8 +778,23 @@ export class HotPotatoGame {
     if (localP && localP.isAlive) {
       localP.pos.set(this.player.x, 160, this.player.z);
 
+      // Check Distance to Exit Portal Doorway (at x = 0, z = 22.8)
+      const exitDist = Math.hypot(this.player.x - 0, this.player.z - 22.8);
+      const exitPrompt = this.uiContainer?.querySelector('#hp-exit-prompt');
+      if (exitDist < 2.6) {
+        sound.playPortal();
+        this.stopMatch();
+        return;
+      } else if (exitDist < 6.5) {
+        if (exitPrompt) exitPrompt.style.display = 'flex';
+      } else {
+        if (exitPrompt) exitPrompt.style.display = 'none';
+      }
+
       const d = Math.hypot(this.player.x, this.player.z);
-      if (d > this.arenaRadius - 0.5) {
+      // Allow passing through doorway to exit at south
+      const isNearDoorway = Math.abs(this.player.x) < 3.0 && this.player.z > 20.0;
+      if (!isNearDoorway && d > this.arenaRadius - 0.5) {
         const a = Math.atan2(this.player.z, this.player.x);
         this.player.x = Math.cos(a) * (this.arenaRadius - 0.5);
         this.player.z = Math.sin(a) * (this.arenaRadius - 0.5);
