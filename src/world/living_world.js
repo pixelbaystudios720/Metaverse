@@ -2285,7 +2285,7 @@ export class LivingWorld {
                   <h2 style="margin: 0; color: #facc15; font-size: 22px; font-weight: 900; display: flex; align-items: center; gap: 8px;">
                     🪙 $METAVERSE Token Launchpad
                   </h2>
-                  <div style="color: #94a3b8; font-size: 12.5px;">Official Attention Agents Metaverse Currency (Solana SPL)</div>
+                  <div style="color: #94a3b8; font-size: 12.5px;">Official NEXORA Metaverse Currency (Solana SPL)</div>
                 </div>
                 <div style="background: rgba(34, 197, 94, 0.15); border: 1.5px solid #22c55e; border-radius: 999px; padding: 4px 12px; color: #4ade80; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
                   <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></span> LIVE ON SOLANA

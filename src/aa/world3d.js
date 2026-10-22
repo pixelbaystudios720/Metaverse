@@ -243,7 +243,7 @@ function towerGeo(w, h, d, ox, oy) {
 }
 function neonSign(text, w, h, color, { vertical = false, bg = 'rgba(14,10,26,.94)', glow = .72 } = {}) {
   color = tint(color);
-  const pxH = vertical ? 512 : 128, pxW = Math.max(32, Math.round((pxH * w) / h));
+  const pxH = vertical ? 512 : (w > 4 ? 256 : 128), pxW = Math.max(32, Math.round((pxH * w) / h));
   const c = document.createElement('canvas'); c.width = pxW; c.height = pxH; const x = c.getContext('2d');
   const r = Math.min(pxW, pxH) * .14;
   x.fillStyle = bg; x.beginPath(); x.roundRect(4, 4, pxW - 8, pxH - 8, r); x.fill();
@@ -911,9 +911,10 @@ export function buildWorld(scene, { shadows = true, seed = 7, labTubes = true, c
     const sign = neonSign('CYBER CAFE', 2.9, .52, '#f0c27e', { glow: .95, bg: 'rgba(31,74,58,.96)' }); sign.position.set(-.35, 3.12, 2.58); g.add(sign); // warm lettering on the awning green
     { const cup = canvasTex(256, 256, (cx, W) => { cx.fillStyle = '#1f4a3a'; cx.beginPath(); cx.arc(128, 128, 122, 0, TAU); cx.fill(); cx.lineWidth = 10; cx.strokeStyle = '#efe2c8'; cx.stroke(); cx.fillStyle = '#efe2c8'; cx.beginPath(); cx.roundRect(78, 112, 84, 70, [0, 0, 26, 26]); cx.fill(); cx.lineWidth = 10; cx.beginPath(); cx.arc(166, 140, 16, -1.4, 1.4); cx.stroke(); cx.lineWidth = 6; cx.lineCap = 'round'; [100, 124, 148].forEach((x0) => { cx.beginPath(); cx.moveTo(x0, 98); cx.quadraticCurveTo(x0 - 10, 80, x0, 64); cx.stroke(); }); });
       const disc = new THREE.Mesh(new THREE.CircleGeometry(.42, 40), new THREE.MeshBasicMaterial({ map: cup, toneMapped: false })); disc.position.set(1.62, 3.12, 2.6); g.add(disc); }
-    { const warm = new THREE.PointLight('#ffb878', 7, 9, 2); warm.position.set(0, 2.2, 3.4); g.add(warm); } // the shop's warm spill onto the pavement
-    const crown = neonSign('ATTENTION AGENTS', 3.2, .5, '#e2c09a', { glow: .95 }); crown.position.set(0, (Y1 + Y2) / 2 + .2, -.3 + 1.81); g.add(crown);
-    const crownB = neonSign('ATTENTION AGENTS', 3.2, .5, '#e2c09a', { glow: .95 }); crownB.position.set(0, (Y1 + Y2) / 2 + .2, -.3 - 1.81); crownB.rotation.y = Math.PI; g.add(crownB);
+    const nexoraW = 6.8, nexoraH = 1.45;
+    const crown = neonSign('NEXORA', nexoraW, nexoraH, '#00e5ff', { glow: 1.15, bg: 'rgba(9, 14, 24, 0.96)' }); crown.position.set(0, (Y1 + Y2) / 2 + .35, -.3 + 1.84); g.add(crown);
+    const crownB = neonSign('NEXORA', nexoraW, nexoraH, '#00e5ff', { glow: 1.15, bg: 'rgba(9, 14, 24, 0.96)' }); crownB.position.set(0, (Y1 + Y2) / 2 + .35, -.3 - 1.84); crownB.rotation.y = Math.PI; g.add(crownB);
+    const crownGlow = new THREE.PointLight('#00e5ff', 4, 14, 1.8); crownGlow.position.set(0, (Y1 + Y2) / 2 + .4, -.3 + 2.2); g.add(crownGlow);
     const blade = neonSign('ネットカフェ', .62, 3.2, '#38e1ff', { vertical: true }); blade.position.set(2.5, 6.2, 2.3); blade.rotation.y = Math.PI / 2; g.add(blade);
     const blade2 = blade.clone(); blade2.position.x = -2.5; blade2.rotation.y = -Math.PI / 2; g.add(blade2);
     const open24 = neonSign('OPEN 24H', .9, .26, '#f0c27e'); open24.position.set(1.5, 1.95, 2.57); g.add(open24);
@@ -1184,7 +1185,7 @@ export function buildWorld(scene, { shadows = true, seed = 7, labTubes = true, c
     // catwalk with a rail, and floodlights on arms over the top edge
     S.build(rig, { shadows });
     adBoard = canvasPlane(5.0, 3.0, 1000, 600); adBoard.mesh.position.set(0, 5.0, -.04); adBoard.mesh.material.color.setScalar(.85); rig.add(adBoard.mesh);
-    { const x = adBoard.x, gr = x.createLinearGradient(0, 0, 1000, 600); gr.addColorStop(0, '#8cc8ff'); gr.addColorStop(1, '#ffb3d1'); x.fillStyle = gr; x.fillRect(0, 0, 1000, 600); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = `700 110px ${ROUND}`; x.fillText('ATTENTION AGENTS', 500, 270); x.font = `600 54px ${ROUND}`; x.fillText('free games · muses · agents', 500, 370); adBoard.tex.needsUpdate = true;
+    { const x = adBoard.x, gr = x.createLinearGradient(0, 0, 1000, 600); gr.addColorStop(0, '#8cc8ff'); gr.addColorStop(1, '#ffb3d1'); x.fillStyle = gr; x.fillRect(0, 0, 1000, 600); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = `700 110px ${ROUND}`; x.fillText('NEXORA', 500, 270); x.font = `600 54px ${ROUND}`; x.fillText('multiverse · mini-games · ai agents', 500, 370); adBoard.tex.needsUpdate = true;
       const im = new Image(); im.onload = () => { if (adBoard.shown) return; x.drawImage(im, 0, 0, 1000, 600); adBoard.tex.needsUpdate = true; }; im.src = new URL('./games/art/world/poster-obby.jpg', import.meta.url).href; } // owner: never a blank black screen
     const blade = sign(rig, '広告', .5, 1.5, '#ffd23f', [-1.8, 2.1, -.27], 0, { vertical: true });
     const p1 = turnP(0, .5); pool(g, p1[0], p1[1], 6.0, 2.6, '#ff4fa3', .2).rotation.z = SWING;
@@ -1275,7 +1276,7 @@ export function buildWorld(scene, { shadows = true, seed = 7, labTubes = true, c
       const x = tick.x, W = 2048, H = 166; x.fillStyle = '#070a0b'; x.fillRect(0, 0, W, H);
       x.fillStyle = 'rgba(255,255,255,.04)'; for (let y = 0; y < H; y += 6) x.fillRect(0, y, W, 2);
       x.font = `700 92px ${ROUND}`; x.textBaseline = 'middle'; let px = 30;
-      const list = items?.length ? items : [{ t: 'ATTENTION AGENTS', v: 'LIVE MARKET', up: true }];
+      const list = items?.length ? items : [{ t: 'NEXORA', v: 'LIVE MARKET', up: true }];
       for (let k = 0; k < 6 && px < W; k++) for (const it of list) { if (px > W) break; x.fillStyle = '#fdf4ea'; x.fillText(it.t, px, H / 2); px += x.measureText(it.t).width + 26; x.fillStyle = it.up ? '#5dffb0' : '#ff6b81'; x.fillText(it.v, px, H / 2); px += x.measureText(it.v).width + 80; }
       tick.tex.needsUpdate = true;
     };
@@ -1634,7 +1635,7 @@ export function buildWorld(scene, { shadows = true, seed = 7, labTubes = true, c
     const gate = (G2, x, z, ry, text, c) => { arch(x, z, ry, text, c); { const o = (dx, y) => [x + Math.cos(ry) * dx, y, z - Math.sin(ry) * dx]; for (let k = -7; k <= 7; k++) archB.add(G.sphLo(), k % 3 ? '#7cc96a' : '#8fd47a', { p: o(k * .5, 4.75 + Math.abs(Math.sin(k * 1.7)) * .25), s: .55 + (k % 2) * .12 }); [-3.4, 3.4].forEach((dx) => { archB.add(G.sphLo(), '#86cf6e', { p: o(dx, .45), s: [.9, .6, .9] }); [0, 1, 2].forEach((q) => archB.add(G.sphLo(), ['#ffb3c7', '#fff1a8', '#ffffff'][q], { p: o(dx + (q - 1) * .4, .85, ), s: .12 })); }); } return; const pm = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 4.0), new THREE.MeshBasicMaterial({ map: portalTex, color: new THREE.Color(tint(c)), transparent: true, opacity: .96, depthWrite: true, side: THREE.DoubleSide, toneMapped: false })); pm.position.set(x, 2.05, z); pm.rotation.y = ry; G2.add(pm); portals.push(pm); };
     extras.push((t) => { portalTex.offset.y = -t * .35; });
     // the town's three gates, at the edges of the square (the districts' exits are built with each district)
-    gate(group, -19.6, 0, Math.PI / 2, 'NEON ARCADE ›', '#e2c09a'); gate(group, 19.6, 0, -Math.PI / 2, 'HARBOR DOCKS ›', '#f8d1a4'); gate(group, 0, 19.6, Math.PI, 'SAKURA PARK ›', '#f0a0b8');
+    gate(group, -19.6, 0, Math.PI / 2, 'NEON ARCADE ›', '#e2c09a'); gate(group, 19.6, 0, -Math.PI / 2, 'HARBOR DOCKS ›', '#f8d1a4'); gate(group, 0, 24.5, Math.PI, 'SAKURA PARK ›', '#f0a0b8');
 
     // hedges along both sides of each path between the town and its district (owner: no bare ground beside the paths)
     { const hb = (x, z) => archB.add(G.sphLo(), (Math.round(x * 3 + z * 7) % 3) ? '#7cc96a' : '#8fd47a', { p: [x, .55, z], s: [.95, .75, .95] });
