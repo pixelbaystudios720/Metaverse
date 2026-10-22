@@ -731,12 +731,17 @@ export const stages = [];
 export class Stage {
   constructor(canvas, { fov = 30, cam = [0, 1.9, 8], look = [0, 1.8, 0], dpr = 2, env = .55, clear = null, bloom = false, bloomThreshold = .86, bloomStrength = .55, exposure = 1, observe = true, size = null, ao = null, tone = 'aces', shadows = false } = {}) {
     this.canvas = canvas; this.size = size;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: clear === null, powerPreference: 'high-performance', preserveDrawingBuffer: !observe });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, dpr));
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: clear === null, powerPreference: 'high-performance', preserveDrawingBuffer: !observe, stencil: false });
+    const isCoarse = typeof window !== 'undefined' && (matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
+    const maxTargetDpr = isCoarse ? 1.25 : Math.min(dpr, 1.6);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxTargetDpr));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = tone === 'neutral' ? THREE.NeutralToneMapping : THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = exposure; // neutral keeps the pastels true
     if (clear !== null) this.renderer.setClearColor(clear, 1);
-    if (shadows) { this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; }
+    if (shadows) {
+      this.renderer.shadowMap.enabled = true;
+      this.renderer.shadowMap.type = isCoarse ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+    }
     this.scene = new THREE.Scene();
     this.scene.environmentIntensity = env; this.hasEnv = false; // the reflections are made on first use (see ensureEnv)
     this.camera = new THREE.PerspectiveCamera(fov, 1, .1, 160);

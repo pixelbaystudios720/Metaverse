@@ -387,6 +387,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
   let target = null, dlg = null, followCam = null, followLook = null, viewing = null, clockT = 0, near = null;
   // outside, the camera orbits the player: drag with the mouse to swivel, scroll to zoom, R to reset; WASD follows the view
   const orbit = { yaw: 0, pitch: .34, dist: 12.2, tyaw: 0, tpitch: .34, tdist: 12.2 };
+  const _camAim = new THREE.Vector3(), _camWant = new THREE.Vector3();
 
   // ---------------------------------------------------------------- the player: a visitor to the cyber cafe
   function makePlayer(parent) {
@@ -693,9 +694,24 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
 
   // ---------------------------------------------------------------- outside in the world
   function buildOutside() {
-    outS = new Stage(cvOut, { fov: 40, cam: [0, 5.2, 12], look: [0, .8, 0], dpr: narrow ? 1.25 : 1.5, env: .35, clear: '#0b0816', exposure: .94, tone: 'neutral', ao: null, shadows: !narrow, bloom: !narrow, bloomThreshold: .95, bloomStrength: .3 });
+    const isMobile = matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    outS = new Stage(cvOut, {
+      fov: 40,
+      cam: [0, 5.2, 12],
+      look: [0, .8, 0],
+      dpr: isMobile ? 1.25 : 1.5,
+      env: .35,
+      clear: '#0b0816',
+      exposure: .94,
+      tone: 'neutral',
+      ao: null,
+      shadows: !isMobile,
+      bloom: !isMobile,
+      bloomThreshold: .95,
+      bloomStrength: .3
+    });
     outS.game = true; outS.suspended = true;
-    world = buildWorld(outS.scene, { shadows: !narrow, seed: 7 }); if (window.AA_TEST) Object.assign(window.AA_TEST, { world, player, cafe: () => room }); // test hooks (only when a test page sets AA_TEST)
+    world = buildWorld(outS.scene, { shadows: !isMobile, seed: 7 }); if (window.AA_TEST) Object.assign(window.AA_TEST, { world, player, cafe: () => room }); // test hooks (only when a test page sets AA_TEST)
     world.setFog(70, 260); world.setTime(0); // authentic cyberpunk atmosphere matching attentionagents.fun
     world.onAct = (fa, id) => (fa.data?.pipId ? realAct(fa, id) : onAct ? onAct(fa, id) : null); world.onBaby = onBaby; // real agents show what they really did, never the sample simulator
     player.roots.out = makePlayer(world.group);
@@ -871,15 +887,15 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     player.duck = lerp(player.duck, player.ducking && player.jy < .01 ? 1 : 0, Math.min(1, dt * 14));
     if (player.jy > 0 || player.jv > 0) { player.jv -= 19 * dt; player.jy = Math.max(0, player.jy + player.jv * dt); if (player.jy === 0) { player.jv = 0; player.land = 1; } }
     player.land = Math.max(0, player.land - dt * 5);
-    const speed = (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 5.4 : 3.3) * (1 - player.duck * .55);
-    player.vx = lerp(player.vx, ix * speed, Math.min(1, dt * 10)); player.vz = lerp(player.vz, iz * speed, Math.min(1, dt * 10));
+    const speed = (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 6.525 : 4.5) * (1 - player.duck * .55);
+    player.vx = lerp(player.vx, ix * speed, Math.min(1, dt * 14)); player.vz = lerp(player.vz, iz * speed, Math.min(1, dt * 14));
     player.x += player.vx * dt; player.z += player.vz * dt;
     const v = Math.hypot(player.vx, player.vz), root = player.roots[rootKey(where)], u = root.userData.creature;
-    if (v > .15) player.heading = turn(player.heading, Math.atan2(player.vx, player.vz), dt * 9);
+    if (v > .15) player.heading = turn(player.heading, Math.atan2(player.vx, player.vz), dt * 12);
     else if (styling) player.heading = turn(player.heading, -.35, dt * 5);
     // a longer stride as you speed up; the cadence comes from how far the planted foot travels per radian of
     // phase (u.strideFor), capped so short legs stay readable, which lets the feet slip a little at a run
-    u.walk = lerp(u.walk, v > .15 ? clamp(v / 3.3, .7, 1.45) : 0, Math.min(1, dt * 8));
+    u.walk = lerp(u.walk, v > .15 ? clamp(v / 4.5, .7, 1.45) : 0, Math.min(1, dt * 10));
     if (v > .15) u.walkPhase += dt * Math.min(u.strideFor ? v / (u.strideFor(Math.max(.7, u.walk)) * root.scale.x) : v * 3.1, 26);
     return v;
   }
@@ -1019,12 +1035,25 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     if (rooftopRunGame?.isActive) rooftopRunGame.update(dt, t);
     // Agents step around the player instead of walking through
     world.agents.forEach((fa) => { const dx = fa.pos.x - player.x, dz = fa.pos.y - player.z, d = Math.hypot(dx, dz), min = fa.radius + player.r; if (d < min && d > 1e-4) { fa.pos.x = player.x + (dx / d) * min; fa.pos.y = player.z + (dz / d) * min; fa.place(); } });
-    const c = outS.camera, ok = Math.min(1, dt * 8);
+    const c = outS.camera, ok = Math.min(1, dt * 10);
     orbit.yaw = lerp(orbit.yaw, orbit.tyaw, ok); orbit.pitch = lerp(orbit.pitch, orbit.tpitch, ok); orbit.dist = lerp(orbit.dist, orbit.tdist, ok);
-    const fx = -Math.sin(orbit.yaw), fz = -Math.cos(orbit.yaw), aim = new THREE.Vector3(player.x + fx * 3.2, (player.y || 0) + 1.7, player.z + fz * 3.2); // look a little past the player, so the street ahead fills the view
-    const want = styling ? new THREE.Vector3(player.x + .75, (player.y || 0) + 1.2, player.z + 3.1) : new THREE.Vector3(aim.x - fx * Math.cos(orbit.pitch) * orbit.dist, aim.y + Math.sin(orbit.pitch) * orbit.dist, aim.z - fz * Math.cos(orbit.pitch) * orbit.dist);
-    followCam ??= want.clone(); followCam.lerp(want, Math.min(1, dt * (orbit.drag ? 12 : 3.5)));
-    if (styling) c.lookAt(c.position.copy(followCam).x - .25, .72, player.z); else { followLook ??= aim.clone(); followLook.lerp(aim, Math.min(1, dt * (orbit.drag ? 12 : 3.5))); c.position.copy(followCam); c.lookAt(followLook); }
+    const fx = -Math.sin(orbit.yaw), fz = -Math.cos(orbit.yaw);
+    _camAim.set(player.x + fx * 3.2, (player.y || 0) + 1.7, player.z + fz * 3.2);
+    if (styling) {
+      _camWant.set(player.x + .75, (player.y || 0) + 1.2, player.z + 3.1);
+    } else {
+      _camWant.set(_camAim.x - fx * Math.cos(orbit.pitch) * orbit.dist, _camAim.y + Math.sin(orbit.pitch) * orbit.dist, _camAim.z - fz * Math.cos(orbit.pitch) * orbit.dist);
+    }
+    followCam ??= _camWant.clone();
+    followCam.lerp(_camWant, Math.min(1, dt * (orbit.drag ? 16 : 8.0)));
+    if (styling) {
+      c.lookAt(c.position.copy(followCam).x - .25, .72, player.z);
+    } else {
+      followLook ??= _camAim.clone();
+      followLook.lerp(_camAim, Math.min(1, dt * (orbit.drag ? 16 : 8.0)));
+      c.position.copy(followCam);
+      c.lookAt(followLook);
+    }
     fadeOccluders(dt);
     window.AA_CAM?.(where, stageOf(where).camera, player, t); // trailer only (window.AA_TRAILER): a scripted camera
     hud(t, dt);
@@ -1379,20 +1408,20 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
         camTouch.lx = e.clientX;
         camTouch.ly = e.clientY;
         orbit.drag = true;
-        orbit.tyaw -= dx * 0.009;
+        orbit.tyaw -= dx * 0.007;
         if (where === 'in') orbit.tyaw = clamp(orbit.tyaw, -.7, .7);
-        orbit.tpitch = clamp(orbit.tpitch + dy * 0.005, 0.1, 1.25);
+        orbit.tpitch = clamp(orbit.tpitch + dy * 0.004, 0.1, 1.25);
         return;
       }
       if (!stick.on || e.pointerId !== stick.id) return;
       const dx = e.clientX - stick.ox, dy = e.clientY - stick.oy, l = Math.hypot(dx, dy); stick.moved = Math.max(stick.moved, l);
-      if (e.pointerType === 'mouse' && (where === 'out' || where === 'in') && stick.moved > 6) { // drag to swivel the camera round the player
+      if (e.pointerType === 'mouse' && (where === 'out' || where === 'in') && stick.moved > 4) { // drag to swivel the camera round the player
         orbit.drag = true; orbit.tyaw -= (e.clientX - (stick.lx ?? stick.ox)) * .0065; if (where === 'in') orbit.tyaw = clamp(orbit.tyaw, -.7, .7); orbit.tpitch = clamp(orbit.tpitch + (e.clientY - (stick.ly ?? stick.oy)) * .004, .1, 1.25);
         stick.lx = e.clientX; stick.ly = e.clientY; return;
       }
-      if (e.pointerType !== 'mouse' && stick.moved > 6) {
-        const k = Math.min(1, l / 60); stick.x = (dx / (l || 1)) * k; stick.y = (dy / (l || 1)) * k;
-        stickEl.hidden = false; stickEl.style.transform = `translate(${stick.ox}px, ${stick.oy}px)`; stickEl.querySelector('i').style.transform = `translate(${stick.x * 34}px, ${stick.y * 34}px)`;
+      if (e.pointerType !== 'mouse' && stick.moved > 4) {
+        const k = Math.min(1, l / 52); stick.x = (dx / (l || 1)) * k; stick.y = (dy / (l || 1)) * k;
+        stickEl.hidden = false; stickEl.style.transform = `translate(${stick.ox}px, ${stick.oy}px)`; stickEl.querySelector('i').style.transform = `translate(${stick.x * 32}px, ${stick.y * 32}px)`;
       }
     });
     const end = (e) => {

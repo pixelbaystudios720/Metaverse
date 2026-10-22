@@ -2299,6 +2299,8 @@ export class LivingWorld {
 
   drawMinimap(totalTime = performance.now() * 0.001) {
     if (!this.minimapCtx) return;
+    if (this._lastMinimapDraw && (totalTime - this._lastMinimapDraw < 0.048)) return; // 20 FPS throttle to save mobile CPU/GPU
+    this._lastMinimapDraw = totalTime;
     const ctx = this.minimapCtx;
     ctx.clearRect(0, 0, 110, 110);
 
