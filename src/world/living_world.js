@@ -883,78 +883,149 @@ export class LivingWorld {
     }
   }
 
-  // ---------------------------------------------------------------- 4. ARCADE Building & Portals (Panel 2)
+  // ---------------------------------------------------------------- 4. ARCADE Building & Portals (Expanded Grand Complex)
   buildArcadeEntrance() {
     this.arcadeGroup = new THREE.Group();
     this.arcadeGroup.position.set(13.5, 0, -6); // East Plaza side, facing the road & plaza
     this.arcadeGroup.rotation.y = -Math.PI * 0.15;
     this.root.add(this.arcadeGroup);
 
-    const facadeMat = new THREE.MeshStandardMaterial({ color: 0x140e26, roughness: 0.5, metalness: 0.3 });
+    const facadeMat = new THREE.MeshStandardMaterial({ color: 0x140e26, roughness: 0.45, metalness: 0.35 });
+    const trimMat = new THREE.MeshStandardMaterial({ color: 0x241842, roughness: 0.3, metalness: 0.6 });
+    const cyanLedMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
+    const pinkLedMat = new THREE.MeshBasicMaterial({ color: 0xff4757 });
 
-    // Arcade Facade Structure (width 22m, height 9m)
-    const facadeGeo = new THREE.BoxGeometry(22, 9.2, 5.5);
+    // 1. Grand Arcade Facade Structure (expanded: width 38m, height 12.5m, depth 8.0m)
+    const facadeGeo = new THREE.BoxGeometry(38, 12.5, 8.0);
     const facade = new THREE.Mesh(facadeGeo, facadeMat);
-    facade.position.y = 4.6;
+    facade.position.set(0, 6.25, 0);
     facade.castShadow = true;
     facade.receiveShadow = true;
     this.arcadeGroup.add(facade);
 
-    // Glowing Neon Gamepad Controller Outline on Top (Matching Image 2 Panel 2)
+    // 2. Front Plaza Gathering Terrace (width 40m, depth 4.5m, height 0.35m) for crowds
+    const terraceGeo = new THREE.BoxGeometry(40, 0.35, 4.5);
+    const terrace = new THREE.Mesh(terraceGeo, trimMat);
+    terrace.position.set(0, 0.175, 4.25);
+    terrace.receiveShadow = true;
+    this.arcadeGroup.add(terrace);
+
+    // Glowing LED trim along the terrace edge
+    const terraceGlow = new THREE.Mesh(new THREE.BoxGeometry(40.2, 0.08, 0.15), cyanLedMat);
+    terraceGlow.position.set(0, 0.35, 6.45);
+    this.arcadeGroup.add(terraceGlow);
+
+    // 3. Cyber Architectural Columns (5 majestic columns framing the entrances)
+    [-17.5, -9.0, 0, 9.0, 17.5].forEach((cx) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(1.2, 12.6, 1.4), trimMat);
+      col.position.set(cx, 6.3, 4.1);
+      this.arcadeGroup.add(col);
+
+      // Vertical neon light strip on each column
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 11.0, 0.08), cyanLedMat);
+      strip.position.set(cx, 6.0, 4.82);
+      this.arcadeGroup.add(strip);
+    });
+
+    // 4. Glowing Neon Gamepad Controller on Top (Expanded Scale)
     const ctrlGroup = new THREE.Group();
-    ctrlGroup.position.set(0, 8.4, 2.8);
-    const neonCyan = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
-    const ctrlOutline = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.8, 0.2), neonCyan);
+    ctrlGroup.position.set(0, 12.8, 4.1);
+    const ctrlOutline = new THREE.Mesh(new THREE.BoxGeometry(5.4, 2.6, 0.3), cyanLedMat);
     ctrlGroup.add(ctrlOutline);
+    // D-Pad and Buttons on top marquee
+    const dpad = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 0.35), pinkLedMat);
+    dpad.position.set(-1.4, 0, 0.05);
+    ctrlGroup.add(dpad);
+    const btnA = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.35, 16), pinkLedMat);
+    btnA.rotation.x = Math.PI / 2;
+    btnA.position.set(1.4, 0, 0.05);
+    ctrlGroup.add(btnA);
     this.arcadeGroup.add(ctrlGroup);
 
-    // Massive Glowing Cyan Neon "ARCADE" 3D Sign
+    // 5. Massive Glowing Cyan Neon "ARCADE" 3D Marquee Sign
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 180;
+    canvas.width = 1024;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, 512, 180);
+    ctx.fillStyle = '#0a0f1d';
+    ctx.fillRect(0, 0, 1024, 256);
 
     ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(176, 16, 160, 58);
+    ctx.lineWidth = 10;
+    ctx.strokeRect(20, 20, 984, 216);
 
     ctx.fillStyle = '#00d2d3';
-    ctx.font = '900 72px Fredoka, sans-serif';
+    ctx.font = '900 110px Fredoka, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('ARCADE', 256, 145);
+    ctx.fillText('MEGA ARCADE', 512, 140);
+    ctx.font = '700 36px Fredoka, sans-serif';
+    ctx.fillStyle = '#facc15';
+    ctx.fillText('MULTIPLAYER ARENAS · PLAY TO EARN', 512, 195);
 
     const arcadeTex = new THREE.CanvasTexture(canvas);
-    const arcadeSign = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 3.4), new THREE.MeshBasicMaterial({ map: arcadeTex }));
-    arcadeSign.position.set(0, 6.6, 2.82);
+    const arcadeSign = new THREE.Mesh(new THREE.PlaneGeometry(14.0, 3.8), new THREE.MeshBasicMaterial({ map: arcadeTex }));
+    arcadeSign.position.set(0, 9.8, 4.15);
     this.arcadeGroup.add(arcadeSign);
 
-    // Two Distinct Portal Entrances (Coin Catcher & Hot Potato) - Rooftop Run removed
+    // 6. Central Atrium Double Glass Doors (Grand Lobby Gathering Hub)
+    const centerDoors = new THREE.Group();
+    centerDoors.position.set(0, 0, 4.05);
+    const centerGlassMat = new THREE.MeshStandardMaterial({
+      color: 0x00d2d3,
+      roughness: 0.1,
+      emissive: 0x00d2d3,
+      emissiveIntensity: 0.35,
+      transparent: true,
+      opacity: 0.35
+    });
+    const centerGlass = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 5.0), centerGlassMat);
+    centerGlass.position.set(0, 2.5, 0.05);
+    centerDoors.add(centerGlass);
+
+    // Atrium Sign
+    const atCanvas = document.createElement('canvas');
+    atCanvas.width = 512;
+    atCanvas.height = 96;
+    const atCtx = atCanvas.getContext('2d');
+    atCtx.fillStyle = '#090d16';
+    atCtx.fillRect(0, 0, 512, 96);
+    atCtx.fillStyle = '#38bdf8';
+    atCtx.font = 'bold 36px Fredoka, sans-serif';
+    atCtx.textAlign = 'center';
+    atCtx.fillText('MAIN LOBBY · ALL ARENAS', 256, 60);
+    const atSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.8, 0.9),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(atCanvas) })
+    );
+    atSign.position.set(0, 5.6, 0.1);
+    centerDoors.add(atSign);
+    this.arcadeGroup.add(centerDoors);
+
+    // 7. Two Distinct Grand Portal Entrances (Coin Catcher & Hot Potato) - Spaced for Crowds
     const portals = [
-      { id: 'coincatcher', title: 'Coin Catcher', x: -4.5, color: 0xffbf1f, colorHex: '#ffbf1f', icon: '🪙' },
-      { id: 'hotpotato', title: 'HOT POTATO', x: 4.5, color: 0xff3838, colorHex: '#ff3838', icon: '🔥' },
+      { id: 'coincatcher', title: 'Coin Catcher', x: -9.0, color: 0xffbf1f, colorHex: '#ffbf1f', icon: '🪙' },
+      { id: 'hotpotato', title: 'HOT POTATO', x: 9.0, color: 0xff3838, colorHex: '#ff3838', icon: '🔥' },
     ];
 
     portals.forEach((p) => {
       const pGroup = new THREE.Group();
-      pGroup.position.set(p.x, 0, 2.8);
+      pGroup.position.set(p.x, 0, 4.05);
 
-      // Glowing Neon Archway
+      // Glowing Neon Archway (widened to 4.5m for seamless multiplayer flow)
       const archMat = new THREE.MeshBasicMaterial({ color: p.color });
-      const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.2, 0.35), archMat);
-      archLeft.position.set(-1.5, 2.1, 0);
+      const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.2, 0.4), archMat);
+      archLeft.position.set(-2.2, 2.6, 0);
       pGroup.add(archLeft);
 
-      const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.2, 0.35), archMat);
-      archRight.position.set(1.5, 2.1, 0);
+      const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.2, 0.4), archMat);
+      archRight.position.set(2.2, 2.6, 0);
       pGroup.add(archRight);
 
-      const archTop = new THREE.Mesh(new THREE.BoxGeometry(3.35, 0.4, 0.35), archMat);
-      archTop.position.set(0, 4.2, 0);
+      const archTop = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.5, 0.4), archMat);
+      archTop.position.set(0, 5.2, 0);
       pGroup.add(archTop);
 
-      // Glass Sliding Door Panels
+      // Glass Sliding Door Panels (Wider entrance)
       const glassMat = new THREE.MeshStandardMaterial({
         color: p.color,
         roughness: 0.1,
@@ -963,27 +1034,27 @@ export class LivingWorld {
         transparent: true,
         opacity: 0.4,
       });
-      const glass = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 3.8), glassMat);
-      glass.position.set(0, 1.9, 0.05);
+      const glass = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 4.8), glassMat);
+      glass.position.set(0, 2.4, 0.05);
       pGroup.add(glass);
 
       // Illuminated Title above Archway
       const tCanvas = document.createElement('canvas');
-      tCanvas.width = 256;
-      tCanvas.height = 64;
+      tCanvas.width = 384;
+      tCanvas.height = 80;
       const tCtx = tCanvas.getContext('2d');
       tCtx.fillStyle = '#0f172a';
-      tCtx.fillRect(0, 0, 256, 64);
+      tCtx.fillRect(0, 0, 384, 80);
       tCtx.fillStyle = p.colorHex;
-      tCtx.font = 'bold 26px Fredoka, sans-serif';
+      tCtx.font = 'bold 36px Fredoka, sans-serif';
       tCtx.textAlign = 'center';
-      tCtx.fillText(`${p.icon} ${p.title}`, 128, 42);
+      tCtx.fillText(`${p.icon} ${p.title}`, 192, 54);
 
       const pTitle = new THREE.Mesh(
-        new THREE.PlaneGeometry(2.8, 0.7),
+        new THREE.PlaneGeometry(4.0, 0.9),
         new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tCanvas) })
       );
-      pTitle.position.set(0, 4.8, 0.1);
+      pTitle.position.set(0, 5.8, 0.1);
       pGroup.add(pTitle);
 
       this.arcadeGroup.add(pGroup);
@@ -998,28 +1069,33 @@ export class LivingWorld {
       });
     });
 
-    // Floating Directory Board on Right ("Select Game" Card)
+    // 8. Dual Floating Directory Boards (Left & Right Wings)
     const dirCanvas = document.createElement('canvas');
-    dirCanvas.width = 320;
-    dirCanvas.height = 240;
+    dirCanvas.width = 360;
+    dirCanvas.height = 260;
     const dCtx = dirCanvas.getContext('2d');
     dCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-    dCtx.roundRect(4, 4, 312, 232, 16);
+    dCtx.roundRect(4, 4, 352, 252, 16);
     dCtx.fill();
     dCtx.strokeStyle = '#38bdf8';
     dCtx.lineWidth = 4;
     dCtx.stroke();
 
     dCtx.fillStyle = '#fde047';
-    dCtx.font = 'bold 26px Fredoka, sans-serif';
-    dCtx.fillText('🪙 Coin Catcher   >', 25, 95);
+    dCtx.font = 'bold 28px Fredoka, sans-serif';
+    dCtx.fillText('🪙 Coin Catcher   >', 30, 95);
     dCtx.fillStyle = '#ff4757';
-    dCtx.fillText('🔥 HOT POTATO     >', 25, 165);
+    dCtx.fillText('🔥 HOT POTATO     >', 30, 165);
+    dCtx.fillStyle = '#38bdf8';
+    dCtx.font = '600 20px Fredoka, sans-serif';
+    dCtx.fillText('2 - 10 PLAYERS LIVE', 30, 220);
 
     const dirTex = new THREE.CanvasTexture(dirCanvas);
-    const dirBoard = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.8), new THREE.MeshBasicMaterial({ map: dirTex }));
-    dirBoard.position.set(8.5, 4.2, 2.85);
-    this.arcadeGroup.add(dirBoard);
+    [-15.0, 15.0].forEach((bx) => {
+      const dirBoard = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 3.2), new THREE.MeshBasicMaterial({ map: dirTex }));
+      dirBoard.position.set(bx, 4.5, 4.2);
+      this.arcadeGroup.add(dirBoard);
+    });
   }
 
   // ---------------------------------------------------------------- 5. Park Area (Panel 3)

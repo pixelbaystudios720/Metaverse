@@ -4,7 +4,7 @@
 > **Repository:** `https://github.com/pixelbaystudios720/Metaverse.git`  
 > **Branch:** `main`  
 > **File Reference:** `shared/collision_data.json`  
-> **Specification Version:** `1.2.0`
+> **Specification Version:** `1.3.0`
 
 ---
 
@@ -20,7 +20,9 @@ All avatar archetypes, styles, and color options are indexed starting from `0` t
 | **2** | `agent_gumdrop` | **Agent Gumdrop** | Nexora Mascots | Candy Agent | Preset mascot (glow only, clothes ignored) | 1.35 m |
 | **3** | `plush_mascot` | **Plush Fur Mascot** | Nexora Mascots | Fluffy Plush | Preset mascot (glow only, clothes ignored) | 1.60 m |
 
-> *Note: Static unrigged scans (`man.glb`, `woman.glb`, `child.glb`) have been fully retired to prevent T-pose glitches and mesh collisions. Archetypes 1, 2, and 3 use preset meshes; the server can default all modular clothing/hair fields to `0` for them.*
+> *Answers to Avatar Customization Questions:*
+> 1. **Can archetypes 1 to 3 be customized?** No, only **Archetype 0 (`chibi_netkid`)** has modular clothing, hair, and skin. Archetypes 1 to 3 are preset mascots — the server can safely default clothing/hair/skin fields to `0` for them.
+> 2. **Is headphone LED on/off toggle still in the game?** No separate boolean toggle is needed. Headphone LED color is controlled by `glowColor` (`0` to `5`).
 
 ---
 
@@ -72,7 +74,6 @@ All avatar archetypes, styles, and color options are indexed starting from `0` t
 | **9** | Warm Cream | `#c9b8a0` |
 
 #### E. LED Glow Colors (`glowColorIndex`: `0` to `5`)
-*Note: Headphone LED on/off is unified into this property (0–5). A separate toggle boolean is not required.*
 | Index | Name | Hex Color |
 |:---:|:---|:---:|
 | **0** | Cyber Cyan | `#3ff0e0` |
@@ -86,14 +87,14 @@ All avatar archetypes, styles, and color options are indexed starting from `0` t
 
 ## 2. Sprint Speed Multiplier & Movement Physics
 
-- **Standard Walk Velocity:** `4.5 m/s` *(discard any previous 7.0 test speed)*
+- **Standard Walk Velocity:** `4.5 m/s`
 - **Sprint Speed Multiplier:** `1.45x`
 - **Standard Sprint Velocity:** `6.525 m/s` (`4.5 × 1.45`)
-- **Stamina System:** **Dropped for MVP** *(unlimited sprint while held; prevents stamina desync & saves tick bandwidth)*
+- **Stamina System:** **Dropped for MVP** (`staminaEnabled: false`)
 - **Collision Model:** **Flat 2D Infinite-Height Footprint Collision**
   - Jump is **purely visual/cosmetic**.
   - Players **cannot** clear or stand on raised objects, fountains, or benches.
-  - Horizontal movement is fully blocked by the 2D bounding footprint regardless of player height or jump state.
+  - Every object marked with `"kind": "blocker"` stops 2D horizontal motion completely.
 - **Authoritative Server Tick Rate:** `20 Hz` (50 ms per tick)
 - **Client Interpolation (Lerp Factor):** `0.15`
 - **Client Input Payload:** `{ seq: number, moveX: number, moveZ: number, jump: boolean, sprint: boolean }`
@@ -102,21 +103,19 @@ All avatar archetypes, styles, and color options are indexed starting from `0` t
 
 ## 3. Authoritative Collision & Arena Data (`shared/collision_data.json`)
 
-The updated authoritative configuration is committed at:  
-👉 [`shared/collision_data.json`](file:///e:/Game/shared/collision_data.json)  
-GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/collision_data.json`
+👉 File Location: [`shared/collision_data.json`](file:///e:/Game/shared/collision_data.json)  
+👉 GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/collision_data.json`
 
-### Key Fixes in Version 1.2.0:
-1. **Coin Catcher Arena Walls:** Centered at **`x = 160, z = 0`** (Walls at `x ∈ [148, 172], z ∈ [-8, 8]`).
-2. **Hot Potato Court Walls:** Centered at **`x = -160, z = 0`** (Walls at `x ∈ [-175, -145], z ∈ [-8, 8]`).
-3. **Dedicated Arena Floors:** Added `coin_arena_floor` (at `x = 160`) and `potato_court_floor` (at `x = -160`).
-4. **All Benches Included:** 4 curved Plaza benches, Park pond bench, and Social park east/west benches.
-5. **Project Name:** Updated `mapName` to `"NexoraPlazaAndArenas"`.
+### Key Enhancements in Version 1.3.0:
+1. **Explicit `kind: "floor"` vs `kind: "blocker"`:** Floors will never block player walking; blockers are 2D infinite-height obstacles.
+2. **Safe Spawns with Obstacle Clearance:** All arena and plaza spawns are verified to sit inside open floor space.
+3. **Grand Arcade Complex Bounds:** Scaled up from 22m to 38m facade width to comfortably host large multiplayer lobbies.
+4. **All Benches Indexed:** Plaza NW/NE/SW/SE, Pond bench, and Social Park benches marked as blockers.
 
 ### Full Raw JSON Content:
 ```json
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "mapName": "NexoraPlazaAndArenas",
   "coordinateSystem": "Y-up, right-handed",
   "authoritativeServerTickRateHz": 20,
@@ -170,9 +169,9 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
     {
       "id": "door_coin_catcher",
       "name": "Coin Catcher Portal",
-      "position": { "x": -6.5, "y": 2.8, "z": -16.8 },
-      "size": { "w": 4.6, "h": 5.6, "d": 0.6 },
-      "triggerRadius": 3.5,
+      "position": { "x": -9.0, "y": 2.8, "z": -16.8 },
+      "size": { "w": 4.8, "h": 5.6, "d": 0.6 },
+      "triggerRadius": 4.5,
       "teleportTarget": { "x": 160, "y": 1.5, "z": 0 },
       "gameId": "coin_catcher",
       "minPlayers": 2,
@@ -182,9 +181,9 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
     {
       "id": "door_hot_potato",
       "name": "Hot Potato Portal",
-      "position": { "x": 6.5, "y": 2.8, "z": -16.8 },
-      "size": { "w": 4.6, "h": 5.6, "d": 0.6 },
-      "triggerRadius": 3.5,
+      "position": { "x": 9.0, "y": 2.8, "z": -16.8 },
+      "size": { "w": 4.8, "h": 5.6, "d": 0.6 },
+      "triggerRadius": 4.5,
       "teleportTarget": { "x": -160, "y": 1.5, "z": 0 },
       "gameId": "hot_potato",
       "minPlayers": 4,
@@ -195,6 +194,7 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
   "collisionBoxes": [
     {
       "id": "ground_plane_plaza",
+      "kind": "floor",
       "type": "box",
       "pos": [0, -0.2, 0],
       "size": [260, 0.4, 260],
@@ -202,6 +202,7 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
     },
     {
       "id": "coin_arena_floor",
+      "kind": "floor",
       "type": "box",
       "pos": [160, -0.2, 0],
       "size": [40, 0.4, 30],
@@ -209,6 +210,7 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
     },
     {
       "id": "potato_court_floor",
+      "kind": "floor",
       "type": "box",
       "pos": [-160, -0.2, 0],
       "size": [40, 0.4, 30],
@@ -216,30 +218,36 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
     },
     {
       "id": "arcade_building_facade",
+      "kind": "blocker",
       "type": "box",
-      "pos": [0, 5.8, -20.0],
-      "size": [32.0, 11.6, 6.0]
+      "pos": [0, 6.25, -20.0],
+      "size": [38.0, 12.5, 8.0],
+      "desc": "Grand Cyber Arcade Complex main facade"
     },
     {
       "id": "arcade_roof_overhang",
+      "kind": "blocker",
       "type": "box",
-      "pos": [0, 11.6, -19.8],
-      "size": [32.5, 0.6, 6.5]
+      "pos": [0, 12.5, -19.8],
+      "size": [39.0, 0.8, 8.5]
     },
     {
       "id": "arcade_door_left_frame",
+      "kind": "blocker",
       "type": "box",
-      "pos": [-6.5, 2.8, -16.8],
-      "size": [4.6, 5.6, 0.6]
+      "pos": [-9.0, 2.8, -16.8],
+      "size": [4.8, 5.6, 0.6]
     },
     {
       "id": "arcade_door_right_frame",
+      "kind": "blocker",
       "type": "box",
-      "pos": [6.5, 2.8, -16.8],
-      "size": [4.6, 5.6, 0.6]
+      "pos": [9.0, 2.8, -16.8],
+      "size": [4.8, 5.6, 0.6]
     },
     {
       "id": "fountain_tier1_basin",
+      "kind": "blocker",
       "type": "cylinder",
       "pos": [0, 0.35, 0],
       "radius": 5.4,
@@ -247,6 +255,7 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
     },
     {
       "id": "fountain_tier2_step",
+      "kind": "blocker",
       "type": "cylinder",
       "pos": [0, 0.8, 0],
       "radius": 3.8,
@@ -254,96 +263,112 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
     },
     {
       "id": "fountain_blue_sphere",
+      "kind": "blocker",
       "type": "sphere",
       "pos": [0, 2.65, 0],
       "radius": 1.15
     },
     {
       "id": "bench_plaza_northwest",
+      "kind": "blocker",
       "type": "box",
       "pos": [-5.5, 0.45, -4.5],
       "size": [0.9, 0.9, 2.5]
     },
     {
       "id": "bench_plaza_northeast",
+      "kind": "blocker",
       "type": "box",
       "pos": [5.5, 0.45, -4.5],
       "size": [0.9, 0.9, 2.5]
     },
     {
       "id": "bench_plaza_southwest",
+      "kind": "blocker",
       "type": "box",
       "pos": [-6.5, 0.45, 6.5],
       "size": [2.2, 0.9, 2.2]
     },
     {
       "id": "bench_plaza_southeast",
+      "kind": "blocker",
       "type": "box",
       "pos": [6.5, 0.45, 6.5],
       "size": [2.2, 0.9, 2.2]
     },
     {
       "id": "bench_park_pond",
+      "kind": "blocker",
       "type": "box",
       "pos": [-25, 0.45, 8.2],
       "size": [2.5, 0.9, 0.9]
     },
     {
       "id": "bench_social_park_west",
+      "kind": "blocker",
       "type": "box",
       "pos": [-8.0, 0.45, 42.0],
       "size": [2.5, 0.9, 0.9]
     },
     {
       "id": "bench_social_park_east",
+      "kind": "blocker",
       "type": "box",
       "pos": [8.0, 0.45, 42.0],
       "size": [2.5, 0.9, 0.9]
     },
     {
       "id": "coin_arena_boundary_north",
+      "kind": "blocker",
       "type": "box",
       "pos": [160, 2.5, -8.0],
       "size": [24.0, 5.0, 0.8]
     },
     {
       "id": "coin_arena_boundary_south",
+      "kind": "blocker",
       "type": "box",
       "pos": [160, 2.5, 8.0],
       "size": [24.0, 5.0, 0.8]
     },
     {
       "id": "coin_arena_boundary_west",
+      "kind": "blocker",
       "type": "box",
       "pos": [148.0, 2.5, 0],
       "size": [0.8, 5.0, 16.0]
     },
     {
       "id": "coin_arena_boundary_east",
+      "kind": "blocker",
       "type": "box",
       "pos": [172.0, 2.5, 0],
       "size": [0.8, 5.0, 16.0]
     },
     {
       "id": "potato_court_boundary_north",
+      "kind": "blocker",
       "type": "box",
       "pos": [-160, 2.5, -8.0],
       "size": [30.0, 5.0, 0.8]
     },
     {
       "id": "potato_court_boundary_south",
+      "kind": "blocker",
       "type": "box",
       "pos": [-160, 2.5, 8.0],
       "size": [30.0, 5.0, 0.8]
     },
     {
       "id": "potato_court_boundary_west",
+      "kind": "blocker",
       "type": "box",
       "pos": [-175.0, 2.5, 0],
       "size": [0.8, 5.0, 16.0]
     },
     {
       "id": "potato_court_boundary_east",
+      "kind": "blocker",
       "type": "box",
       "pos": [-145.0, 2.5, 0],
       "size": [0.8, 5.0, 16.0]
@@ -356,7 +381,7 @@ GitHub URL: `https://github.com/pixelbaystudios720/Metaverse/blob/main/shared/co
 
 ## 4. Doors & Matchmaking Queue Integration
 1. The server retains authoritative control over room entry and matchmaking queues.
-2. When the player presses **E** (or taps the interact button on mobile) within 3.5 m of a portal door, the client sends:
+2. When the player presses **E** (or taps the interact button on mobile) within 4.5 m of a portal door, the client sends:
    ```json
    { "action": "interact_door", "doorId": "door_coin_catcher" }
    ```
