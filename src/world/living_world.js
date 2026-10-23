@@ -2146,38 +2146,47 @@ export class LivingWorld {
           margin-left: 4px !important;
         }
 
+        /* Mobile Token Bar: Docked neatly under profile card on the left, never overlapping minimap on the right */
         #lw-token-bar {
           top: 56px !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
-          padding: 4px 10px !important;
-          gap: 6px !important;
-          max-width: calc(100vw - 20px) !important;
+          left: 10px !important;
+          transform: none !important;
+          padding: 3px 8px !important;
+          gap: 5px !important;
+          max-width: calc(100vw - 105px) !important;
+          box-sizing: border-box !important;
         }
-        .lw-token-name { font-size: 11.5px !important; }
+        .lw-token-name { font-size: 11px !important; }
         .lw-token-status { display: none !important; }
-        .lw-token-ca-box { padding: 2px 7px !important; font-size: 10px !important; }
-        .lw-btn-token-buy { padding: 4px 10px !important; font-size: 10.5px !important; }
+        .lw-token-ca-box { padding: 2px 6px !important; font-size: 9.5px !important; }
+        .lw-ca-digits { max-width: 60px !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .lw-btn-token-buy { padding: 3px 8px !important; font-size: 10px !important; }
         .lw-btn-token-airdrop { display: none !important; }
 
+        /* Minimap on mobile: Clean 68px radar in top right without colliding side buttons */
         #lw-minimap-card {
           top: 10px !important;
           right: 10px !important;
           gap: 3px !important;
         }
         #lw-minimap-card .lw-minimap-circle {
-          width: 70px !important;
-          height: 70px !important;
+          width: 68px !important;
+          height: 68px !important;
           border-width: 2px !important;
         }
         #lw-minimap-card #lw-minimap-canvas {
-          width: 70px !important;
-          height: 70px !important;
+          width: 68px !important;
+          height: 68px !important;
         }
-        #lw-minimap-card .lw-loc-badge {
-          font-size: 9.5px !important;
+        /* Hide side floating radar buttons on mobile to avoid screen clutter; tapping circle opens map */
+        #lw-mm-zoom-in, #lw-mm-zoom-out, #lw-mm-expand {
+          display: none !important;
+        }
+        #lw-minimap-card .lw-loc-badge, #lw-loc-badge {
+          font-size: 9px !important;
           padding: 2px 6px !important;
           border-radius: 8px !important;
+          margin-top: 2px !important;
         }
 
         /* Chat positioned on mobile above touch controls, collapsible */
@@ -2185,7 +2194,7 @@ export class LivingWorld {
           bottom: 80px !important;
           left: 10px !important;
           width: calc(100vw - 20px) !important;
-          max-width: 280px !important;
+          max-width: 270px !important;
           padding: 8px !important;
           border-radius: 14px !important;
         }
@@ -2195,7 +2204,7 @@ export class LivingWorld {
         }
         #lw-chat-card.collapsed {
           width: auto !important;
-          padding: 6px 12px !important;
+          padding: 5px 10px !important;
           border-radius: 999px !important;
           bottom: 12px !important;
           left: 10px !important;

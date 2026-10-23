@@ -183,86 +183,164 @@ export class Map3DEngine {
     ctx.fillText('W', 9, cy);
   }
 
-  // Visual City Map Layer (Paved Plaza, Roads, Fountain, Arcade, Trees, Pond)
+  // Visual City Map Layer (High-contrast tactical overworld with Left/Right Arenas, Fountain, Park, and Live Peers)
   _drawCityMinimap(ctx, px, pz, scale, t) {
-    // 1. City Foundation Platform
-    const pRad = 94 * scale;
+    const pRad = 92 * scale;
     const pOffsetX = -px * scale;
     const pOffsetZ = -pz * scale;
 
-    ctx.fillStyle = '#141a29';
+    // 1. Concentric Tactical Distance Range Rings (25m, 50m, 75m, 100m)
+    [25, 50, 75, 100].forEach((dist) => {
+      const ringR = dist * scale;
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.16)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath();
+      ctx.arc(0, 0, ringR, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.5)';
+      ctx.font = '700 9px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${dist}m`, ringR + 3, 3);
+    });
+
+    // 2. City Foundation Island (High-contrast slate-navy platform)
+    ctx.fillStyle = '#0a1626';
     ctx.beginPath();
     ctx.arc(pOffsetX, pOffsetZ, pRad, 0, Math.PI * 2);
     ctx.fill();
 
-    // Stone Plaza Pavers Inlay
-    ctx.fillStyle = '#1e283d';
+    // Outer Neon Perimeter Border (92m)
+    ctx.strokeStyle = '#00d2d3';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // 3. Central Plaza Paving Inlay (Radius 36m)
+    ctx.fillStyle = '#132338';
     ctx.beginPath();
-    ctx.arc(pOffsetX, pOffsetZ, pRad * 0.85, 0, Math.PI * 2);
+    ctx.arc(pOffsetX, pOffsetZ, 36 * scale, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 210, 211, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
-    // 2. Multi-lane Highway Asphalt (x = 22, z = -96 to 96)
-    const rx = (22 - px) * scale;
-    const rz = (-pz) * scale;
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(rx - 4.5 * scale, rz - 96 * scale, 9.5 * scale, 192 * scale);
-
-    // Yellow Lane Center Divider
-    ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([3, 4]);
+    // Decorative Plaza Rings
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(rx, rz - 96 * scale);
-    ctx.lineTo(rx, rz + 96 * scale);
+    ctx.arc(pOffsetX, pOffsetZ, 22 * scale, 0, Math.PI * 2);
+    ctx.arc(pOffsetX, pOffsetZ, 12 * scale, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 4. Highway Boulevard (x = 38.5, z = -92 to 92)
+    const rx = (38.5 - px) * scale;
+    const rz = (-pz) * scale;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(rx - 5.5 * scale, rz - 92 * scale, 11 * scale, 184 * scale);
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(rx, rz - 92 * scale);
+    ctx.lineTo(rx, rz + 92 * scale);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 3. Central Fountain (0, 0)
+    // 5. Grand Central Marble Fountain (0, 0)
     const fx = -px * scale;
     const fz = -pz * scale;
     ctx.fillStyle = '#0284c7';
     ctx.beginPath();
     ctx.arc(fx, fz, 5.4 * scale, 0, Math.PI * 2);
     ctx.fill();
-    // Fountain water ripples
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(fx, fz, (2.5 + Math.sin(t * 3) * 1.5) * scale, 0, Math.PI * 2);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.8;
     ctx.stroke();
 
-    // 4. Arcade Building & Facade (16.0, -18.5)
-    const ax = (16.0 - px) * scale;
-    const az = (-18.5 - pz) * scale;
-    ctx.fillStyle = '#1e1b4b';
-    ctx.fillRect(ax - 8 * scale, az - 2.5 * scale, 16 * scale, 5 * scale);
+    // Pulsing Water Ripples
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(fx, fz, (2.6 + Math.sin(t * 3.5) * 1.8) * scale, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Fountain Core Crystal
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath();
+    ctx.arc(fx, fz, 1.8 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 6. LEFT BUILDING: COIN CATCHER ARENA (-18, -18)
+    const ccx = (-18 - px) * scale;
+    const ccz = (-18 - pz) * scale;
+    const ccw = 16 * scale;
+    const ccd = 8 * scale;
+    ctx.fillStyle = '#2c2205';
+    ctx.fillRect(ccx - ccw / 2, ccz - ccd / 2, ccw, ccd);
     ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 2.2;
+    ctx.strokeRect(ccx - ccw / 2, ccz - ccd / 2, ccw, ccd);
+
+    // Arena Door & Badge
+    ctx.fillStyle = '#fde047';
+    ctx.fillRect(ccx - 2 * scale, ccz + ccd / 2 - 1.2 * scale, 4 * scale, 1.2 * scale);
+    ctx.font = '900 10.5px "Fredoka", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🪙 COIN CATCHER', ccx, ccz - ccd / 2 - 5);
+
+    // 7. RIGHT BUILDING: HOT POTATO COLOSSEUM (18, -18)
+    const hpx = (18 - px) * scale;
+    const hpz = (-18 - pz) * scale;
+    const hpw = 16 * scale;
+    const hpd = 8 * scale;
+    ctx.fillStyle = '#2e0a0d';
+    ctx.fillRect(hpx - hpw / 2, hpz - hpd / 2, hpw, hpd);
+    ctx.strokeStyle = '#ff3838';
+    ctx.lineWidth = 2.2;
+    ctx.strokeRect(hpx - hpw / 2, hpz - hpd / 2, hpw, hpd);
+
+    // Colosseum Door & Badge
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillRect(hpx - 2 * scale, hpz + hpd / 2 - 1.2 * scale, 4 * scale, 1.2 * scale);
+    ctx.font = '900 10.5px "Fredoka", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🔥 HOT POTATO', hpx, hpz - hpd / 2 - 5);
+
+    // 8. Cyber Cafe Promenade (0, -1.8)
+    const cfx = (0 - px) * scale;
+    const cfz = (-1.8 - pz) * scale;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(cfx - 3.8 * scale, cfz - 2.5 * scale, 7.6 * scale, 5 * scale);
+    ctx.strokeStyle = '#00d2d3';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(ax - 8 * scale, az - 2.5 * scale, 16 * scale, 5 * scale);
+    ctx.strokeRect(cfx - 3.8 * scale, cfz - 2.5 * scale, 7.6 * scale, 5 * scale);
+    ctx.fillStyle = '#00d2d3';
+    ctx.font = '800 9px "Fredoka", sans-serif';
+    ctx.fillText('☕ CYBER CAFE', cfx, cfz - 2.5 * scale - 4);
 
-    // Coin Catcher & Hot Potato Door Blips
-    ctx.fillStyle = '#facc15';
+    // 9. Sakura Zen Park (-5, 54)
+    const pkx = (-5 - px) * scale;
+    const pkz = (54 - pz) * scale;
+    ctx.fillStyle = '#064e3b';
     ctx.beginPath();
-    ctx.arc(ax - 3.8 * scale, az + 1.8 * scale, 2.5, 0, Math.PI * 2);
+    ctx.arc(pkx, pkz, 14 * scale, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.arc(ax + 3.8 * scale, az + 1.8 * scale, 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
 
-    // 5. Sakura Park Wishing Pond (-5, 54)
-    const wx = (-5 - px) * scale;
-    const wz = (54 - pz) * scale;
-    ctx.fillStyle = '#065f46';
+    // Wishing Pond inside Park
+    ctx.fillStyle = '#0284c7';
     ctx.beginPath();
-    ctx.arc(wx, wz, 9 * scale, 0, Math.PI * 2);
+    ctx.arc(pkx, pkz, 6.5 * scale, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#0ea5e9';
-    ctx.beginPath();
-    ctx.arc(wx, wz, 5.2 * scale, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
 
-    // 6. Park Cherry Trees (Pink Blips)
+    // Park Cherry Trees (Pink Blips)
     const trees = [
       [-14, 38], [14, 38], [-18, 48], [18, 48], [-12, 58], [12, 58],
       [-26, 14], [26, 14], [-30, 28], [30, 28]
@@ -270,31 +348,53 @@ export class Map3DEngine {
     ctx.fillStyle = '#f472b6';
     trees.forEach(([tx, tz]) => {
       ctx.beginPath();
-      ctx.arc((tx - px) * scale, (tz - pz) * scale, 2.8, 0, Math.PI * 2);
+      ctx.arc((tx - px) * scale, (tz - pz) * scale, 3.2, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    // 7. Outer Perimeter Neon Balustrade (92m radius)
-    ctx.strokeStyle = '#00d2d3';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.arc(pOffsetX, pOffsetZ, 92 * scale, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '800 10px "Fredoka", sans-serif';
+    ctx.fillText('🌸 SAKURA ZEN PARK', pkx, pkz - 14 * scale - 4);
 
-    // 8. Landmark Badges
+    // 10. Live Peers & Other Players (from window.NEXORA_PEERS)
+    if (window.NEXORA_PEERS) {
+      window.NEXORA_PEERS.forEach((p) => {
+        if (!p.here) return;
+        const lx = (p.x - px) * scale;
+        const lz = (p.z - pz) * scale;
+
+        const col = p.body === 'muse' ? '#ec4899' : p.npc ? '#a78bfa' : '#38bdf8';
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(lx, lz, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(lx, lz, 7, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 9.5px "Fredoka", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.name || 'Citizen', lx, lz - 9);
+      });
+    }
+
+    // 11. Landmarks
     this.cityLandmarks.forEach((lm) => {
       if (this.activeFilter !== 'all' && lm.cat !== this.activeFilter) return;
       const lx = (lm.x - px) * scale;
       const lz = (lm.z - pz) * scale;
       ctx.fillStyle = lm.color;
       ctx.beginPath();
-      ctx.arc(lx, lz, 3.8, 0, Math.PI * 2);
+      ctx.arc(lx, lz, 4.5, 0, Math.PI * 2);
       ctx.fill();
-      // Glow ring
-      ctx.strokeStyle = lm.color;
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.arc(lx, lz, 5.8, 0, Math.PI * 2);
+      ctx.arc(lx, lz, 7, 0, Math.PI * 2);
       ctx.stroke();
     });
   }
@@ -548,59 +648,161 @@ export class Map3DEngine {
     this.modalContainer.id = 'tactical-holo-map-modal';
     this.modalContainer.style.cssText = `
       position: fixed; inset: 0; z-index: 10000; display: none;
-      background: rgba(6, 10, 20, 0.88); backdrop-filter: blur(16px);
+      background: rgba(4, 8, 16, 0.92); backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px); font-family: 'Fredoka', system-ui, sans-serif;
       align-items: center; justify-content: center; user-select: none;
     `;
 
     this.modalContainer.innerHTML = `
-      <div id="tactical-map-box" style="
-        position: relative; width: min(1040px, 95vw); height: min(680px, 90vh);
-        background: radial-gradient(circle at 50% 0%, #152033, #080c16 85%);
-        border: 2px solid rgba(0, 210, 211, 0.5); border-radius: 28px;
-        box-shadow: 0 0 50px rgba(0, 210, 211, 0.25), inset 0 0 30px rgba(0, 210, 211, 0.08);
-        display: flex; flex-direction: column; overflow: hidden;
-      ">
-        <!-- Top Tactical Header Bar -->
-        <div style="
+      <style>
+        #tactical-map-box {
+          position: relative; width: min(1040px, 95vw); height: min(680px, 90vh);
+          background: radial-gradient(circle at 50% 0%, #101c2e, #060a12 85%);
+          border: 2px solid rgba(0, 210, 211, 0.6); border-radius: 24px;
+          box-shadow: 0 0 50px rgba(0, 210, 211, 0.25), inset 0 0 30px rgba(0, 210, 211, 0.08);
+          display: flex; flex-direction: column; overflow: hidden;
+        }
+        .tm-header-bar {
           display: flex; justify-content: space-between; align-items: center;
-          padding: 16px 24px; border-bottom: 1px solid rgba(56, 189, 248, 0.2);
-          background: rgba(15, 23, 42, 0.6);
-        ">
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="font-size: 26px;">🌐</div>
+          padding: 14px 20px; border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+          background: rgba(15, 23, 42, 0.75);
+        }
+        .tm-header-left {
+          display: flex; align-items: center; gap: 12px;
+        }
+        .tm-header-btns {
+          display: flex; align-items: center; gap: 8px;
+        }
+        .tm-filter-bar {
+          position: absolute; left: 16px; bottom: 16px; display: flex; gap: 6px;
+          background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(56, 189, 248, 0.35);
+          border-radius: 999px; padding: 4px 6px; z-index: 10;
+        }
+        .tm-zoom-btns {
+          position: absolute; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 6px; z-index: 10;
+        }
+        .tm-bottom-bar {
+          padding: 10px 20px; border-top: 1px solid rgba(56, 189, 248, 0.25);
+          background: rgba(15, 23, 42, 0.85); display: flex; justify-content: space-between; align-items: center;
+        }
+        .tm-ft-btns {
+          display: flex; gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+          #tactical-map-box {
+            width: 96vw !important;
+            height: 92vh !important;
+            border-radius: 18px !important;
+          }
+          .tm-header-bar {
+            padding: 8px 12px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+          }
+          #tm-title {
+            font-size: 14px !important;
+          }
+          #tm-badge {
+            font-size: 9.5px !important;
+            padding: 1px 6px !important;
+          }
+          #tm-coords {
+            font-size: 10px !important;
+          }
+          .tm-header-btns {
+            width: 100% !important;
+            justify-content: flex-end !important;
+            gap: 6px !important;
+          }
+          .tm-header-btns button {
+            padding: 5px 10px !important;
+            font-size: 11px !important;
+          }
+          .tm-filter-bar {
+            left: 8px !important;
+            bottom: 8px !important;
+            padding: 3px 6px !important;
+            gap: 3px !important;
+            max-width: calc(100% - 60px) !important;
+            overflow-x: auto !important;
+          }
+          .tm-filter-btn {
+            padding: 4px 8px !important;
+            font-size: 10.5px !important;
+            white-space: nowrap !important;
+          }
+          .tm-zoom-btns {
+            right: 8px !important;
+            bottom: 8px !important;
+            gap: 4px !important;
+          }
+          .tm-zoom-btns button {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 16px !important;
+          }
+          .tm-bottom-bar {
+            padding: 8px 12px !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            align-items: stretch !important;
+          }
+          .tm-bottom-bar .tm-tip {
+            display: none !important;
+          }
+          .tm-ft-btns {
+            width: 100% !important;
+            justify-content: space-between !important;
+            gap: 4px !important;
+          }
+          .tm-ft-btns button {
+            flex: 1 !important;
+            padding: 5px 6px !important;
+            font-size: 10.5px !important;
+            text-align: center !important;
+          }
+        }
+      </style>
+
+      <div id="tactical-map-box">
+        <!-- Top Tactical Header Bar -->
+        <div class="tm-header-bar">
+          <div class="tm-header-left">
+            <div style="font-size: 22px;">🌐</div>
             <div>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <b id="tm-title" style="font-size: 20px; color: #fff; letter-spacing: 0.03em;">METAVERSE 3D TACTICAL MAP</b>
-                <span id="tm-badge" style="background: rgba(0, 210, 211, 0.2); border: 1px solid #00d2d3; color: #00d2d3; font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 999px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <b id="tm-title" style="font-size: 18px; color: #fff; letter-spacing: 0.02em;">METAVERSE 3D TACTICAL MAP</b>
+                <span id="tm-badge" style="background: rgba(0, 210, 211, 0.2); border: 1px solid #00d2d3; color: #00d2d3; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
                   LIVE TELEMETRY
                 </span>
               </div>
-              <div id="tm-coords" style="font-size: 13px; color: #94a3b8; font-family: monospace; margin-top: 2px;">
+              <div id="tm-coords" style="font-size: 12px; color: #94a3b8; font-family: monospace; margin-top: 1px;">
                 POS: X 0.0 | Z 0.0 · SPEED: 0.0 m/s · HEADING: 0°
               </div>
             </div>
           </div>
 
           <!-- Filter & View Controls -->
-          <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="tm-header-btns">
             <button id="tm-btn-tilt" style="
-              background: rgba(30, 41, 59, 0.8); border: 1.5px solid #38bdf8; color: #38bdf8;
-              border-radius: 999px; padding: 7px 16px; font-weight: 800; font-size: 12.5px;
-              cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+              background: rgba(30, 41, 59, 0.85); border: 1.5px solid #38bdf8; color: #38bdf8;
+              border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 12px;
+              cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;
             ">
               🧊 3D Isometric View
             </button>
             <button id="tm-btn-recenter" style="
-              background: rgba(30, 41, 59, 0.8); border: 1.5px solid #00d2d3; color: #00d2d3;
-              border-radius: 999px; padding: 7px 16px; font-weight: 800; font-size: 12.5px;
-              cursor: pointer; display: flex; align-items: center; gap: 6px;
+              background: rgba(30, 41, 59, 0.85); border: 1.5px solid #00d2d3; color: #00d2d3;
+              border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 12px;
+              cursor: pointer; display: flex; align-items: center; gap: 5px;
             ">
               🎯 Center You
             </button>
             <button id="tm-btn-close" style="
               background: rgba(239, 68, 68, 0.2); border: 1.5px solid #ef4444; color: #ef4444;
-              border-radius: 50%; width: 36px; height: 36px; font-size: 20px; line-height: 1;
+              border-radius: 50%; width: 32px; height: 32px; font-size: 18px; line-height: 1;
               cursor: pointer; display: grid; place-items: center;
             ">
               ✕
@@ -609,44 +811,44 @@ export class Map3DEngine {
         </div>
 
         <!-- Center Interactive Map Canvas Area -->
-        <div style="position: relative; flex: 1; width: 100%; height: 100%; overflow: hidden; cursor: grab;" id="tm-canvas-wrap">
-          <canvas id="tm-tactical-canvas" width="1040" height="520" style="width: 100%; height: 100%; display: block;"></canvas>
+        <div style="position: relative; flex: 1; width: 100%; height: 100%; overflow: hidden; cursor: grab; touch-action: none;" id="tm-canvas-wrap">
+          <canvas id="tm-tactical-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
 
           <!-- Floating Zoom Controls -->
-          <div style="position: absolute; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
-            <button id="tm-zoom-in" style="background: rgba(15, 23, 42, 0.9); border: 1.5px solid #00d2d3; color: #fff; width: 38px; height: 38px; border-radius: 10px; font-size: 20px; font-weight: 900; cursor: pointer;">+</button>
-            <button id="tm-zoom-out" style="background: rgba(15, 23, 42, 0.9); border: 1.5px solid #00d2d3; color: #fff; width: 38px; height: 38px; border-radius: 10px; font-size: 20px; font-weight: 900; cursor: pointer;">−</button>
+          <div class="tm-zoom-btns">
+            <button id="tm-zoom-in" style="background: rgba(15, 23, 42, 0.92); border: 1.5px solid #00d2d3; color: #fff; width: 36px; height: 36px; border-radius: 9px; font-size: 18px; font-weight: 900; cursor: pointer;">+</button>
+            <button id="tm-zoom-out" style="background: rgba(15, 23, 42, 0.92); border: 1.5px solid #00d2d3; color: #fff; width: 36px; height: 36px; border-radius: 9px; font-size: 18px; font-weight: 900; cursor: pointer;">−</button>
           </div>
 
           <!-- Bottom Left Filter Bar -->
-          <div style="position: absolute; left: 20px; bottom: 20px; display: flex; gap: 8px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 999px; padding: 4px 8px;">
-            <button class="tm-filter-btn active" data-filter="all" style="background: #00d2d3; border: none; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 12px; color: #080c16; cursor: pointer;">All</button>
-            <button class="tm-filter-btn" data-filter="games" style="background: transparent; border: none; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 12px; color: #94a3b8; cursor: pointer;">🕹️ Arenas</button>
-            <button class="tm-filter-btn" data-filter="social" style="background: transparent; border: none; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 12px; color: #94a3b8; cursor: pointer;">🌸 Social</button>
-            <button class="tm-filter-btn" data-filter="transport" style="background: transparent; border: none; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 12px; color: #94a3b8; cursor: pointer;">🚏 Transit</button>
+          <div class="tm-filter-bar">
+            <button class="tm-filter-btn active" data-filter="all" style="background: #00d2d3; border: none; border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: 11.5px; color: #080c16; cursor: pointer;">All</button>
+            <button class="tm-filter-btn" data-filter="games" style="background: transparent; border: none; border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: 11.5px; color: #94a3b8; cursor: pointer;">🕹️ Arenas</button>
+            <button class="tm-filter-btn" data-filter="social" style="background: transparent; border: none; border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: 11.5px; color: #94a3b8; cursor: pointer;">🌸 Social</button>
+            <button class="tm-filter-btn" data-filter="transport" style="background: transparent; border: none; border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: 11.5px; color: #94a3b8; cursor: pointer;">🚏 Transit</button>
           </div>
         </div>
 
         <!-- Bottom Action Bar with Quick Fast-Travel -->
-        <div style="
-          padding: 12px 24px; border-top: 1px solid rgba(56, 189, 248, 0.2);
-          background: rgba(15, 23, 42, 0.8); display: flex; justify-content: space-between; align-items: center;
-        ">
-          <div style="font-size: 13px; color: #94a3b8; display: flex; gap: 14px; align-items: center;">
-            <span>💡 <b>Tip:</b> Click any landmark or area to Fast Travel or set a Waypoint</span>
+        <div class="tm-bottom-bar">
+          <div class="tm-tip" style="font-size: 12px; color: #94a3b8; display: flex; gap: 10px; align-items: center;">
+            <span>💡 <b>Tip:</b> Tap any landmark or location on the map to set a waypoint or fast travel</span>
             <span style="color: #facc15;">·</span>
-            <span>Press <b>[M]</b> anytime to toggle map</span>
+            <span>Press <b>[M]</b> to toggle map</span>
           </div>
 
-          <div style="display: flex; gap: 10px;">
-            <button id="tm-ft-plaza" style="background: rgba(0, 210, 211, 0.2); border: 1px solid #00d2d3; color: #00d2d3; border-radius: 8px; padding: 6px 14px; font-weight: 800; font-size: 12px; cursor: pointer;">
+          <div class="tm-ft-btns">
+            <button id="tm-ft-plaza" style="background: rgba(0, 210, 211, 0.2); border: 1px solid #00d2d3; color: #00d2d3; border-radius: 8px; padding: 6px 12px; font-weight: 800; font-size: 11.5px; cursor: pointer;">
               🏙️ Plaza (0, 0)
             </button>
-            <button id="tm-ft-arcade" style="background: rgba(250, 204, 21, 0.2); border: 1px solid #facc15; color: #fde047; border-radius: 8px; padding: 6px 14px; font-weight: 800; font-size: 12px; cursor: pointer;">
-              🕹️ Arcade (16, -18)
+            <button id="tm-ft-coincatcher" style="background: rgba(250, 204, 21, 0.2); border: 1px solid #facc15; color: #fde047; border-radius: 8px; padding: 6px 12px; font-weight: 800; font-size: 11.5px; cursor: pointer;">
+              🪙 Coin Catcher (-18, -15)
             </button>
-            <button id="tm-ft-park" style="background: rgba(74, 222, 128, 0.2); border: 1px solid #4ade80; color: #4ade80; border-radius: 8px; padding: 6px 14px; font-weight: 800; font-size: 12px; cursor: pointer;">
-              🌸 Park (-5, 54)
+            <button id="tm-ft-hotpotato" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff6b6b; border-radius: 8px; padding: 6px 12px; font-weight: 800; font-size: 11.5px; cursor: pointer;">
+              🔥 Hot Potato (18, -15)
+            </button>
+            <button id="tm-ft-park" style="background: rgba(74, 222, 128, 0.2); border: 1px solid #4ade80; color: #4ade80; border-radius: 8px; padding: 6px 12px; font-weight: 800; font-size: 11.5px; cursor: pointer;">
+              🌸 Park (-5, 48)
             </button>
           </div>
         </div>
@@ -666,6 +868,7 @@ export class Map3DEngine {
     let isDragging = false;
     let startX = 0, startZ = 0;
 
+    // Mouse Controls
     wrap.addEventListener('mousedown', (e) => {
       isDragging = true;
       startX = e.clientX;
@@ -686,6 +889,57 @@ export class Map3DEngine {
     window.addEventListener('mouseup', () => {
       isDragging = false;
       wrap.style.cursor = 'grab';
+    });
+
+    // Touch Drag & Pinch-Zoom for Mobile Devices
+    let initialPinchDist = null;
+    let initialZoom = 1.0;
+    let touchStartX = 0, touchStartZ = 0;
+    let isTouching = false;
+
+    wrap.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isTouching = true;
+        touchStartX = e.touches[0].clientX;
+        touchStartZ = e.touches[0].clientY;
+        initialPinchDist = null;
+      } else if (e.touches.length === 2) {
+        isTouching = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialPinchDist = Math.hypot(dx, dy);
+        initialZoom = this.zoom;
+      }
+    }, { passive: false });
+
+    wrap.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && isTouching) {
+        const dx = e.touches[0].clientX - touchStartX;
+        const dz = e.touches[0].clientY - touchStartZ;
+        touchStartX = e.touches[0].clientX;
+        touchStartZ = e.touches[0].clientY;
+        this.panX += dx;
+        this.panZ += dz;
+      } else if (e.touches.length === 2 && initialPinchDist) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const factor = dist / initialPinchDist;
+        this.zoom = Math.max(0.4, Math.min(3.5, initialZoom * factor));
+      }
+    }, { passive: false });
+
+    wrap.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        isTouching = false;
+        initialPinchDist = null;
+      } else if (e.touches.length === 1) {
+        isTouching = true;
+        touchStartX = e.touches[0].clientX;
+        touchStartZ = e.touches[0].clientY;
+        initialPinchDist = null;
+      }
     });
 
     // Mouse wheel zoom
@@ -736,8 +990,11 @@ export class Map3DEngine {
     this.modalContainer.querySelector('#tm-ft-plaza')?.addEventListener('click', () => {
       this.teleportPlayer(0, 0);
     });
-    this.modalContainer.querySelector('#tm-ft-arcade')?.addEventListener('click', () => {
-      this.teleportPlayer(16.0, -14.0);
+    this.modalContainer.querySelector('#tm-ft-coincatcher')?.addEventListener('click', () => {
+      this.teleportPlayer(-18.0, -15.0);
+    });
+    this.modalContainer.querySelector('#tm-ft-hotpotato')?.addEventListener('click', () => {
+      this.teleportPlayer(18.0, -15.0);
     });
     this.modalContainer.querySelector('#tm-ft-park')?.addEventListener('click', () => {
       this.teleportPlayer(-5.0, 48.0);
@@ -869,6 +1126,18 @@ export class Map3DEngine {
     this.updateModalHeader();
     this.panX = 0;
     this.panZ = 0;
+
+    // Immediately sync canvas buffer to container
+    const wrap = this.modalContainer.querySelector('#tm-canvas-wrap');
+    if (wrap && this.tacticalCanvas) {
+      const rect = wrap.getBoundingClientRect();
+      const targetW = Math.round(rect.width);
+      const targetH = Math.round(rect.height);
+      if (targetW > 0 && targetH > 0) {
+        this.tacticalCanvas.width = targetW;
+        this.tacticalCanvas.height = targetH;
+      }
+    }
   }
 
   closeModal() {
@@ -879,14 +1148,42 @@ export class Map3DEngine {
   renderTacticalMap(t) {
     if (!this.tacticalCtx || this.modalContainer.style.display !== 'flex') return;
     const ctx = this.tacticalCtx;
-    const w = this.tacticalCanvas.width;
-    const h = this.tacticalCanvas.height;
+
+    // Automatically synchronize canvas buffer dimensions to DOM rect
+    const wrap = this.modalContainer.querySelector('#tm-canvas-wrap');
+    if (wrap) {
+      const rect = wrap.getBoundingClientRect();
+      const targetW = Math.round(rect.width);
+      const targetH = Math.round(rect.height);
+      if (targetW > 0 && targetH > 0 && (this.tacticalCanvas.width !== targetW || this.tacticalCanvas.height !== targetH)) {
+        this.tacticalCanvas.width = targetW;
+        this.tacticalCanvas.height = targetH;
+      }
+    }
+
+    const w = this.tacticalCanvas.width || 800;
+    const h = this.tacticalCanvas.height || 500;
 
     ctx.clearRect(0, 0, w, h);
 
-    // Deep space sci-fi background with hexagonal grid
-    ctx.fillStyle = '#070b14';
+    // Deep sci-fi tactical background
+    ctx.fillStyle = '#060d19';
     ctx.fillRect(0, 0, w, h);
+
+    // Tactical Coordinate Grid Lines
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 210, 211, 0.08)';
+    ctx.lineWidth = 1;
+    const gridSize = 36 * this.zoom;
+    const startX = (w / 2 + this.panX) % gridSize;
+    const startY = (h / 2 + this.panZ) % gridSize;
+    for (let x = startX; x < w; x += gridSize) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = startY; y < h; y += gridSize) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+    ctx.restore();
 
     const midX = w / 2 + this.panX;
     const midY = h / 2 + this.panZ;
@@ -928,14 +1225,33 @@ export class Map3DEngine {
     if (this.waypoint) {
       const wx = (this.waypoint.x - px) * scale;
       const wz = (this.waypoint.z - pz) * scale;
+      const dist = Math.hypot(this.waypoint.x - px, this.waypoint.z - pz);
+
+      // Dotted trajectory line to waypoint
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(wx, wz);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
       ctx.fillStyle = this.waypoint.color || '#facc15';
       ctx.beginPath();
       ctx.arc(wx, wz, 7, 0, Math.PI * 2);
       ctx.fill();
 
+      // Pulsing beacon ring
+      ctx.strokeStyle = this.waypoint.color || '#facc15';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(wx, wz, 7 + Math.sin(t * 6) * 4, 0, Math.PI * 2);
+      ctx.stroke();
+
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 12px "Fredoka", sans-serif';
-      ctx.fillText(this.waypoint.label || 'Waypoint', wx + 10, wz + 4);
+      ctx.font = 'bold 11px "Fredoka", sans-serif';
+      ctx.fillText(`${this.waypoint.label || 'Waypoint'} (${dist.toFixed(0)}m)`, wx + 11, wz + 4);
     }
 
     // Draw Player Pin with FOV

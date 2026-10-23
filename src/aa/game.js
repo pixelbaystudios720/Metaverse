@@ -521,10 +521,14 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
   function sendX() { try { if (live && pkey) live.x(pkey); } catch {} }
   function stopLive() { chatEl.hidden = true; live?.close(); live = null; me = null; shownName = ''; peers.forEach((p, id) => { dropRoot(p); if (!p.npc) peers.delete(id); }); }
   let peerSortN = 0, peerShown = new Set();
-  // 12 townsfolk (owner): background characters who travel between the districts and hang out at the games. They never talk,
-  // are never counted as players online, and follow a shared clock so everyone sees the same
-  const NPC_SPOTS = { town: [[-9.5, 0], [9.5, 0], [-10.5, 8.5], [10.5, 8.5], [-4.5, 12.5], [4.5, 12.5], [-12.5, -8.5], [12.5, -8.5]], arcade: [[-48.6, -7.6], [-45.4, -7.4], [-42.2, -7.8], [-50.4, 2.2], [-44, 3]], docks: [[53.4, -3.6], [60.5, -1], [63.5, -1.2], [47, 4], [52, 2], [60, 3.5]], park: [[-6.8, 48.6], [-3.2, 48.4], [3, 52], [1.5, 45], [-1, 58], [8.7, 49.5]] };
-  const NPC_GATE = { town: [0, 4], arcade: [-38.5, 0], docks: [38.5, 0], park: [0, 38.6] }, NPC_ZONES = Object.keys(NPC_SPOTS);
+  // 15 townsfolk & 5 muses: background characters who travel between the districts, visit the arenas, and stroll the plaza
+  const NPC_SPOTS = {
+    town: [[-5, 3], [5, 3], [-7, 8], [7, 8], [-4.5, 12.5], [4.5, 12.5], [-9.5, -4], [9.5, -4], [-2, 6], [2, 6], [0, 9], [-6, -2], [6, -2]],
+    arcade: [[-18.0, -14.0], [-15.0, -12.0], [-21.0, -13.0], [18.0, -14.0], [15.0, -12.0], [21.0, -13.0]],
+    docks: [[32.0, -6.0], [32.0, 6.0], [30.0, 0.0], [31.0, -10.0]],
+    park: [[-6.8, 48.6], [-3.2, 48.4], [3, 52], [1.5, 45], [-1, 58], [8.7, 49.5]]
+  };
+  const NPC_GATE = { town: [0, 4], arcade: [-18, -14], docks: [32, 0], park: [0, 38.6] }, NPC_ZONES = Object.keys(NPC_SPOTS);
   const NPC_NAMES = ['n0scope', 'fl1ckz', 'dezzy_', 'kr4ken', 'v0id.', 'tr1gg3r', 'zeph-', 'm4rr', 'ezpz_', 'lurk3r', 'frag0', 'ttv_s1lent', 'cl4ssic', 'nade.exe', 'jxnny'];
   const hash = (n) => { n = (n ^ 61) ^ (n >>> 16); n = Math.imul(n, 9); n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); return (n ^ (n >>> 15)) >>> 0; };
   NPC_NAMES.forEach((name, i) => { let a = hash(i + 101); peers.set('npc' + i, { id: 'npc' + i, npc: true, name, look: (() => { const L = randomLook(() => ((a = hash(a)) % 1000) / 1000), O = LOOK_OPTIONS; L.hoodie = O.hoodie[(i * 5) % O.hoodie.length]; L.pants = O.pants[(i * 3 + 1) % O.pants.length]; L.style = O.style[i % O.style.length]; L.hair = O.hair[(i * 7) % O.hair.length]; L.kicks = O.kicks[(i * 2 + 1) % O.kicks.length]; return L; })(), here: false, x: 0, z: 0, h: 0, tx: 0, tz: 0, th: 0, tv: 0 }); });
@@ -561,12 +565,10 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
   function stepNpcs(room) {
     const now = Date.now() / 1000, P = 50;
     peers.forEach((p) => { if (!p.npc || p.inside || p.id === 'npcmuse') return; let i = +p.id.slice(3), seg = Math.floor((now + (i % 4) * 4.2) / P), ph = (now + (i % 4) * 4.2) - seg * P, hs = hash(seg * 31 + i * 7);
-      const zn = NPC_ZONES[i % 4], pads = (world?.minigames || []).filter((m) => m.zone === zn && m.spot), sp = pads.length ? pads.map((m) => [m.spot.x, m.spot.z]).concat(NPC_SPOTS[zn].slice(0, 2)) : NPC_SPOTS[zn], rank = Math.floor(i / 4), pick = (sg, k2) => sp[(hash(sg * 31 + (i % 4) * 7 + k2) + rank) % sp.length], A = pick(seg, 0), Bp = pick(seg, 3), Prev = pick(seg - 1, 3);
+      const zn = NPC_ZONES[i % NPC_ZONES.length], sp = NPC_SPOTS[zn] || NPC_SPOTS.town, rank = Math.floor(i / 4), pick = (sg, k2) => sp[(hash(sg * 31 + (i % 4) * 7 + k2) + rank) % sp.length], A = pick(seg, 0), Bp = pick(seg, 3), Prev = pick(seg - 1, 3);
       // owner: never despawn. Each one lives in its own district for good and walks on from where it last stood
-      // each one keeps its own place round the pad (golden-angle spread), so nobody stands on top of anybody
-      const ang = i * 2.39996, rad = pads.length ? 1.05 + (i % 3) * .35 : 1.4, ox = Math.sin(ang) * rad, oz = Math.cos(ang) * rad * .8;
+      const ang = i * 2.39996, rad = 1.25 + (i % 3) * .35, ox = Math.sin(ang) * rad, oz = Math.cos(ang) * rad * .8;
       const G0 = [Prev[0] - oz, Prev[1] + ox], pts = [G0, [A[0] + ox, A[1] + oz], [Bp[0] - oz, Bp[1] + ox]], spd = 1.7 + (hash(i * 31) % 100) / 100 * .9, wait = (hash(i * 97) % 1000) / 1000 * 9, legs = [Math.hypot(pts[1][0] - G0[0], pts[1][1] - G0[1]) / spd, 12 + (hash(i * 53) % 1000) / 1000 * 8, Math.hypot(pts[2][0] - pts[1][0], pts[2][1] - pts[1][1]) / spd];
-      // each one sets off on its own beat: a personal start delay, pace and pause (owner: not in tandem)
       ph -= wait; if (ph < 0) ph = -1;
       let x = pts[2][0], z = pts[2][1], v = 0, h = p.th; const lerp2 = (a, b, f) => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
       if (ph < 0) { [x, z] = G0; h = Math.atan2(Prev[0] - x, Prev[1] - z); }
@@ -575,7 +577,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
       else if (ph < legs[0] + legs[1] + legs[2]) { [x, z] = lerp2(pts[1], pts[2], (ph - legs[0] - legs[1]) / legs[2]); v = spd; h = Math.atan2(pts[2][0] - pts[1][0], pts[2][1] - pts[1][1]); }
       else h = Math.atan2(Bp[0] - x, Bp[1] - z);
       const hop = v === 0 && hash(Math.floor(now * 1.5) + i * 13) % 23 === 0 ? .35 : 0;
-      const was = p.here; p.here = room === zn; if (p.here && !was) { p.x = x; p.z = z; p.h = h; } p.tx = x; p.tz = z; p.th = h; p.tv = v; p.tj = hop; p.td = 0; });
+      const was = p.here; p.here = (where === 'out'); if (p.here && !was) { p.x = x; p.z = z; p.h = h; } p.tx = x; p.tz = z; p.th = h; p.tv = v; p.tj = hop; p.td = 0; });
   }
   function stepPeers(t, dt) {
     const scene = sceneOf(where), s = scaleHere(), k = Math.min(1, dt * 10);
@@ -586,25 +588,12 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
     peers.forEach((p) => {
       if (!p.here || !scene || busy || !peerShown.has(p)) { if (p.root) p.root.visible = false; return; }
       if (!p.root || p.rootW !== where) { dropRoot(p); p.root = p.body && p.body !== 'person' ? buildVisitor(p.body, p.vcolor || p.look?.hoodie) : buildPerson(p.look, { lite: true }); castShadows(p.root, false, false); scene.add(p.root); p.rootW = where; }
+      const u = p.root?.userData?.creature;
+      if (!u) return;
+
       if (Math.hypot(p.tx - p.x, p.tz - p.z) > 4) { p.x = p.tx; p.z = p.tz; } else { p.x = lerp(p.x, p.tx, k); p.z = lerp(p.z, p.tz, k); }
       if (where === 'out') {
-        // Enforce static world collision against benches, fountain, and buildings
         globalCollision._resolveOverlap(p, 0.42);
-
-        // Mutual collision separation with other active peers so NPCs never overlap/clip
-        peers.forEach((other) => {
-          if (other === p || !other.here) return;
-          const odx = p.x - other.x, odz = p.z - other.z;
-          const odist = Math.hypot(odx, odz);
-          if (odist < 0.85 && odist > 1e-4) {
-            const push = (0.85 - odist) * 0.5;
-            const nx = odx / odist, nz = odz / odist;
-            p.x += nx * push;
-            p.z += nz * push;
-            other.x -= nx * push;
-            other.z -= nz * push;
-          }
-        });
 
         // Mutual collision separation with local player
         const pdx = p.x - player.x, pdz = p.z - player.z;
@@ -615,8 +604,6 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
           const nx = pdx / pdist, nz = pdz / pdist;
           p.x += nx * push * 0.6;
           p.z += nz * push * 0.6;
-          player.x -= nx * push * 0.4;
-          player.z -= nz * push * 0.4;
         }
 
         globalCollision._resolveOverlap(p, 0.42);
@@ -628,6 +615,7 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
       p.root.position.set(p.x, p.jy, p.z); p.root.rotation.y = p.h; p.root.scale.set(s * (1 + sq * .45), s * (1 - sq), s * (1 + sq * .45)); p.root.visible = true;
       u.update(t, dt); u.view?.(stageOf(where).camera.position, p.root.position, p.h);
     });
+    window.NEXORA_PEERS = peers;
   }
 
   // ---------------------------------------------------------------- inside the cyber cafe
@@ -784,6 +772,8 @@ export function createGame({ labAgents, worldAgents, onAct = null, onBaby = null
           clone() { return new THREE.Vector3(player.x, player.y || 0, player.z); }
         };
       },
+      get vx() { return player.vx || 0; },
+      get vz() { return player.vz || 0; },
       velocity: { x: 0, y: 0, z: 0 },
       teleport(x, y, z) {
         player.x = x;
