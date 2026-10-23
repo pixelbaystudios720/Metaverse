@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "mapName": "NexoraPlazaAndArenas",
   "coordinateSystem": "Y-up, right-handed",
   "authoritativeServerTickRateHz": 20,
@@ -11,6 +11,7 @@
   "jumpCosmeticOnly": true,
   "collisionMode": "2d_infinite_height_footprint",
   "chatMaxCharacters": 140,
+  "benchSitInteractionRadiusMeters": 1.8,
   "gameRules": {
     "coinCatcher": {
       "minPlayers": 2,
@@ -49,13 +50,38 @@
     "hotPotatoCourt": { "x": -160, "y": 1.5, "z": 0, "rotY": 0 },
     "socialPark": { "x": 0, "y": 1.5, "z": 42, "rotY": 0 }
   },
+  "coinCatcherSpawnPositions": [
+    { "index": 0, "x": -24.0, "y": 1.5, "z": -14.0 },
+    { "index": 1, "x": 0.0, "y": 1.5, "z": -16.0 },
+    { "index": 2, "x": 24.0, "y": 1.5, "z": -14.0 },
+    { "index": 3, "x": -24.0, "y": 1.5, "z": 14.0 },
+    { "index": 4, "x": 0.0, "y": 1.5, "z": 16.0 },
+    { "index": 5, "x": 24.0, "y": 1.5, "z": 14.0 },
+    { "index": 6, "x": -14.0, "y": 1.5, "z": 0.0 },
+    { "index": 7, "x": 14.0, "y": 1.5, "z": 0.0 }
+  ],
+  "hotPotatoSpawnPositions": [
+    { "index": 0, "x": 16.0, "y": 1.5, "z": 0.0 },
+    { "index": 1, "x": 12.94, "y": 1.5, "z": 9.40 },
+    { "index": 2, "x": 4.94, "y": 1.5, "z": 15.22 },
+    { "index": 3, "x": -4.94, "y": 1.5, "z": 15.22 },
+    { "index": 4, "x": -12.94, "y": 1.5, "z": 9.40 },
+    { "index": 5, "x": -16.0, "y": 1.5, "z": 0.0 },
+    { "index": 6, "x": -12.94, "y": 1.5, "z": -9.40 },
+    { "index": 7, "x": -4.94, "y": 1.5, "z": -15.22 },
+    { "index": 8, "x": 4.94, "y": 1.5, "z": -15.22 },
+    { "index": 9, "x": 12.94, "y": 1.5, "z": -9.40 }
+  ],
   "interactiveDoors": [
     {
       "id": "door_coin_catcher",
-      "name": "Coin Catcher Portal",
-      "position": { "x": 13.2, "y": 2.1, "z": -17.5 },
-      "size": { "w": 3.2, "h": 4.2, "d": 0.4 },
-      "triggerRadius": 3.2,
+      "name": "Coin Catcher Arena Entrance",
+      "building": "Left Building (West)",
+      "position": { "x": -18.0, "y": 2.1, "z": -15.5 },
+      "size": { "w": 3.4, "h": 4.2, "d": 0.4 },
+      "triggerRadius": 3.5,
+      "promptMessage": "Press E to enter Coin Catcher Arena (2-8 Players)",
+      "actionKey": "E",
       "teleportTarget": { "x": 160, "y": 1.5, "z": 0 },
       "gameId": "coin_catcher",
       "minPlayers": 2,
@@ -64,10 +90,13 @@
     },
     {
       "id": "door_hot_potato",
-      "name": "Hot Potato Portal",
-      "position": { "x": 20.3, "y": 2.1, "z": -14.7 },
-      "size": { "w": 3.2, "h": 4.2, "d": 0.4 },
-      "triggerRadius": 3.2,
+      "name": "Hot Potato Colosseum Entrance",
+      "building": "Right Building (East)",
+      "position": { "x": 18.0, "y": 2.1, "z": -15.5 },
+      "size": { "w": 3.4, "h": 4.2, "d": 0.4 },
+      "triggerRadius": 3.5,
+      "promptMessage": "Press E to enter Hot Potato Colosseum (4-10 Players)",
+      "actionKey": "E",
       "teleportTarget": { "x": -160, "y": 1.5, "z": 0 },
       "gameId": "hot_potato",
       "minPlayers": 4,
@@ -101,33 +130,36 @@
       "desc": "Dedicated ground floor for Hot Potato Court at x=-160"
     },
     {
-      "id": "arcade_building_facade",
+      "id": "coincatcher_building_body",
       "kind": "blocker",
       "type": "box",
-      "pos": [16.0, 3.6, -18.0],
-      "size": [15.0, 7.2, 4.0],
-      "desc": "Compact Cyber Arcade building facade with Coin Catcher and Hot Potato doors"
+      "pos": [-18.0, 4.0, -18.0],
+      "size": [16.0, 8.0, 5.0],
+      "desc": "Left Building (West): Coin Catcher Cyber Arena Main Structure"
     },
     {
-      "id": "arcade_roof_overhang",
+      "id": "coincatcher_door_frame",
       "kind": "blocker",
       "type": "box",
-      "pos": [16.0, 7.2, -18.0],
-      "size": [15.4, 0.4, 4.4]
+      "pos": [-18.0, 2.1, -15.5],
+      "size": [3.4, 4.2, 0.4],
+      "desc": "Coin Catcher Sliding Glass Door Entrance Portal Frame"
     },
     {
-      "id": "arcade_door_left_frame",
+      "id": "hotpotato_building_body",
       "kind": "blocker",
       "type": "box",
-      "pos": [13.2, 2.1, -17.5],
-      "size": [3.2, 4.2, 0.4]
+      "pos": [18.0, 4.0, -18.0],
+      "size": [16.0, 8.0, 5.0],
+      "desc": "Right Building (East): Hot Potato Colosseum Main Structure"
     },
     {
-      "id": "arcade_door_right_frame",
+      "id": "hotpotato_door_frame",
       "kind": "blocker",
       "type": "box",
-      "pos": [20.3, 2.1, -14.7],
-      "size": [3.2, 4.2, 0.4]
+      "pos": [18.0, 2.1, -15.5],
+      "size": [3.4, 4.2, 0.4],
+      "desc": "Hot Potato Sliding Glass Door Entrance Portal Frame"
     },
     {
       "id": "fountain_tier1_basin",

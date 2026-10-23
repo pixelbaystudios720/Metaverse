@@ -1122,26 +1122,7 @@ export class LivingWorld {
       this.ccRightDoor.position.x = THREE.MathUtils.lerp(this.ccRightDoor.position.x, 0.9 + targetOffset, dt * 6);
     });
 
-    // 6. Floating Rotating 3D Holographic Gold Coin on Rooftop
-    const coinRooftopGroup = new THREE.Group();
-    coinRooftopGroup.position.set(0, 9.6, 2.5);
-    const bigCoinGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.28, 32);
-    const bigCoinMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.2, emissive: 0xffaa00, emissiveIntensity: 0.4 });
-    const bigCoin = new THREE.Mesh(bigCoinGeo, bigCoinMat);
-    bigCoin.rotation.x = Math.PI / 2;
-    coinRooftopGroup.add(bigCoin);
-
-    const ringGeo = new THREE.TorusGeometry(2.1, 0.06, 12, 36);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
-    const orbitRing = new THREE.Mesh(ringGeo, ringMat);
-    coinRooftopGroup.add(orbitRing);
-    this.coinCatcherGroup.add(coinRooftopGroup);
-
-    this.updatables.push((t, dt) => {
-      bigCoin.rotation.z += dt * 1.8;
-      orbitRing.rotation.x = Math.sin(t * 1.5) * 0.4;
-      orbitRing.rotation.y += dt * 1.2;
-    });
+    // 6. Roofline clean & open - unobstructed view of marquee sign
 
     // 7. Sleek Illuminated Marquee Sign: "🪙 COIN CATCHER ARENA"
     const canvas = document.createElement('canvas');
@@ -1403,36 +1384,7 @@ export class LivingWorld {
       this.hpRightDoor.position.x = THREE.MathUtils.lerp(this.hpRightDoor.position.x, 0.9 + targetOffset, dt * 6);
     });
 
-    // 6. Floating 3D Holographic Fire Bomb on Rooftop
-    const bombGroup = new THREE.Group();
-    bombGroup.position.set(0, 9.6, 2.5);
-    const bombSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(1.3, 24, 24),
-      new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.7, roughness: 0.3, emissive: 0xff2200, emissiveIntensity: 0.35 })
-    );
-    bombGroup.add(bombSphere);
-
-    const fuse = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.7, 12), redTrimMat);
-    fuse.position.set(0, 1.45, 0);
-    bombGroup.add(fuse);
-
-    const flameSpark = new THREE.Mesh(
-      new THREE.SphereGeometry(0.35, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xffd000 })
-    );
-    flameSpark.position.set(0, 1.85, 0);
-    bombGroup.add(flameSpark);
-
-    const bombRing = new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.06, 12, 36), orangeNeonMat);
-    bombGroup.add(bombRing);
-    this.hotPotatoGroup.add(bombGroup);
-
-    this.updatables.push((t, dt) => {
-      const scale = 1.0 + Math.sin(t * 5.0) * 0.08;
-      bombGroup.scale.set(scale, scale, scale);
-      bombRing.rotation.y += dt * 2.2;
-      flameSpark.scale.setScalar(0.8 + Math.sin(t * 12.0) * 0.3);
-    });
+    // 6. Roofline clean & open - unobstructed view of marquee sign
 
     // 7. Sleek Illuminated Marquee Sign: "🔥 HOT POTATO COLOSSEUM"
     const canvas = document.createElement('canvas');
